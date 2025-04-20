@@ -1,0 +1,11 @@
+flask==2.3.2
+mysql-connector-python==8.0.33
+# Outras dependências do seu projeto
+fastapi
+uvicorn
+openai
+langchain
+# Adicionando o langchain-groq
+langchain-groq
+python-dotenv
+pandas

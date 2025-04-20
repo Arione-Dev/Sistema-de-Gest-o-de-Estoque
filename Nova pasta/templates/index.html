@@ -1,0 +1,897 @@
+
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Estoque</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f4f4;
+        }
+
+        /* Estilo do cabeçalho */
+        .header {
+            background-color: #34495e;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-voltar, .btn-relatorio, .btn-cv-analise, .btn-ajustes-realizados, .btn-liberar, .logout-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            color: white;
+        }
+
+        .btn-voltar {
+            background-color: #1abc9c;
+        }
+
+        .btn-voltar:hover {
+            background-color: #16a085;
+        }
+
+        .btn-relatorio {
+            background-color: #1abc9c;
+        }
+
+        .btn-relatorio:hover {
+            background-color: #16a085;
+        }
+
+        .btn-cv-analise {
+            background-color: #3498db;
+        }
+
+        .btn-cv-analise:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-ajustes-realizados {
+            background-color: #9b59b6;
+        }
+
+        .btn-ajustes-realizados:hover {
+            background-color: #8e44ad;
+        }
+
+        .btn-liberar {
+            background-color: #f39c12;
+        }
+
+        .btn-liberar:hover {
+            background-color: #e67e22;
+        }
+
+        .logout-btn {
+            background-color: #e74c3c;
+        }
+
+        .logout-btn:hover {
+            background-color: #c0392b;
+        }
+
+        /* Estilo do container principal */
+        .container {
+            margin-top: 80px;
+            padding: 20px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        /* Estilo da seção de ajuste */
+        .ajuste-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .ajuste-section input[type="text"],
+        .ajuste-section input[type="number"] {
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        /* Estilo genérico para botões na seção de ajuste (aplicado apenas a botões sem classe específica) */
+        .ajuste-section button:not(.btn-menos):not(.btn-mais):not(.btn-adicionar):not(.confirmar-ajuste) {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .ajuste-section button:not(.btn-menos):not(.btn-mais):not(.btn-adicionar):not(.confirmar-ajuste):hover {
+            background-color: #2980b9;
+        }
+
+        #produtoInfo {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        #ajusteForm {
+            margin-top: 10px;
+        }
+
+        .ajuste-massa-section {
+            display: flex;
+            gap: 15px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .ajuste-massa-section label {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .quantidade-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .quantidade-section input {
+            padding: 8px;
+            width: 100px;
+            text-align: center;
+        }
+
+        /* Botão Menos */
+        .ajuste-section .btn-menos {
+            padding: 8px 15px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .ajuste-section .btn-menos:hover {
+            background-color: #c0392b;
+        }
+
+        .ajuste-section .btn-menos:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* Botão Mais */
+        .ajuste-section .btn-mais {
+            padding: 8px 15px;
+            background-color: #1abc9c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .ajuste-section .btn-mais:hover {
+            background-color: #16a085;
+        }
+
+        .ajuste-section .btn-mais:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* Seção de confirmação */
+        .confirmar-section {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Botão Adicionar Ajuste */
+        .ajuste-section .btn-adicionar {
+            padding: 8px 15px;
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .ajuste-section .btn-adicionar:hover {
+            background-color: #e67e22;
+        }
+
+        /* Botão Confirmar Ajuste */
+        .ajuste-section .confirmar-ajuste {
+            padding: 8px 15px;
+            background-color: #1abc9c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .ajuste-section .confirmar-ajuste:hover {
+            background-color: #16a085;
+        }
+
+        /* Estilo da tabela de ajustes pendentes */
+        #ajustesPendentes {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #34495e;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .ajuste-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            color: white;
+            font-size: 12px;
+            text-align: center;
+            line-height: 20px;
+            margin-right: 5px;
+        }
+
+        .ajuste-icon.positive {
+            background-color: #1abc9c;
+        }
+
+        .ajuste-icon.negative {
+            background-color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Sistema de Gestão de Estoque</h1>
+        <div class="header-buttons">
+            <button class="btn-relatorio" onclick="abrirRelatorio()">Relatório</button>
+            <button class="btn-cv-analise" onclick="abrirCVAnalise()">CV-Análise</button>
+            <button class="btn-ajustes-realizados" onclick="abrirAjustesRealizados()">Ajustes Realizados</button>
+            <button class="btn-liberar" onclick="abrirLiberarAjustes()">Liberar Ajustes</button>
+            <!-- <button class="btn-voltar" onclick="voltar()">Voltar</button> -->
+            <button class="logout-btn" onclick="logout()">Sair</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="ajuste-section">
+            <h2>Ajustar Estoque</h2>
+            <div class="input-section">
+                <input type="text" id="codigoInput" placeholder="Código ou Barras do Produto">
+                <button onclick="buscarProduto()">Buscar</button>
+            </div>
+            <div id="produtoInfo"></div>
+            <div class="ajuste-massa-section">
+                <label>
+                    <input type="checkbox" id="ajusteMassivoCheckbox" onchange="atualizarAjusteMassivo()">
+                    Ajuste em Massa
+                </label>
+                <label>
+                    <input type="checkbox" id="ajusteMenosCheckbox" onchange="atualizarAjusteMassa(); formatarQuantidade()">
+                    Ajuste Menos
+                </label>
+                <label>
+                    <input type="checkbox" id="ajusteMaisCheckbox" onchange="atualizarAjusteMassa(); formatarQuantidade()">
+                    Ajuste Mais
+                </label>
+                <label>
+                    <input type="checkbox" id="ocultarTecladoCheckbox" onchange="atualizarOcultarTeclado()">
+                    Ocultar Teclado
+                </label>
+            </div>
+            <div id="ajusteForm" style="display: none;">
+                <div class="quantidade-section">
+                    <button class="btn-menos" onclick="alterarQuantidade('menos')">-</button>
+                    <input type="number" id="ajusteInput" placeholder="Quantidade a ajustar">
+                    <button class="btn-mais" onclick="alterarQuantidade('mais')">+</button>
+                </div>
+                <div class="confirmar-section">
+                    <button class="btn-adicionar" onclick="adicionarAjuste()">Adicionar Ajuste</button>
+                    <button class="confirmar-ajuste" onclick="confirmarAjuste()">Confirmar Ajuste</button>
+                </div>
+            </div>
+            <div id="ajustesPendentes">
+                <h2>Ajustes Pendentes</h2>
+                <table id="pendentesTable">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Descrição</th>
+                            <th>Quantidade</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendentesBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2>Histórico de Ajustes</h2>
+        <table id="historicoTable">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Número do Ajuste</th>
+                    <th>Código do Produto</th>
+                    <th>Descrição</th>
+                    <th>Ajuste</th>
+                    <th>Data/Hora</th>
+                    <th>Matrícula</th>
+                    <th>Nome do Usuário</th>
+                </tr>
+            </thead>
+            <tbody id="historicoBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        console.log('Carregando index.js...');
+
+        let currentProduto = null;
+        let produtosMassivo = []; // Array para armazenar produtos no modo ajuste em massivo
+        let ultimoCodigoBipado = null; // Armazena o último código bipado para comparação
+        let ajustesPendentes = []; // Array para armazenar ajustes pendentes
+
+        function atualizarAjusteMassivo() {
+            const ajusteMassivoCheckbox = document.getElementById('ajusteMassivoCheckbox');
+            if (ajusteMassivoCheckbox.checked) {
+                console.log('Ajuste em Massivo ativado.');
+                produtosMassivo = []; // Reseta a lista de produtos acumulados
+                ultimoCodigoBipado = null; // Reseta o último código bipado
+                document.getElementById('ajusteInput').value = '0'; // Quantidade inicial zero
+            } else {
+                console.log('Ajuste em Massivo desativado.');
+                produtosMassivo = []; // Limpa a lista ao desativar o modo massivo
+                ultimoCodigoBipado = null; // Reseta o último código bipado
+                document.getElementById('ajusteInput').value = '0'; // Reseta o campo de quantidade
+            }
+        }
+
+        function atualizarAjusteMassa() {
+            const ajusteMenosCheckbox = document.getElementById('ajusteMenosCheckbox');
+            const ajusteMaisCheckbox = document.getElementById('ajusteMaisCheckbox');
+            const btnMenos = document.querySelector('.btn-menos');
+            const btnMais = document.querySelector('.btn-mais');
+
+            console.log(`Atualizar Ajuste Massa - Ajuste Menos: ${ajusteMenosCheckbox.checked}, Ajuste Mais: ${ajusteMaisCheckbox.checked}`);
+
+            if (ajusteMenosCheckbox.checked && ajusteMaisCheckbox.checked) {
+                ajusteMaisCheckbox.checked = false;
+            }
+
+            if (ajusteMenosCheckbox.checked) {
+                btnMenos.disabled = false;
+                btnMais.disabled = true;
+            } else if (ajusteMaisCheckbox.checked) {
+                btnMenos.disabled = true;
+                btnMais.disabled = false;
+            } else {
+                btnMenos.disabled = false;
+                btnMais.disabled = false;
+            }
+        }
+
+        function atualizarOcultarTeclado() {
+            const ocultarTecladoCheckbox = document.getElementById('ocultarTecladoCheckbox');
+            const codigoInput = document.getElementById('codigoInput');
+
+            if (ocultarTecladoCheckbox.checked) {
+                console.log('Ocultar Teclado ativado.');
+                codigoInput.setAttribute('inputmode', 'none');
+                codigoInput.focus();
+            } else {
+                console.log('Ocultar Teclado desativado.');
+                codigoInput.removeAttribute('inputmode');
+                codigoInput.focus();
+            }
+        }
+
+        function formatarQuantidade() {
+            const ajusteMenosCheckbox = document.getElementById('ajusteMenosCheckbox');
+            const ajusteMaisCheckbox = document.getElementById('ajusteMaisCheckbox');
+            let quantidade = parseInt(document.getElementById('ajusteInput').value) || 0;
+
+            console.log(`Formatar Quantidade - Quantidade atual: ${quantidade}, Ajuste Menos: ${ajusteMenosCheckbox.checked}, Ajuste Mais: ${ajusteMaisCheckbox.checked}`);
+
+            quantidade = Math.abs(quantidade);
+
+            if (ajusteMenosCheckbox.checked) {
+                document.getElementById('ajusteInput').value = -quantidade;
+            } else {
+                document.getElementById('ajusteInput').value = quantidade;
+            }
+            console.log(`Quantidade formatada para: ${document.getElementById('ajusteInput').value}`);
+        }
+
+        async function buscarProduto() {
+            console.log('Executando buscarProduto()');
+            const codigo = document.getElementById('codigoInput').value.trim();
+            console.log(`Buscando produto com código: ${codigo}`);
+
+            if (!codigo) {
+                console.log('Código não fornecido.');
+                alert('Por favor, insira o código ou barras do produto.');
+                return;
+            }
+
+            try {
+                console.log(`Enviando requisição GET para /produto/${codigo}`);
+                const response = await fetch(`/produto/${codigo}`);
+                console.log('Resposta recebida do backend:', response);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error(`Erro na requisição: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+                    throw new Error(errorData.error || `Erro na requisição: ${response.status} ${response.statusText}`);
+                }
+
+                const produto = await response.json();
+                console.log('Produto retornado do backend:', produto);
+                currentProduto = produto;
+
+                document.getElementById('produtoInfo').innerHTML = `
+                    <p>Código: ${produto.codigo}</p>
+                    <p>Descrição: ${produto.descricao || 'Descrição não disponível'}</p>
+                    <p>Saldo Atual: ${produto.saldo_atual !== undefined ? produto.saldo_atual : 'N/A'}</p>
+                    <p>Barras: ${produto.barras || 'N/A'}</p>
+                `;
+                document.getElementById('ajusteForm').style.display = 'block';
+
+                const ajusteMassivoCheckbox = document.getElementById('ajusteMassivoCheckbox');
+                if (!ajusteMassivoCheckbox.checked) {
+                    document.getElementById('ajusteInput').value = '0';
+                } else if (ultimoCodigoBipado !== codigo) {
+                    document.getElementById('ajusteInput').value = '1'; // Quantidade padrão para novo código
+                }
+
+                document.getElementById('codigoInput').value = '';
+                ultimoCodigoBipado = codigo;
+                carregarHistorico();
+            } catch (err) {
+                console.error('Erro ao buscar produto:', err);
+                alert(`Erro ao buscar produto: ${err.message}`);
+                document.getElementById('produtoInfo').innerHTML = '';
+                document.getElementById('ajusteForm').style.display = 'none';
+                currentProduto = null;
+                document.getElementById('codigoInput').value = '';
+            }
+        }
+
+        async function processarCodigoBarras(codigo) {
+            if (!codigo) {
+                console.log('Nenhum código fornecido para processar.');
+                return;
+            }
+
+            try {
+                console.log(`Processando código de barras: ${codigo}`);
+                const response = await fetch(`/produto/${codigo}`);
+                const produto = await response.json();
+                if (produto.error) {
+                    throw new Error(produto.error);
+                }
+
+                currentProduto = produto;
+
+                const ajusteMassivoCheckbox = document.getElementById('ajusteMassivoCheckbox');
+                if (ajusteMassivoCheckbox.checked) {
+                    const ajusteMamongstCheckbox = document.getElementById('ajusteMenosCheckbox');
+                    const ajusteMaisCheckbox = document.getElementById('ajusteMaisCheckbox');
+
+                    console.log('Ajuste em Massivo ativo. Ajuste Menos:', ajusteMenosCheckbox.checked, 'Ajuste Mais:', ajusteMaisCheckbox.checked);
+
+                    // Verifica se o produto já está na lista de produtos massivos
+                    let produtoExistente = produtosMassivo.find(p => p.codigo === produto.codigo);
+
+                    if (!produtoExistente || ultimoCodigoBipado !== codigo) {
+                        // Novo produto ou novo bip após mudança de código
+                        produtoExistente = { codigo: produto.codigo, quantidade: 0 };
+                        if (!produtosMassivo.find(p => p.codigo === produto.codigo)) {
+                            produtosMassivo.push(produtoExistente);
+                        }
+                    }
+
+                    // Incrementa a quantidade para o bip atual
+                    produtoExistente.quantidade += 1;
+
+                    // Calcula a quantidade total para exibição
+                    const quantidadeTotal = produtoExistente.quantidade;
+                    document.getElementById('ajusteInput').value = ajusteMenosCheckbox.checked ? -quantidadeTotal : quantidadeTotal;
+
+                    console.log('Produtos acumulados:', produtosMassivo);
+                    console.log('Quantidade atualizada no campo:', document.getElementById('ajusteInput').value);
+
+                    ultimoCodigoBipado = codigo;
+
+                    document.getElementById('produtoInfo').innerHTML = `
+                        <p>Código: ${produto.codigo}</p>
+                        <p>Descrição: ${produto.descricao || 'Descrição não disponível'}</p>
+                        <p>Saldo Atual: ${produto.saldo_atual !== undefined ? produto.saldo_atual : 'N/A'}</p>
+                        <p>Barras: ${produto.barras || 'N/A'}</p>
+                    `;
+                    document.getElementById('ajusteForm').style.display = 'block';
+                }
+
+                document.getElementById('codigoInput').value = '';
+            } catch (err) {
+                console.error('Erro ao processar código de barras:', err);
+                alert('Erro ao processar código de barras: ' + err.message);
+                document.getElementById('codigoInput').value = '';
+            }
+        }
+
+        function alterarQuantidade(operacao) {
+            const ajusteMenosCheckbox = document.getElementById('ajusteMenosCheckbox');
+            const ajusteMaisCheckbox = document.getElementById('ajusteMaisCheckbox');
+            let quantidade = parseInt(document.getElementById('ajusteInput').value) || 0;
+
+            console.log(`Alterar quantidade - Operação: ${operacao}, Quantidade atual: ${quantidade}, Ajuste Menos: ${ajusteMenosCheckbox.checked}, Ajuste Mais: ${ajusteMaisCheckbox.checked}`);
+
+            if (ajusteMenosCheckbox.checked && operacao !== 'menos') {
+                alert('Apenas ajustes de diminuição são permitidos com "Ajuste Menos" marcado.');
+                return;
+            }
+            if (ajusteMaisCheckbox.checked && operacao !== 'mais') {
+                alert('Apenas ajustes de aumento são permitidos com "Ajuste Mais" marcado.');
+                return;
+            }
+
+            if (operacao === 'mais') {
+                quantidade += 1;
+            } else if (operacao === 'menos') {
+                quantidade -= 1;
+            }
+
+            document.getElementById('ajusteInput').value = quantidade;
+            console.log(`Quantidade atualizada para: ${quantidade}`);
+        }
+
+        function adicionarAjuste() {
+            if (!currentProduto) {
+                console.log('Nenhum produto selecionado para adicionar ao ajuste.');
+                alert('Nenhum produto selecionado para adicionar ao ajuste.');
+                return;
+            }
+
+            let quantidade = parseInt(document.getElementById('ajusteInput').value);
+            console.log('Quantidade digitada:', quantidade);
+            if (isNaN(quantidade) || quantidade === 0) {
+                console.log('Quantidade inválida:', quantidade);
+                alert('Por favor, digite uma quantidade válida.');
+                return;
+            }
+
+            const ajusteExistente = ajustesPendentes.find(ajuste => ajuste.codigo === currentProduto.codigo);
+            if (ajusteExistente) {
+                ajusteExistente.quantidade += quantidade;
+                console.log(`Produto ${currentProduto.codigo} já existe na lista. Nova quantidade: ${ajusteExistente.quantidade}`);
+            } else {
+                ajustesPendentes.push({
+                    codigo: currentProduto.codigo,
+                    descricao: currentProduto.descricao || 'Descrição não disponível',
+                    quantidade: quantidade
+                });
+                console.log(`Produto ${currentProduto.codigo} adicionado à lista com quantidade: ${quantidade}`);
+            }
+
+            // Reseta o estado do modo massivo para o produto atual
+            const ajusteMassivoCheckbox = document.getElementById('ajusteMassivoCheckbox');
+            if (ajusteMassivoCheckbox.checked) {
+                produtosMassivo = produtosMassivo.filter(p => p.codigo !== currentProduto.codigo); // Remove o produto ajustado
+                document.getElementById('ajusteInput').value = '0'; // Reseta a quantidade exibida
+                ultimoCodigoBipado = null; // Permite que o próximo bip reinicie a contagem
+            } else {
+                document.getElementById('ajusteInput').value = '0'; // Reseta para modo normal
+            }
+
+            atualizarListaPendentes();
+        }
+
+        function atualizarListaPendentes() {
+            const tbody = document.getElementById('pendentesBody');
+            tbody.innerHTML = '';
+            ajustesPendentes.forEach(ajuste => {
+                const tr = document.createElement('tr');
+                const ajusteSymbol = ajuste.quantidade > 0 ? '+' : '';
+                tr.innerHTML = `
+                    <td>${ajuste.codigo}</td>
+                    <td>${ajuste.descricao}</td>
+                    <td>${ajusteSymbol}${ajuste.quantidade}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function confirmarAjuste() {
+            if (ajustesPendentes.length === 0) {
+                console.log('Nenhum ajuste pendente para confirmar.');
+                alert('Nenhum ajuste pendente para confirmar.');
+                return;
+            }
+
+            for (const ajuste of ajustesPendentes) {
+                if (!ajuste.codigo || ajuste.codigo.trim() === '') {
+                    console.log('Erro: Um ajuste na lista não possui um código válido:', ajuste);
+                    alert('Erro: Um ou mais ajustes na lista não possuem um código válido.');
+                    return;
+                }
+                if (!ajuste.descricao || ajuste.descricao.trim() === '') {
+                    console.log('Aviso: Descrição não fornecida para o ajuste, usando valor padrão:', ajuste);
+                    ajuste.descricao = 'Descrição não disponível';
+                }
+                if (!ajuste.quantidade || isNaN(ajuste.quantidade)) {
+                    console.log('Erro: Quantidade inválida no ajuste:', ajuste);
+                    alert('Erro: Um ou mais ajustes na lista possuem uma quantidade inválida.');
+                    return;
+                }
+            }
+
+            try {
+                console.log('Enviando requisição POST para /ajustar-estoque');
+                console.log('Ajustes pendentes enviados:', JSON.stringify(ajustesPendentes, null, 2));
+                const response = await fetch('/ajustar-estoque', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ajustes: ajustesPendentes })
+                });
+                console.log('Resposta recebida do backend:', response);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error(`Erro na requisição: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+                    throw new Error(errorData.error || `Erro na requisição: ${response.status} ${response.statusText}`);
+                }
+
+                const resultado = await response.json();
+                console.log('Resultado retornado do backend:', resultado);
+
+                if (resultado.success) {
+                    let mensagem = `Ajuste #${resultado.numero_ajuste} realizado com sucesso!\n`;
+                    resultado.resultados.forEach(res => {
+                        mensagem += `Código: ${res.codigo}, Novo Saldo: ${res.saldo_atual}\n`;
+                    });
+                    alert(mensagem);
+
+                    ajustesPendentes = [];
+                    atualizarListaPendentes();
+                    document.getElementById('produtoInfo').innerHTML = '';
+                    document.getElementById('ajusteForm').style.display = 'none';
+                    currentProduto = null;
+                    produtosMassivo = [];
+                    ultimoCodigoBipado = null;
+                    carregarHistorico();
+                } else {
+                    throw new Error('Erro ao realizar ajustes');
+                }
+            } catch (err) {
+                console.error('Erro ao ajustar estoque:', err);
+                alert(`Erro ao ajustar estoque: ${err.message}`);
+            }
+        }
+
+        async function carregarHistorico() {
+            console.log('Executando carregarHistorico()');
+            try {
+                console.log('Enviando requisição GET para /historico');
+                const response = await fetch('/historico');
+                console.log('Resposta recebida do backend:', response);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error(`Erro na requisição: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+                    throw new Error(errorData.error || `Erro na requisição: ${response.status} ${response.statusText}`);
+                }
+
+                const historico = await response.json();
+                console.log('Histórico retornado do backend:', historico);
+
+                const tbody = document.getElementById('historicoBody');
+                tbody.innerHTML = '';
+                historico.forEach(item => {
+                    const tr = document.createElement('tr');
+                    const ajusteIcon = item.ajuste > 0 ? 'positive' : 'negative';
+                    const ajusteSymbol = item.ajuste > 0 ? '+' : '-';
+                    tr.innerHTML = `
+                        <td><span class="ajuste-icon ${ajusteIcon}">${ajusteSymbol}</span></td>
+                        <td>${item.id}</td>
+                        <td>${item.produto_codigo}</td>
+                        <td>${item.descricao || 'N/A'}</td>
+                        <td>${ajusteSymbol}${item.ajuste}</td>
+                        <td>${item.data_hora}</td>
+                        <td>${item.matricula || 'N/A'}</td>
+                        <td>${item.nome_usuario || 'N/A'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error('Erro ao carregar histórico:', err);
+                alert(`Erro ao carregar histórico: ${err.message}`);
+            }
+        }
+
+        const codigoInput = document.getElementById('codigoInput');
+
+        codigoInput.addEventListener('keydown', (event) => {
+            console.log('Evento keydown detectado no codigoInput. Tecla:', event.key, 'Código:', event.keyCode);
+            if (event.keyCode === 13 || event.key === 'Enter') {
+                event.preventDefault();
+                event.stopPropagation();
+                console.log('Enter bloqueado no codigoInput via keydown.');
+                const codigo = event.target.value.trim();
+                if (codigo) {
+                    console.log('Código detectado via Enter:', codigo);
+                    const ajusteMassivoCheckbox = document.getElementById('ajusteMassivoCheckbox');
+                    if (ajusteMassivoCheckbox.checked) {
+                        processarCodigoBarras(codigo);
+                    } else {
+                        buscarProduto();
+                    }
+                }
+            }
+        });
+
+        codigoInput.addEventListener('keypress', (event) => {
+            console.log('Evento keypress detectado no codigoInput. Tecla:', event.key, 'Código:', event.keyCode);
+            if (event.keyCode === 13 || event.key === 'Enter') {
+                event.preventDefault();
+                event.stopPropagation();
+                console.log('Enter bloqueado no codigoInput via keypress.');
+            }
+        });
+
+        codigoInput.addEventListener('input', (event) => {
+            const codigo = event.target.value.trim();
+            console.log('Evento input detectado no codigoInput. Código no campo:', codigo);
+            if (codigo && (codigo.endsWith('\n') || codigo.length >= 8)) {
+                console.log('Código de barras detectado via input no codigoInput:', codigo);
+                event.target.value = codigo.replace(/\n/g, '');
+                const ajusteMassivoCheckbox = document.getElementById('ajusteMassivoCheckbox');
+                setTimeout(() => {
+                    if (ajusteMassivoCheckbox.checked) {
+                        processarCodigoBarras(codigo);
+                    } else {
+                        buscarProduto();
+                    }
+                }, 0);
+            }
+        });
+
+        codigoInput.addEventListener('change', (event) => {
+            const codigo = event.target.value.trim();
+            console.log('Evento change detectado no codigoInput. Código no campo:', codigo);
+            if (codigo) {
+                console.log('Código de barras detectado via change no codigoInput:', codigo);
+                event.target.value = codigo.replace(/\n/g, '');
+                const ajusteMassivoCheckbox = document.getElementById('ajusteMassivoCheckbox');
+                setTimeout(() => {
+                    if (ajusteMassivoCheckbox.checked) {
+                        processarCodigoBarras(codigo);
+                    } else {
+                        buscarProduto();
+                    }
+                }, 0);
+            }
+        });
+
+        document.getElementById('ajusteInput').addEventListener('input', () => {
+            formatarQuantidade();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Página carregada. Executando carregarHistorico().');
+            carregarHistorico();
+            document.getElementById('codigoInput').focus();
+        });
+
+        function voltar() {
+            console.log("Botão Voltar clicado.");
+            history.back();
+        }
+
+        function abrirRelatorio() {
+            console.log("Botão Relatório clicado.");
+            window.location.href = '/relatorio';
+        }
+
+        function abrirCVAnalise() {
+            console.log("Botão CV-Análise clicado.");
+            window.location.href = '/cv_analise';
+        }
+
+        function abrirAjustesRealizados() {
+            console.log("Botão Ajustes Realizados clicado. Redirecionando para /ajustes_realizados.");
+            window.location.href = '/ajustes_realizados';
+        }
+
+        function abrirLiberarAjustes() {
+            console.log("Botão Liberar Ajustes clicado.");
+            window.location.href = '/liberar-ajustes';
+        }
+
+        function logout() {
+            console.log("Executando logout...");
+            window.location.href = '/logout';
+        }
+
+        console.log('index.js carregado com sucesso.');
+    </script>
+</body>
+</html>
