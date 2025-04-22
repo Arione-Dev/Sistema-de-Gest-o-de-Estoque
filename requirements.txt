@@ -9,4 +9,4 @@ langchain
 langchain-groq
 python-dotenv
 pandas
-pip  install  --upgrade  pip
+
