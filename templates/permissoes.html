@@ -1,0 +1,698 @@
+<!-- <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Permissões</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #343a40;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .btn-logout {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-logout:hover {
+            background-color: #c82333;
+        }
+        main {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .user-header {
+            background-color: #ffffff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #333;
+        }
+        .user-header h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .user-header p {
+            margin: 4px 0 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .filter-section {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .filter-section label {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .filter-section select,
+        .filter-section input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn-buscar,
+        .btn-limpar {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-buscar:hover,
+        .btn-limpar:hover {
+            background-color: #0069d9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        th {
+            background-color: #343a40;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .perm-label {
+            display: block;
+            margin: 5px 0;
+            font-size: 13px;
+        }
+        .btn-confirmar,
+        .btn-voltar {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .btn-confirmar {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-confirmar:hover {
+            background-color: #218838;
+        }
+        .btn-voltar {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-voltar:hover {
+            background-color: #5a6268;
+        }
+        @media (max-width: 768px) {
+            .filter-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            table,
+            th,
+            td {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Gerenciar Permissões</h1>
+    <button class="btn-logout" onclick="window.location.href='/logout'">Sair</button>
+</header>
+<main>
+    Exibe informações do usuário selecionado --
+    <div id="userHeader" class="user-header" style="display: none;">
+        <h2>Usuário: <span id="userName"></span></h2>
+        <p>Matrícula: <span id="userMatricula"></span>, Filial: <span id="userFilial"></span></p>
+    </div>
+
+    !-- Filtro por módulo e busca por matrícula --
+    <div class="filter-section">
+        <label for="moduloFilter">Filtrar por Módulo:</label>
+        <select id="moduloFilter" onchange="filterPermissions()">
+            <option value="">Todos os Módulos</option>
+            <option value="autenticacao">Autenticação</option>
+            <option value="estoque">Estoque</option>
+            <option value="ajustes">Ajustes</option>
+            <option value="relatorios">Relatórios</option>
+            <option value="rh">RH</option>
+            <option value="solicitacoes">Solicitações</option>
+            <option value="logistica">Logística</option>
+            <option value="monitoramento">Monitoramento</option>
+            <option value="admin">Admin</option>
+        </select>
+        <input type="text" id="matriculaSearch" placeholder="Buscar por Matrícula" onkeyup="searchMatricula()">
+        <button class="btn-buscar" onclick="searchMatricula()">Buscar</button>
+        <button class="btn-limpar" onclick="clearFilters()">Limpar</button>
+    </div>
+
+    !-- Tabela de usuários e permissões --
+    <table>
+        <thead>
+            <tr>
+                <th>Matrícula</th>
+                <th>Nome</th>
+                <th>Filial</th>
+                <th>Permissões</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="usuariosTable">
+            {% for usuario in usuarios %}
+            <tr data-matricula="{{ usuario['matricula'] }}">
+                <td>{{ usuario['matricula'] }}</td>
+                <td>{{ usuario['nome'] }}</td>
+                <td>{{ usuario['filial'] }}</td>
+                <td>
+                    <form method="POST" action="/permissoes">
+                        <input type="hidden" name="matricula" value="{{ usuario['matricula'] }}">
+                        {% for permissao in permissoes_disponiveis %}
+                        <label class="perm-label" data-modulo="{{ permissao.split(':')[0] }}">
+                            <input type="checkbox" name="permissoes" value="{{ permissao }}"
+                                   {% if permissao in permissoes_dict.get(usuario['matricula'], []) %}checked{% endif %}>
+                            {{ permissao }}
+                        </label><br>
+                        {% endfor %}
+                        <button type="submit" class="btn-confirmar">Salvar</button>
+                    </form>
+                </td>
+                <td>
+                    <button class="btn-voltar" onclick="window.location.href='/pagina_inicial'">Voltar</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</main>
+
+<script>
+    // Filtra permissões por módulo
+    function filterPermissions() {
+        const modulo = document.getElementById('moduloFilter').value;
+        const labels = document.querySelectorAll('.perm-label');
+        labels.forEach(label => {
+            if (!modulo || label.dataset.modulo === modulo) {
+                label.style.display = 'block';
+            } else {
+                label.style.display = 'none';
+            }
+        });
+    }
+
+    // Busca usuário por matrícula e exibe dados no cabeçalho
+    function searchMatricula() {
+        const searchTerm = document.getElementById('matriculaSearch').value.trim().toLowerCase();
+        const rows = document.querySelectorAll('#usuariosTable tr');
+        let foundUser = null;
+
+        rows.forEach(row => {
+            const matricula = row.dataset.matricula?.toLowerCase();
+            if (!matricula) return;
+
+            if (!searchTerm || matricula.includes(searchTerm)) {
+                row.style.display = '';
+                if (matricula === searchTerm) { // Correspondência exata
+                    foundUser = {
+                        nome: row.querySelector('td:nth-child(2)').textContent,
+                        matricula: row.querySelector('td:nth-child(1)').textContent,
+                        filial: row.querySelector('td:nth-child(3)').textContent
+                    };
+                }
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Atualiza o cabeçalho com os dados do usuário encontrado
+        const userHeader = document.getElementById('userHeader');
+        if (foundUser) {
+            document.getElementById('userName').textContent = foundUser.nome;
+            document.getElementById('userMatricula').textContent = foundUser.matricula;
+            document.getElementById('userFilial').textContent = foundUser.filial;
+            userHeader.style.display = 'block';
+        } else {
+            userHeader.style.display = 'none';
+        }
+    }
+
+    // Limpa filtros e campos
+    function clearFilters() {
+        document.getElementById('matriculaSearch').value = '';
+        document.getElementById('moduloFilter').value = '';
+        const userHeader = document.getElementById('userHeader');
+        userHeader.style.display = 'none';
+
+        const rows = document.querySelectorAll('#usuariosTable tr');
+        const labels = document.querySelectorAll('.perm-label');
+
+        rows.forEach(row => row.style.display = '');
+        labels.forEach(label => label.style.display = 'block');
+    }
+</script>
+</body>
+</html> -->
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Permissões</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 600;
+        }
+
+        .btn-logout {
+            background-color: #e74c3c;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-logout:hover {
+            background-color: #c0392b;
+        }
+
+        main {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .user-header {
+            background-color: #ffffff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            color: #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-header h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .user-header p {
+            margin: 5px 0 0;
+            font-size: 15px;
+            color: #7f8c8d;
+        }
+
+        .filter-section {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-section label {
+            font-weight: 500;
+            font-size: 15px;
+            color: #2c3e50;
+        }
+
+        .filter-section select,
+        .filter-section input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s;
+        }
+
+        .filter-section select:focus,
+        .filter-section input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .btn-buscar,
+        .btn-limpar {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-buscar:hover,
+        .btn-limpar:hover {
+            background-color: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 14px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .permissions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            padding: 10px 0;
+        }
+
+        .perm-module {
+            font-weight: 500;
+            color: #2c3e50;
+            margin-top: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        .perm-label {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .perm-label input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .btn-confirmar,
+        .btn-voltar {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .btn-confirmar {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-confirmar:hover {
+            background-color: #219653;
+        }
+
+        .btn-voltar {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-voltar:hover {
+            background-color: #7f8c8d;
+        }
+
+        @media (max-width: 768px) {
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-section select,
+            .filter-section input,
+            .btn-buscar,
+            .btn-limpar {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            table,
+            th,
+            td {
+                font-size: 12px;
+            }
+
+            .permissions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Gerenciar Permissões</h1>
+        <button class="btn-logout" onclick="window.location.href='/logout'">Sair</button>
+    </header>
+    <main>
+        <!-- Exibe informações do usuário selecionado -->
+        <div id="userHeader" class="user-header" style="display: none;">
+            <div>
+                <h2>Usuário: <span id="userName"></span></h2>
+                <p>Matrícula: <span id="userMatricula"></span>, Filial: <span id="userFilial"></span></p>
+            </div>
+        </div>
+
+        <!-- Filtro por módulo e busca por matrícula -->
+        <div class="filter-section">
+            <label for="moduloFilter">Filtrar por Módulo:</label>
+            <select id="moduloFilter" onchange="filterPermissions()">
+                <option value="">Todos os Módulos</option>
+                <option value="autenticacao">Autenticação</option>
+                <option value="estoque">Estoque</option>
+                <option value="ajustes">Ajustes</option>
+                <option value="relatorios">Relatórios</option>
+                <option value="gestao_de_estoque">Gestão de Estoque</option>
+                <option value="rh">RH</option>
+                <option value="solicitacoes">Solicitações</option>
+                <option value="logistica">Logística</option>
+                <option value="monitoramento">Monitoramento</option>
+                <option value="admin">Admin</option>
+            </select>
+            <input type="text" id="matriculaSearch" placeholder="Buscar por Matrícula" onkeyup="searchMatricula()">
+            <button class="btn-buscar" onclick="searchMatricula()">Buscar</button>
+            <button class="btn-limpar" onclick="clearFilters()">Limpar</button>
+        </div>
+
+        <!-- Tabela de usuários e permissões -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Matrícula</th>
+                    <th>Nome</th>
+                    <th>Filial</th>
+                    <th>Permissões</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="usuariosTable">
+                {% for usuario in usuarios %}
+                <tr data-matricula="{{ usuario['matricula'] }}">
+                    <td>{{ usuario['matricula'] }}</td>
+                    <td>{{ usuario['nome'] }}</td>
+                    <td>{{ usuario['filial'] }}</td>
+                    <td>
+                        <form method="POST" action="/permissoes">
+                            <input type="hidden" name="matricula" value="{{ usuario['matricula'] }}">
+                            {% for permissao in permissoes_disponiveis %}
+                            {% set modulo = permissao.split(':')[0] %}
+                            {% if loop.index == 1 or permissoes_disponiveis[loop.index-2].split(':')[0] != modulo %}
+                            <div class="perm-module">{{ modulo | capitalize }}</div>
+                            {% endif %}
+                            <div class="perm-label" data-modulo="{{ modulo }}">
+                                <input type="checkbox" name="permissoes" value="{{ permissao }}" {% if permissao in
+                                    permissoes_dict.get(usuario['matricula'], []) %}checked{% endif %}>
+                                {{ permissao.split(':')[1] | replace('_', ' ') | capitalize }}
+                            </div>
+                            {% endfor %}
+                            <button type="submit" class="btn-confirmar">Salvar</button>
+                        </form>
+                    </td>
+                    <td>
+                        <button class="btn-voltar" onclick="window.location.href='/pagina_inicial'">Voltar</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+
+    <script>
+        // Filtra permissões por módulo
+        function filterPermissions() {
+            const modulo = document.getElementById('moduloFilter').value;
+            const labels = document.querySelectorAll('.perm-label');
+            labels.forEach(label => {
+                if (!modulo || label.dataset.modulo === modulo) {
+                    label.style.display = 'flex';
+                } else {
+                    label.style.display = 'none';
+                }
+            });
+            const modules = document.querySelectorAll('.perm-module');
+            modules.forEach(module => {
+                if (!modulo || module.textContent.toLowerCase() === modulo) {
+                    module.style.display = 'block';
+                } else {
+                    module.style.display = 'none';
+                }
+            });
+        }
+
+        // Busca usuário por matrícula e exibe dados no cabeçalho
+        function searchMatricula() {
+            const searchTerm = document.getElementById('matriculaSearch').value.trim().toLowerCase();
+            const rows = document.querySelectorAll('#usuariosTable tr');
+            let foundUser = null;
+
+            rows.forEach(row => {
+                const matricula = row.dataset.matricula?.toLowerCase();
+                if (!matricula) return;
+
+                if (!searchTerm || matricula.includes(searchTerm)) {
+                    row.style.display = '';
+                    if (matricula === searchTerm) { // Correspondência exata
+                        foundUser = {
+                            nome: row.querySelector('td:nth-child(2)').textContent,
+                            matricula: row.querySelector('td:nth-child(1)').textContent,
+                            filial: row.querySelector('td:nth-child(3)').textContent
+                        };
+                    }
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Atualiza o cabeçalho com os dados do usuário encontrado
+            const userHeader = document.getElementById('userHeader');
+            if (foundUser) {
+                document.getElementById('userName').textContent = foundUser.nome;
+                document.getElementById('userMatricula').textContent = foundUser.matricula;
+                document.getElementById('userFilial').textContent = foundUser.filial;
+                userHeader.style.display = 'flex';
+            } else {
+                userHeader.style.display = 'none';
+            }
+        }
+
+        // Limpa filtros e campos
+        function clearFilters() {
+            document.getElementById('matriculaSearch').value = '';
+            document.getElementById('moduloFilter').value = '';
+            const userHeader = document.getElementById('userHeader');
+            userHeader.style.display = 'none';
+
+            const rows = document.querySelectorAll('#usuariosTable tr');
+            const labels = document.querySelectorAll('.perm-label');
+            const modules = document.querySelectorAll('.perm-module');
+
+            rows.forEach(row => row.style.display = '');
+            labels.forEach(label => label.style.display = 'flex');
+            modules.forEach(module => module.style.display = 'block');
+        }
+    </script>
+</body>
+
+</html>

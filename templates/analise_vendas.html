@@ -1,0 +1,2393 @@
+<!-- <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Análise de Vendas</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        /* --- Variáveis CSS para Cores e Fontes --- */
+        :root {
+            --bg-primary: #020617; /* Fundo principal */
+            --bg-secondary: #0f172a; /* Fundo de elementos secundários (inputs, botões rápidos) */
+            --bg-card: rgba(15, 23, 42, 0.6); /* Fundo dos cards com transparência */
+            --border-color: rgba(56, 189, 248, 0.2); /* Cor da borda para elementos */
+            --glow-color: rgba(56, 189, 248, 0.1); /* Efeito de brilho */
+            --text-primary: #e2e8f0; /* Cor principal do texto */
+            --text-secondary: #94a3b8; /* Cor secundária do texto (títulos de card, labels) */
+            --accent-cyan: #0ea5e9; /* Ciano de destaque */
+            --accent-magenta: #d946ef; /* Magenta de destaque */
+            --accent-green: #22c55e; /* Verde para positivo */
+            --accent-red: #ef4444; /* Vermelho para negativo */
+            --font-mono: 'Roboto Mono', monospace;
+            --font-sans: 'Inter', sans-serif;
+        }
+
+        /* --- Estilos Gerais --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: var(--bg-primary);
+            font-family: var(--font-sans);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden; /* Evita rolagem horizontal */
+        }
+
+        /* --- Header Principal da Página --- */
+        .header {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+        .header h1 {
+            font-family: var(--font-mono);
+            font-size: 24px;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 5px var(--accent-cyan);
+            flex-shrink: 0;
+        }
+        .header-buttons {
+            display: flex;
+            gap: 10px; /* Espaço entre os botões */
+            align-items: center;
+        }
+
+        /* --- Container Principal do Dashboard --- */
+        .container {
+            margin-top: 64px; /* Compensar altura do header fixo */
+            padding: 20px;
+            max-width: 1800px; /* Largura máxima do dashboard */
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+            z-index: 1; /* Para estar acima do loader/fundo */
+        }
+
+        /* --- Header de Filtros do Dashboard --- */
+        .dashboard-filters-header {
+            display: flex;
+            flex-wrap: wrap; /* Permite quebrar em várias linhas */
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+            gap: 15px; /* Espaçamento entre os grupos de filtros */
+        }
+        .dashboard-filters-header h2 {
+            font-family: var(--font-mono);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 5px var(--accent-cyan);
+            flex-shrink: 0; /* Não encolhe */
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap; /* Permite quebrar campos individuais */
+        }
+        .filter-group.period-buttons {
+            border-right: 1px solid var(--border-color);
+            padding-right: 15px;
+        }
+        .filter-group label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        select, input[type="date"], input[type="text"] {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 7px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            color-scheme: dark; /* Garante que o calendário/dropdown seja escuro */
+            min-width: 120px; /* Largura mínima para inputs */
+            max-width: 200px; /* Largura máxima para inputs */
+        }
+        select:focus, input[type="date"]:focus, input[type="text"]:focus, button:focus {
+            outline: 2px solid var(--accent-cyan);
+            border-color: var(--accent-cyan);
+        }
+
+        /* --- Botões de Ação --- */
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            font-weight: 500;
+        }
+        .btn.primary { background-color: var(--accent-cyan); }
+        .btn.primary:hover { background-color: #0d8cc0; box-shadow: 0 0 8px var(--accent-cyan); }
+        .btn.secondary { background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-secondary); }
+        .btn.secondary:hover { background-color: var(--accent-cyan); color: white; border-color: var(--accent-cyan); }
+        .btn.success { background-color: var(--accent-green); }
+        .btn.success:hover { background-color: #1a9c4b; }
+        .btn.danger { background-color: var(--accent-red); }
+        .btn.danger:hover { background-color: #c0392b; }
+
+        /* --- Grid de Cards do Dashboard --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr); /* 12 colunas para layout flexível */
+            gap: 20px; /* Espaçamento entre os cards */
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            box-shadow: 0 0 30px var(--glow-color);
+            transition: all 0.3s ease;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 200px; /* Altura mínima para cards em geral */
+        }
+        .card:hover {
+            border-color: rgba(56, 189, 248, 0.5);
+            transform: translateY(-5px);
+        }
+
+        /* --- Tamanhos de Cards no Grid --- */
+        .kpi-card { grid-column: span 3; height: 180px; } /* KPIs menores */
+        .chart-card { grid-column: span 6; height: 400px; } /* Gráficos maiores */
+        .list-kpi-card { grid-column: span 3; height: 400px; } /* <--- AJUSTADO: Cards de lista rolável agora com 400px de altura */
+        /* REMOVIDO: .table-card { grid-column: span 12; min-height: 300px; } */
+
+        /* --- Estilos Internos dos Cards --- */
+        .card-title {
+            font-family: var(--font-mono);
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        /* Estilo para KPIs (Faturamento, Lucro, etc.) */
+        .kpi-value {
+            font-size: 38px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.1;
+            word-break: break-all;
+            overflow-wrap: break-word;
+            white-space: normal;
+            flex-grow: 1; /* Ocupa o espaço restante */
+            display: flex;
+            align-items: center; /* Centraliza verticalmente o valor */
+            justify-content: center; /* Centraliza horizontalmente */
+        }
+        .kpi-meta { /* Para texto como "Atualizado às..." */
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            margin-top: 8px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 0;
+            justify-content: center; /* Centraliza horizontalmente */
+        }
+        .kpi-trend-comparison { /* Para comparação como "+R$ X (Y%)" */
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 5px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .kpi-trend-comparison.positive { color: var(--accent-green); }
+        .kpi-trend-comparison.negative { color: var(--accent-red); }
+
+        /* Estilos para Gráficos */
+        .chart-container {
+            position: relative;
+            flex-grow: 1;
+            min-height: 0; /* Essencial para flex-grow com canvas */
+        }
+
+        /* Estilos para Listas Roláveis dentro de Cards (ex: Top Produtos/Grupos) */
+        .scrollable-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 8px; /* Espaço para a barra de rolagem */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .scrollable-list::-webkit-scrollbar { width: 6px; }
+        .scrollable-list::-webkit-scrollbar-track { background: transparent; }
+        .scrollable-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Ajustado para alinhar verticalmente */
+            padding-bottom: 5px;
+            border-bottom: 1px dashed var(--border-color);
+            font-size: 15px;
+        }
+        .list-item:last-child { border-bottom: none; }
+        .list-item-name {
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+            padding-right: 10px;
+        }
+        .list-item-value {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--accent-cyan);
+            flex-shrink: 0; /* Não encolhe o valor */
+        }
+        .list-item-secondary { /* Para porcentagem ou info extra */
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: right;
+            margin-top: 2px;
+        }
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background-color: var(--bg-secondary);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-magenta), var(--accent-cyan));
+            border-radius: 3px;
+            transition: width 0.5s ease-out;
+        }
+
+        /* --- Estilos de Tabela (REMOVIDOS/AJUSTADOS) --- */
+        .table-toolbar { /* Mantido apenas para layout se houver botões futuros, mas vazio no HTML */
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end; /* Ajustado para alinhar qualquer botão à direita */
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        /* As classes .data-table-container, .data-table, etc. não são mais usadas */
+
+        /* --- Loader --- */
+        #loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(2, 6, 23, 0.9); /* Usar bg-primary com opacidade */
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 9999;
+        }
+        .loader-bars { height: 50px; display: flex; align-items: center; gap: 6px; }
+        .loader-bars div { width: 8px; height: 100%; background-color: var(--accent-cyan); animation: stretch 1.2s infinite ease-in-out; }
+        .loader-bars div:nth-child(2) { animation-delay: -1.1s; }
+        .loader-bars div:nth-child(3) { animation-delay: -1.0s; }
+        .loader-bars div:nth-child(4) { animation-delay: -0.9s; }
+        .loader-text { color: var(--text-primary); margin-top: 20px; font-size: 18px; font-family: var(--font-mono); }
+        @keyframes stretch { 0%, 40%, 100% { transform: scaleY(0.4); } 20% { transform: scaleY(1.0); } }
+
+        /* --- Mensagens de Erro --- */
+        .error-message {
+            color: var(--accent-red);
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .no-data-message {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 20px;
+        }
+
+        /* --- Responsividade --- */
+        @media (max-width: 1400px) {
+            .dashboard-filters-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .dashboard-filters-header h2 {
+                margin-bottom: 15px;
+            }
+            .filter-group.period-buttons {
+                border-right: none;
+                padding-right: 0;
+            }
+            .filter-group {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .kpi-card, .chart-card, .list-kpi-card { grid-column: span 6; }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                padding: 10px 15px;
+                height: auto;
+            }
+            .header h1 { margin-bottom: 10px; }
+            .header-buttons { margin-top: 5px; }
+
+            .dashboard-filters-header {
+                padding: 15px;
+            }
+            .dashboard-filters-header h2 { font-size: 20px; }
+            .filter-group {
+                gap: 8px;
+            }
+            select, input[type="date"], input[type="text"] {
+                width: 100%;
+                max-width: none;
+                min-width: unset;
+            }
+            .btn {
+                width: 100%;
+            }
+            .kpi-card, .chart-card, .list-kpi-card {
+                grid-column: span 12;
+            }
+            .kpi-value { font-size: 30px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="loader-overlay">
+        <div class="loader-bars"><div></div><div></div><div></div><div></div></div>
+        <p class="loader-text">Calculando e Carregando Dados...</p>
+    </div>
+
+    <div class="header">
+        <h1>Dashboard de Vendas</h1>
+        <div class="header-buttons">
+            <button class="btn danger" onclick="window.location.href='/logout'">Sair</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <header class="dashboard-filters-header">
+            <h2>Filtros e Controles</h2>
+            <div class="filter-group period-buttons">
+                <button class="btn secondary" onclick="setPeriod('last7days')">Últimos 7 Dias</button>
+                <button class="btn secondary" onclick="setPeriod('thisMonth')">Este Mês</button>
+                <button class="btn secondary" onclick="setPeriod('lastMonth')">Mês Passado</button>
+            </div>
+            <div class="filter-group">
+                <label for="loja">Loja:</label>
+                <select id="loja">
+                    <option value="">Todas as Lojas</option>
+                    </select>
+            </div>
+            <div class="filter-group">
+                <label for="startDate">De:</label>
+                <input type="date" id="startDate">
+                <label for="endDate">Até:</label>
+                <input type="date" id="endDate">
+            </div>
+            <button class="btn primary" id="fetchDataButton">Aplicar Filtros</button>
+        </header>
+        
+        <main class="dashboard-grid">
+            <div class="card kpi-card">
+                <h3 class="card-title">Faturamento (Período)</h3>
+                <p class="kpi-value" id="kpi-faturamento-valor">R$ 0,00</p>
+                <div class="kpi-meta" id="kpi-faturamento-meta"><i class="fas fa-check-circle"></i> Atualizado</div>
+            </div>
+            <div class="card kpi-card">
+                <h3 class="card-title">Lucro (Período)</h3>
+                <p class="kpi-value" id="kpi-lucro-valor">R$ 0,00</p>
+                <div class="kpi-meta" id="kpi-lucro-meta"></div>
+            </div>
+            <div class="card kpi-card">
+                <h3 class="card-title">Quantidade Vendida</h3>
+                <p class="kpi-value" id="kpi-quantidade-valor">0</p>
+                <div class="kpi-meta" id="kpi-quantidade-meta"></div>
+            </div>
+            <div class="card kpi-card">
+                <h3 class="card-title">Ticket Médio Geral</h3>
+                <p class="kpi-value" id="kpi-ticket-medio-valor">R$ 0,00</p>
+                <div class="kpi-meta" id="kpi-ticket-medio-meta"></div>
+            </div>
+
+            <div class="card chart-card">
+                <h3 class="card-title">Faturamento por Grupo</h3>
+                <div class="chart-container">
+                    <canvas id="chartFaturamentoGrupo"></canvas>
+                </div>
+                <div id="chartFaturamentoGrupoError" class="error-message"></div>
+            </div>
+
+            <div class="card chart-card">
+                <h3 class="card-title">Faturamento Diário</h3>
+                <div class="chart-container">
+                    <canvas id="chartFaturamentoDiario"></canvas>
+                </div>
+                <div id="chartFaturamentoDiarioError" class="error-message"></div>
+            </div>
+            
+            <div class="card list-kpi-card">
+                <h3 class="card-title">Top 10 Produtos por Faturamento</h3>
+                <div class="scrollable-list" id="top-produtos-faturamento-lista">
+                    <p class="no-data-message">Nenhum produto para exibir.</p>
+                </div>
+            </div>
+
+            <div class="card list-kpi-card">
+                <h3 class="card-title">Top 10 Fornecedores por Faturamento</h3>
+                <div class="scrollable-list" id="top-fornecedores-faturamento-lista">
+                    <p class="no-data-message">Nenhum fornecedor para exibir.</p>
+                </div>
+            </div>
+
+            </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Variáveis globais para instâncias de gráficos
+        let chartFaturamentoGrupo = null;
+        let chartFaturamentoDiario = null;
+        // chartTopProdutosFaturamento e chartTopFornecedoresFaturamento não são mais instâncias de Chart.js aqui
+        // Eles são populados como listas roláveis.
+
+        // Mapeamento de IDs de Loja para Nomes Legíveis (igual ao do backend)
+        const LOJAS_MAP_FRONTEND = {
+            "1": "PONTA NEGRA", "2": "ALECRIM", "7": "SAC - CENTRO VI", "100": "LAGOA NOVA",
+            "121": "NORTE SHOPPING", "122": "PARNAMIRIM", "131": "ZN2", "137": "MACAIBA",
+            "140": "MARIA LACERDA", "141": "IGAPO"
+        };
+
+        // --- Funções de Utilitário ---
+        function formatCurrency(value) {
+            return `R$ ${parseFloat(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function formatNumber(value) {
+            return parseFloat(value || 0).toLocaleString('pt-BR');
+        }
+
+        // --- Funções de Manipulação de Datas ---
+        function getTodayDate() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = (d.getMonth() + 1).toString().padStart(2, '0');
+            const day = d.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function setPeriod(period) {
+            const today = new Date();
+            let startDate, endDate;
+            // Ajuste para lidar com o fuso horário e obter a data correta sem offset
+            today.setMinutes(today.getMinutes() - today.getTimezoneOffset()); 
+
+            endDate = new Date(today); // Data final é hoje
+
+            switch (period) {
+                case 'last7days':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 6);
+                    break;
+                case 'thisMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    break;
+                case 'lastMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0); // Último dia do mês anterior
+                    break;
+                default:
+                    // Caso padrão, pode ser o dia atual ou nenhum, dependendo da necessidade
+                    startDate = new Date(today); 
+            }
+
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+            fetchDashboardData(); // Aciona a busca de dados
+        }
+
+        // --- Função Principal de Busca de Dados ---
+        async function fetchDashboardData() {
+            const id_loja = document.getElementById("loja").value; // 'value' será string vazia para "Todas as Lojas"
+            const data_inicio = document.getElementById("startDate").value;
+            const data_fim = document.getElementById("endDate").value;
+
+            // Validações básicas
+            if (!data_inicio || !data_fim) {
+                alert("Por favor, selecione as datas de início e fim.");
+                return;
+            }
+            if (new Date(data_fim) < new Date(data_inicio)) {
+                alert("A data final deve ser posterior à data inicial.");
+                return;
+            }
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            document.getElementById('fetchDataButton').disabled = true;
+
+            let url = `/api/vendas?data_inicio=${data_inicio}&data_fim=${data_fim}`;
+            if (id_loja) { // Adiciona id_loja apenas se não for a opção "Todas as Lojas"
+                url += `&id_loja=${id_loja}`;
+            }
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Erro na requisição da API: ${response.status} - ${errorText}`);
+                }
+                const data = await response.json();
+                console.log('Dados recebidos da API:', data);
+
+                // Atualiza o Dashboard com os dados recebidos
+                updateKPIs(data.kpis);
+                drawChartFaturamentoGrupo(data.chart_faturamento_grupo);
+                drawChartFaturamentoDiario(data.chart_faturamento_diario);
+                populateTopLists(data.top_produtos_faturamento, data.top_fornecedores_faturamento);
+                // REMOVIDO: populateDataTable(data.tabela_detalhes_vendas);
+
+            } catch (error) {
+                console.error('Erro ao buscar dados do dashboard:', error);
+                alert(`Erro ao carregar dados: ${error.message}. Verifique o console para mais detalhes.`);
+                // Resetar o dashboard para estado de erro
+                resetDashboardData();
+            } finally {
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('fetchDataButton').disabled = false;
+            }
+        }
+
+        // --- Função para Resetar o Dashboard em caso de Erro/Sem Dados ---
+        function resetDashboardData() {
+            // Resetar KPIs
+            document.getElementById('kpi-faturamento-valor').textContent = formatCurrency(0);
+            document.getElementById('kpi-lucro-valor').textContent = formatCurrency(0);
+            document.getElementById('kpi-quantidade-valor').textContent = formatNumber(0);
+            document.getElementById('kpi-ticket-medio-valor').textContent = formatCurrency(0);
+            document.getElementById('kpi-faturamento-meta').innerHTML = `<i class="fas fa-exclamation-circle"></i> Sem dados (${getTodayDate()})`;
+
+            // Destruir instâncias de gráficos para limpar canvas
+            if (chartFaturamentoGrupo) { chartFaturamentoGrupo.destroy(); chartFaturamentoGrupo = null; }
+            if (chartFaturamentoDiario) { chartFaturamentoDiario.destroy(); chartFaturamentoDiario = null; }
+
+            // Limpar mensagens de erro de gráficos
+            document.getElementById('chartFaturamentoGrupoError').textContent = '';
+            document.getElementById('chartFaturamentoDiarioError').textContent = '';
+
+            // Limpar listas roláveis
+            document.getElementById('top-produtos-faturamento-lista').innerHTML = '<p class="no-data-message">Nenhum produto para exibir.</p>';
+            document.getElementById('top-fornecedores-faturamento-lista').innerHTML = '<p class="no-data-message">Nenhum fornecedor para exibir.</p>';
+            
+            // REMOVIDO: Lógica para limpar tabela de detalhes
+            // const tbody = document.querySelector('#vendasDataTable tbody');
+            // tbody.innerHTML = '<tr><td colspan="7" class="no-data-message">Nenhum dado encontrado para os filtros.</td></tr>';
+        }
+
+        // --- Atualização de KPIs ---
+        function updateKPIs(kpis) {
+            document.getElementById('kpi-faturamento-valor').textContent = formatCurrency(kpis.faturamento || 0);
+            document.getElementById('kpi-lucro-valor').textContent = formatCurrency(kpis.lucro || 0);
+            document.getElementById('kpi-quantidade-valor').textContent = formatNumber(kpis.quantidade_vendida || 0);
+            document.getElementById('kpi-ticket-medio-valor').textContent = formatCurrency(kpis.ticket_medio || 0);
+            
+            const now = new Date();
+            const updateTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            document.getElementById('kpi-faturamento-meta').innerHTML = `<i class="fas fa-check-circle"></i> Atualizado às ${updateTime}`;
+        }
+
+        // --- Desenho de Gráficos ---
+        function drawChartFaturamentoGrupo(chartData) {
+            const ctx = document.getElementById("chartFaturamentoGrupo").getContext("2d");
+            if (chartFaturamentoGrupo) chartFaturamentoGrupo.destroy(); // Destroi instância anterior
+
+            const labels = chartData?.labels || [];
+            const dataValues = chartData?.data || [];
+
+            if (labels.length === 0 || dataValues.every(val => val === 0)) {
+                document.getElementById('chartFaturamentoGrupoError').textContent = "Sem dados para 'Faturamento por Grupo'.";
+                return;
+            } else {
+                 document.getElementById('chartFaturamentoGrupoError').textContent = "";
+            }
+
+            const backgroundColors = labels.map((label, i) => {
+                const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+                return colors[i % colors.length]; // Cicla pelas cores
+            });
+
+            chartFaturamentoGrupo = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Faturamento (R$)',
+                        data: dataValues,
+                        backgroundColor: backgroundColors,
+                        borderColor: 'rgba(15, 23, 42, 0.8)', /* var(--bg-card) mais opaco */
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: 'var(--text-secondary)' } },
+                        title: { display: true, text: 'Faturamento por Grupo', color: 'var(--accent-cyan)', font: { size: 16 } },
+                        tooltip: { callbacks: { label: (context) => `Faturamento: ${formatCurrency(context.raw)}` } }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: 'var(--text-secondary)' },
+                            grid: { color: 'var(--border-color)' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: 'var(--text-secondary)', callback: (value) => formatCurrency(value) },
+                            grid: { color: 'var(--border-color)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function drawChartFaturamentoDiario(chartData) {
+            const ctx = document.getElementById("chartFaturamentoDiario").getContext("2d");
+            if (chartFaturamentoDiario) chartFaturamentoDiario.destroy(); // Destroi instância anterior
+
+            const labels = chartData?.labels || [];
+            const dataValues = chartData?.data || [];
+
+            if (labels.length === 0 || dataValues.every(val => val === 0)) {
+                document.getElementById('chartFaturamentoDiarioError').textContent = "Sem dados para 'Faturamento Diário'.";
+                return;
+            } else {
+                document.getElementById('chartFaturamentoDiarioError').textContent = "";
+            }
+
+            chartFaturamentoDiario = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Faturamento (R$)',
+                        data: dataValues,
+                        backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                        borderColor: 'var(--accent-cyan)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: 'var(--text-secondary)' } },
+                        title: { display: true, text: 'Faturamento Diário', color: 'var(--accent-cyan)', font: { size: 16 } },
+                        tooltip: { callbacks: { label: (context) => `Faturamento: ${formatCurrency(context.raw)}` } }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: 'var(--text-secondary)' },
+                            grid: { color: 'var(--border-color)' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: 'var(--text-secondary)', callback: (value) => formatCurrency(value) },
+                            grid: { color: 'var(--border-color)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // --- População de Listas Roláveis (Top Produtos/Fornecedores) ---
+        function populateTopLists(topProdutos, topFornecedores) {
+            const topProdutosListEl = document.getElementById('top-produtos-faturamento-lista');
+            topProdutosListEl.innerHTML = '';
+            if (topProdutos && topProdutos.length > 0) {
+                topProdutos.forEach(item => {
+                    const listItem = document.createElement('div');
+                    listItem.classList.add('list-item');
+                    listItem.innerHTML = `
+                        <span class="list-item-name" title="${item.nome}">${item.nome}</span>
+                        <span class="list-item-value">${formatCurrency(item.faturamento)}</span>
+                        <div class="progress-bar-container"><div class="progress-bar" style="width: ${item.percentual || 0}%;"></div></div>
+                        <span class="list-item-secondary">${(item.percentual || 0).toFixed(2)}% do total</span>
+                    `;
+                    topProdutosListEl.appendChild(listItem);
+                });
+            } else {
+                topProdutosListEl.innerHTML = '<p class="no-data-message">Nenhum produto para exibir.</p>';
+            }
+
+            const topFornecedoresListEl = document.getElementById('top-fornecedores-faturamento-lista');
+            topFornecedoresListEl.innerHTML = '';
+            if (topFornecedores && topFornecedores.length > 0) {
+                topFornecedores.forEach(item => {
+                    const listItem = document.createElement('div');
+                    listItem.classList.add('list-item');
+                    listItem.innerHTML = `
+                        <span class="list-item-name" title="${item.nome}">${item.nome}</span>
+                        <span class="list-item-value">${formatCurrency(item.faturamento)}</span>
+                        <div class="progress-bar-container"><div class="progress-bar" style="width: ${item.percentual || 0}%;"></div></div>
+                        <span class="list-item-secondary">${(item.percentual || 0).toFixed(2)}% do total</span>
+                    `;
+                    topFornecedoresListEl.appendChild(listItem);
+                });
+            } else {
+                topFornecedoresListEl.innerHTML = '<p class="no-data-message">Nenhum fornecedor para exibir.</p>';
+            }
+        }
+
+        /* REMOVIDO: Funções de Tabela e Exportação (populateDataTable, exportarCSV) */
+        /* function populateDataTable(tableData) { ... } */
+        /* function exportarCSV() { ... } */
+
+        // --- Popula o Dropdown de Lojas no Frontend ---
+        function populateLojaDropdown() {
+            const lojaSelect = document.getElementById('loja');
+            lojaSelect.innerHTML = '<option value="">Todas as Lojas</option>'; // Opção padrão
+            for (const id in LOJAS_MAP_FRONTEND) {
+                if (LOJAS_MAP_FRONTEND.hasOwnProperty(id)) {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = LOJAS_MAP_FRONTEND[id];
+                    lojaSelect.appendChild(option);
+                }
+            }
+        }
+
+        // --- Event Listeners e Inicialização ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const fetchDataButton = document.getElementById('fetchDataButton');
+            fetchDataButton.addEventListener('click', fetchDashboardData);
+
+            document.querySelector('.filter-group.period-buttons').querySelectorAll('.btn.secondary').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const periodMatch = event.target.onclick.toString().match(/setPeriod\('(.+?)'\)/);
+                    if (periodMatch && periodMatch[1]) {
+                        setPeriod(periodMatch[1]);
+                    }
+                });
+            });
+            
+            // Popula o dropdown de lojas ao carregar a página
+            populateLojaDropdown();
+
+            // Nenhuma busca automática de dados ao carregar a página
+            // setPeriod('thisMonth'); 
+        });
+    </script>
+</body>
+</html> -->
+
+
+
+<!-- 
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Análise de Vendas</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+    /* --- Variáveis CSS para Cores e Fontes --- */
+    :root {
+        --bg-primary: #020617; /* Fundo principal */
+        --bg-secondary: #0f172a; /* Fundo de elementos secundários (inputs, botões rápidos) */
+        --bg-card: rgba(15, 23, 42, 0.6); /* Fundo dos cards com transparência */
+        --border-color: rgba(56, 189, 248, 0.2); /* Cor da borda para elementos */
+        --glow-color: rgba(56, 189, 248, 0.1); /* Efeito de brilho */
+        --text-primary: #e2e8f0; /* Cor principal do texto (branco/quase branco) */
+        --text-secondary: #94a3b8; /* Cor secundária do texto (cinza claro) */
+        --accent-cyan: #0ea5e9; /* Ciano de destaque */
+        --accent-magenta: #d946ef; /* Magenta de destaque */
+        --accent-green: #22c55e; /* Verde para positivo */
+        --accent-red: #ef4444; /* Vermelho para negativo */
+        --font-mono: 'Roboto Mono', monospace;
+        --font-sans: 'Inter', sans-serif;
+    }
+
+    /* --- Estilos Gerais --- */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    body {
+        background-color: var(--bg-primary);
+        font-family: var(--font-sans);
+        color: var(--text-primary);
+        line-height: 1.6;
+        overflow-x: hidden; /* Evita rolagem horizontal */
+    }
+
+    /* --- Header Principal da Página --- */
+    .header {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+    }
+    .header h1 {
+        font-family: var(--font-mono);
+        font-size: 24px;
+        color: var(--accent-cyan);
+        text-shadow: 0 0 5px var(--accent-cyan);
+        flex-shrink: 0;
+    }
+    .header-buttons {
+        display: flex;
+        gap: 10px; /* Espaço entre os botões */
+        align-items: center;
+    }
+
+    /* --- Container Principal do Dashboard --- */
+    .container {
+        margin-top: 64px; /* Compensar altura do header fixo */
+        padding: 20px;
+        max-width: 1800px; /* Largura máxima do dashboard */
+        margin-left: auto;
+        margin-right: auto;
+        position: relative;
+        z-index: 1; /* Para estar acima do loader/fundo */
+    }
+
+    /* --- Header de Filtros do Dashboard --- */
+    .dashboard-filters-header {
+        display: flex;
+        flex-wrap: wrap; /* Permite quebrar em várias linhas */
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 25px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        margin-bottom: 20px;
+        gap: 15px; /* Espaçamento entre os grupos de filtros */
+    }
+    .dashboard-filters-header h2 {
+        font-family: var(--font-mono);
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--accent-cyan);
+        text-shadow: 0 0 5px var(--accent-cyan);
+        flex-shrink: 0; /* Não encolhe */
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap; /* Permite quebrar campos individuais */
+    }
+    .filter-group.period-buttons {
+        border-right: 1px solid var(--border-color);
+        padding-right: 15px;
+    }
+    .filter-group label {
+        color: var(--text-secondary);
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    select, input[type="date"], input[type="text"] {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 7px 10px;
+        border-radius: 6px;
+        font-size: 14px;
+        color-scheme: dark; /* Garante que o calendário/dropdown seja escuro */
+        min-width: 120px; /* Largura mínima para inputs */
+        max-width: none; /* Allow responsiveness to control max-width */
+        width: auto; /* Allow elements to take their natural width by default */
+    }
+    select:focus, input[type="date"]:focus, input[type="text"]:focus, button:focus {
+        outline: 2px solid var(--accent-cyan);
+        border-color: var(--accent-cyan);
+    }
+
+    /* --- Botões de Ação --- */
+    .btn {
+        padding: 8px 15px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: white;
+        font-weight: 500;
+    }
+    .btn.primary { background-color: var(--accent-cyan); }
+    .btn.primary:hover { background-color: #0d8cc0; box-shadow: 0 0 8px var(--accent-cyan); }
+    .btn.secondary { background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-secondary); }
+    .btn.secondary:hover { background-color: var(--accent-cyan); color: white; border-color: var(--accent-cyan); }
+    .btn.success { background-color: var(--accent-green); }
+    .btn.success:hover { background-color: #1a9c4b; }
+    .btn.danger { background-color: var(--accent-red); }
+    .btn.danger:hover { background-color: #c0392b; }
+
+    /* --- Grid de Cards do Dashboard --- */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr); /* 12 colunas para layout flexível */
+        gap: 20px; /* Espaçamento entre os cards */
+    }
+
+    .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        padding: 25px;
+        box-shadow: 0 0 30px var(--glow-color);
+        transition: all 0.3s ease;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 200px; /* Altura mínima para cards em general */
+    }
+    .card:hover {
+        border-color: rgba(56, 189, 248, 0.5);
+        transform: translateY(-5px);
+    }
+
+    /* --- Tamanhos de Cards no Grid --- */
+    .kpi-card { grid-column: span 3; height: 180px; } /* KPIs menores */
+    .chart-card { grid-column: span 6; height: 400px; } /* Gráficos maiores */
+    /* ALTERADO: list-kpi-card agora ocupa 6 colunas, igual ao chart-card */
+    .list-kpi-card { grid-column: span 6; height: 400px; } /* Cards de lista rolável agora com 400px de altura e 6 colunas */
+
+    /* --- Estilos Internos dos Cards --- */
+    .card-title {
+        font-family: var(--font-mono);
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 15px;
+        color: var(--text-secondary);
+        flex-shrink: 0;
+    }
+
+    /* Estilo para KPIs (Faturamento, Lucro, etc.) */
+    .kpi-value {
+        font-size: 38px;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.1;
+        word-break: break-all;
+        overflow-wrap: break-word;
+        white-space: normal;
+        flex-grow: 1; /* Ocupa o espaço restante */
+        display: flex;
+        align-items: center; /* Centraliza verticalmente o valor */
+        justify-content: center; /* Centraliza horizontalmente */
+    }
+    .kpi-meta { /* Para texto como "Atualizado às..." */
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 13px;
+        margin-top: 8px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-shrink: 0;
+        justify-content: center; /* Centraliza horizontalmente */
+    }
+    .kpi-trend-comparison { /* Para comparação como "+R$ X (Y%)" */
+        font-size: 16px;
+        font-weight: 600;
+        margin-top: 5px;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .kpi-trend-comparison.positive { color: var(--accent-green); }
+    .kpi-trend-comparison.negative { color: var(--accent-red); }
+
+    /* Estilos para Gráficos */
+    .chart-container {
+        position: relative;
+        flex-grow: 1;
+        min-height: 0; /* Essencial para flex-grow com canvas */
+    }
+
+    /* Estilos para Listas Roláveis dentro de Cards (ex: Top Produtos/Grupos) */
+    .scrollable-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-right: 8px; /* Espaço para a barra de rolagem */
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .scrollable-list::-webkit-scrollbar { width: 6px; }
+    .scrollable-list::-webkit-scrollbar-track { background: transparent; }
+    .scrollable-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+    .list-item {
+        display: flex;
+        flex-wrap: wrap; /* Permite quebrar linha para o percentual/barra */
+        justify-content: space-between;
+        align-items: center; /* Alinha verticalmente nome e valor */
+        padding-bottom: 5px;
+        border-bottom: 1px dashed var(--border-color);
+        font-size: 15px;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .list-item-name {
+        color: var(--text-primary); /* <--- NOME DO ITEM EM BRANCO */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-grow: 1;
+        padding-right: 10px;
+        font-weight: 500; /* Um pouco mais de destaque para o nome */
+    }
+    .list-item-value {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--accent-cyan); /* Valor em ciano de destaque */
+        flex-shrink: 0; /* Não encolhe o valor */
+    }
+    .list-item-secondary { /* <--- TEXTO DO PERCENTUAL EM CINZA CLARO */
+        font-size: 12px;
+        color: var(--text-secondary); /* Mantido text-secondary para um contraste suave */
+        text-align: right;
+        width: 100%; /* <--- Ocupa a largura total na próxima linha */
+        margin-top: 2px; /* Espaço acima do percentual */
+        flex-shrink: 0;
+    }
+    .progress-bar-container {
+        width: 100%; /* <--- Ocupa a largura total na próxima linha */
+        height: 4px; /* <--- DIMINUÍDO A ALTURA DA BARRA DE PROGRESSO */
+        background-color: var(--bg-secondary);
+        border-radius: 2px; /* Ajuste o border-radius com a altura */
+        overflow: hidden;
+        margin-top: 2px; /* <--- Diminuído a margem superior da barra */
+    }
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent-magenta), var(--accent-cyan));
+        border-radius: 2px; /* Ajuste o border-radius com a altura */
+        transition: width 0.5s ease-out;
+    }
+
+    /* --- Estilos de Tabela (REMOVIDOS) --- */
+    .table-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-bottom: 15px;
+        gap: 10px;
+    }
+
+    /* --- Loader --- */
+    #loader-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(2, 6, 23, 0.9);
+        display: none; flex-direction: column; justify-content: center;
+        align-items: center; z-index: 9999;
+    }
+    .loader-bars { height: 50px; display: flex; align-items: center; gap: 6px; }
+    .loader-bars div { width: 8px; height: 100%; background-color: var(--accent-cyan); animation: stretch 1.2s infinite ease-in-out; }
+    .loader-bars div:nth-child(2) { animation-delay: -1.1s; }
+    .loader-bars div:nth-child(3) { animation-delay: -1.0s; }
+    .loader-bars div:nth-child(4) { animation-delay: -0.9s; }
+    .loader-text { color: var(--text-primary); margin-top: 20px; font-size: 18px; font-family: var(--font-mono); }
+    @keyframes stretch { 0%, 40%, 100% { transform: scaleY(0.4); } 20% { transform: scaleY(1.0); } }
+
+    /* --- Mensagens de Erro --- */
+    .error-message {
+        color: var(--accent-red);
+        font-size: 14px;
+        text-align: center;
+        margin-top: 10px;
+    }
+    .no-data-message {
+        text-align: center;
+        color: var(--text-secondary);
+        padding: 20px;
+    }
+
+    /* --- Responsividade --- */
+    @media (max-width: 1400px) {
+        .dashboard-filters-header {
+            flex-direction: column; /* Stacks filter groups vertically */
+            align-items: center; /* Centers items horizontally within the column */
+            text-align: center;
+            padding: 15px; /* Adjust padding for smaller screens */
+            gap: 15px; /* Keep consistent gap between rows */
+        }
+        .dashboard-filters-header h2 {
+            margin-bottom: 10px; /* Reduced margin */
+        }
+        .filter-group {
+            width: 100%; /* Ensure filter groups take full width */
+            flex-direction: row; /* Keep elements in row within group by default */
+            flex-wrap: wrap; /* Allow wrapping within group */
+            justify-content: center; /* Center items within each filter group */
+            gap: 10px; /* Adjust gap within groups */
+        }
+        .filter-group.period-buttons {
+            border-right: none;
+            padding-right: 0;
+            margin-bottom: 0; /* No extra margin here */
+        }
+
+        /* Specific styles for date inputs and select within filter groups */
+        .filter-group label {
+            flex-shrink: 0; /* Prevent labels from shrinking */
+            margin-right: 0; /* Remove specific right margin */
+            white-space: nowrap; /* Prevent labels from wrapping */
+        }
+
+        select, input[type="date"], input[type="text"] {
+            /* Override general width/max-width for this breakpoint */
+            width: auto; /* Allow natural width */
+            max-width: 160px; /* Constrain max width for better appearance */
+            flex-grow: 1; /* Allow them to grow if space permits, but max-width limits */
+        }
+
+        /* Adjust date input group to ensure 'De:' and 'Até:' are on one line */
+        .filter-group:last-of-type { /* This targets the date inputs group specifically */
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap; /* Allow wrapping if space is extremely tight */
+            padding-top: 5px; /* Add a little space from the above group */
+        }
+
+        .dashboard-filters-header .btn.primary {
+            width: 100%; /* Make the button span full width */
+            max-width: 280px; /* Give it a reasonable max-width */
+            margin-top: 15px; /* Add some space above the button */
+        }
+    }
+
+    @media (max-width: 1200px) {
+        /* ALTERAÇÃO: Todos os cards de KPI (kpi-card, chart-card, list-kpi-card) ocupam 6 colunas */
+        .kpi-card, .chart-card, .list-kpi-card { grid-column: span 6; }
+    }
+
+    @media (max-width: 768px) {
+        /* ALTERAÇÃO: Todos os cards ocupam 12 colunas em telas muito pequenas */
+        .kpi-card, .chart-card, .list-kpi-card {
+            grid-column: span 12;
+        }
+        .header {
+            flex-direction: column;
+            padding: 10px 15px;
+            height: auto;
+        }
+        .header h1 { margin-bottom: 10px; }
+        .header-buttons { margin-top: 5px; }
+
+        .dashboard-filters-header {
+            padding: 15px;
+        }
+        .dashboard-filters-header h2 { font-size: 20px; }
+        .filter-group {
+            gap: 8px;
+        }
+        /* On very small mobile screens, inputs should always take full width */
+        select, input[type="date"], input[type="text"] {
+            width: 100%;
+            max-width: none; /* Remove any max-width constraints */
+            min-width: unset; /* Remove min-width constraint */
+        }
+        .btn {
+            width: 100%;
+        }
+        .kpi-value { font-size: 30px; }
+    }
+</style>
+</head>
+<body>
+    <div id="loader-overlay">
+        <div class="loader-bars"><div></div><div></div><div></div><div></div></div>
+        <p class="loader-text">Calculando e Carregando Dados...</p>
+    </div>
+
+    <div class="header">
+        <h1>Dashboard de Vendas</h1>
+        <div class="header-buttons">
+            <button class="btn danger" onclick="window.location.href='/logout'">Sair</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <header class="dashboard-filters-header">
+            <h2>Filtros e Controles</h2>
+            <div class="filter-group period-buttons">
+                <button class="btn secondary" onclick="setPeriod('last7days')">Últimos 7 Dias</button>
+                <button class="btn secondary" onclick="setPeriod('thisMonth')">Este Mês</button>
+                <button class="btn secondary" onclick="setPeriod('lastMonth')">Mês Passado</button>
+            </div>
+            <div class="filter-group">
+                <label for="loja">Loja:</label>
+                <select id="loja">
+                    <option value="">Todas as Lojas</option>
+                    </select>
+            </div>
+            <div class="filter-group">
+                <label for="startDate">De:</label>
+                <input type="date" id="startDate">
+                <label for="endDate">Até:</label>
+                <input type="date" id="endDate">
+            </div>
+            <button class="btn primary" id="fetchDataButton">Aplicar Filtros</button>
+        </header>
+        
+        <main class="dashboard-grid">
+            <div class="card kpi-card">
+                <h3 class="card-title">Faturamento (Período)</h3>
+                <p class="kpi-value" id="kpi-faturamento-valor">R$ 0,00</p>
+                <div class="kpi-meta" id="kpi-faturamento-meta"><i class="fas fa-check-circle"></i> Atualizado</div>
+            </div>
+            <div class="card kpi-card">
+                <h3 class="card-title">Lucro (Período)</h3>
+                <p class="kpi-value" id="kpi-lucro-valor">R$ 0,00</p>
+                <div class="kpi-meta" id="kpi-lucro-meta"></div>
+            </div>
+            <div class="card kpi-card">
+                <h3 class="card-title">Quantidade Vendida</h3>
+                <p class="kpi-value" id="kpi-quantidade-valor">0</p>
+                <div class="kpi-meta" id="kpi-quantidade-meta"></div>
+            </div>
+            <div class="card kpi-card">
+                <h3 class="card-title">Ticket Médio Geral</h3>
+                <p class="kpi-value" id="kpi-ticket-medio-valor">R$ 0,00</p>
+                <div class="kpi-meta" id="kpi-ticket-medio-meta"></div>
+            </div>
+
+            <div class="card chart-card">
+                <h3 class="card-title">Faturamento por Grupo</h3>
+                <div class="chart-container">
+                    <canvas id="chartFaturamentoGrupo"></canvas>
+                </div>
+                <div id="chartFaturamentoGrupoError" class="error-message"></div>
+            </div>
+
+            <div class="card chart-card">
+                <h3 class="card-title">Faturamento Diário</h3>
+                <div class="chart-container">
+                    <canvas id="chartFaturamentoDiario"></canvas>
+                </div>
+                <div id="chartFaturamentoDiarioError" class="error-message"></div>
+            </div>
+            
+            <div class="card list-kpi-card">
+                <h3 class="card-title">Top 10 Produtos por Faturamento</h3>
+                <div class="scrollable-list" id="top-produtos-faturamento-lista">
+                    <p class="no-data-message">Nenhum produto para exibir.</p>
+                </div>
+            </div>
+
+            <div class="card list-kpi-card">
+                <h3 class="card-title">Top 10 Fornecedores por Faturamento</h3>
+                <div class="scrollable-list" id="top-fornecedores-faturamento-lista">
+                    <p class="no-data-message">Nenhum fornecedor para exibir.</p>
+                </div>
+            </div>
+
+            </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Variáveis globais para instâncias de gráficos
+        let chartFaturamentoGrupo = null;
+        let chartFaturamentoDiario = null;
+        // chartTopProdutosFaturamento e chartTopFornecedoresFaturamento não são mais instâncias de Chart.js aqui
+        // Eles são populados como listas roláveis.
+
+        // Mapeamento de IDs de Loja para Nomes Legíveis (igual ao do backend)
+        // ESTE MAPA É USADO PARA PREENCHER O DROPDOWN 'Loja'
+        const LOJAS_MAP_FRONTEND = {
+            "1": "PONTA NEGRA", "2": "ALECRIM", "7": "SAC - CENTRO VI", "100": "LAGOA NOVA",
+            "121": "NORTE SHOPPING", "122": "PARNAMIRIM", "131": "ZN2", "137": "MACAIBA",
+            "140": "MARIA LACERDA", "141": "IGAPO"
+        };
+
+        // --- Funções de Utilitário ---
+        function formatCurrency(value) {
+            return `R$ ${parseFloat(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function formatNumber(value) {
+            return parseFloat(value || 0).toLocaleString('pt-BR');
+        }
+
+        // --- Funções de Manipulação de Datas ---
+        function getTodayDate() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = (d.getMonth() + 1).toString().padStart(2, '0');
+            const day = d.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function setPeriod(period) {
+            const today = new Date();
+            let startDate, endDate;
+            // Ajuste para lidar com o fuso horário e obter a data correta sem offset
+            today.setMinutes(today.getMinutes() - today.getTimezoneOffset()); 
+
+            endDate = new Date(today); // Data final é hoje
+
+            switch (period) {
+                case 'last7days':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 6);
+                    break;
+                case 'thisMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    break;
+                case 'lastMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0); // Último dia do mês anterior
+                    break;
+                default:
+                    // Caso padrão, pode ser o dia atual ou nenhum, dependendo da necessidade
+                    startDate = new Date(today); 
+            }
+
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+            fetchDashboardData(); // Aciona a busca de dados
+        }
+
+        // --- Função Principal de Busca de Dados ---
+        async function fetchDashboardData() {
+            const id_loja = document.getElementById("loja").value; // 'value' será string vazia para "Todas as Lojas"
+            const data_inicio = document.getElementById("startDate").value;
+            const data_fim = document.getElementById("endDate").value;
+
+            // Validações básicas
+            if (!data_inicio || !data_fim) {
+                alert("Por favor, selecione as datas de início e fim.");
+                return;
+            }
+            if (new Date(data_fim) < new Date(data_inicio)) {
+                alert("A data final deve ser posterior à data inicial.");
+                return;
+            }
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            document.getElementById('fetchDataButton').disabled = true;
+
+            let url = `/api/vendas?data_inicio=${data_inicio}&data_fim=${data_fim}`;
+            if (id_loja) { // Adiciona id_loja apenas se não for a opção "Todas as Lojas"
+                url += `&id_loja=${id_loja}`;
+            }
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Erro na requisição da API: ${response.status} - ${errorText}`);
+                }
+                const data = await response.json();
+                console.log('Dados recebidos da API:', data);
+
+                // Atualiza o Dashboard com os dados recebidos
+                updateKPIs(data.kpis);
+                drawChartFaturamentoGrupo(data.chart_faturamento_grupo);
+                drawChartFaturamentoDiario(data.chart_faturamento_diario);
+                populateTopLists(data.top_produtos_faturamento, data.top_fornecedores_faturamento);
+
+            } catch (error) {
+                console.error('Erro ao buscar dados do dashboard:', error);
+                alert(`Erro ao carregar dados: ${error.message}. Verifique o console para mais detalhes.`);
+                // Resetar o dashboard para estado de erro
+                resetDashboardData();
+            } finally {
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('fetchDataButton').disabled = false;
+            }
+        }
+
+        // --- Função para Resetar o Dashboard em caso de Erro/Sem Dados ---
+        function resetDashboardData() {
+            // Resetar KPIs
+            document.getElementById('kpi-faturamento-valor').textContent = formatCurrency(0);
+            document.getElementById('kpi-lucro-valor').textContent = formatCurrency(0);
+            document.getElementById('kpi-quantidade-valor').textContent = formatNumber(0);
+            document.getElementById('kpi-ticket-medio-valor').textContent = formatCurrency(0);
+            document.getElementById('kpi-faturamento-meta').innerHTML = `<i class="fas fa-exclamation-circle"></i> Sem dados (${getTodayDate()})`;
+
+            // Destruir instâncias de gráficos para limpar canvas
+            if (chartFaturamentoGrupo) { chartFaturamentoGrupo.destroy(); chartFaturamentoGrupo = null; }
+            if (chartFaturamentoDiario) { chartFaturamentoDiario.destroy(); chartFaturamentoDiario = null; }
+
+            // Limpar mensagens de erro de gráficos
+            document.getElementById('chartFaturamentoGrupoError').textContent = '';
+            document.getElementById('chartFaturamentoDiarioError').textContent = '';
+
+            // Limpar listas roláveis
+            document.getElementById('top-produtos-faturamento-lista').innerHTML = '<p class="no-data-message">Nenhum produto para exibir.</p>';
+            document.getElementById('top-fornecedores-faturamento-lista').innerHTML = '<p class="no-data-message">Nenhum fornecedor para exibir.</p>';
+        }
+
+        // --- Atualização de KPIs ---
+        function updateKPIs(kpis) {
+            document.getElementById('kpi-faturamento-valor').textContent = formatCurrency(kpis.faturamento || 0);
+            document.getElementById('kpi-lucro-valor').textContent = formatCurrency(kpis.lucro || 0);
+            document.getElementById('kpi-quantidade-valor').textContent = formatNumber(kpis.quantidade_vendida || 0);
+            document.getElementById('kpi-ticket-medio-valor').textContent = formatCurrency(kpis.ticket_medio || 0);
+            
+            const now = new Date();
+            const updateTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            document.getElementById('kpi-faturamento-meta').innerHTML = `<i class="fas fa-check-circle"></i> Atualizado às ${updateTime}`;
+        }
+
+        // --- Desenho de Gráficos ---
+        function drawChartFaturamentoGrupo(chartData) {
+            const ctx = document.getElementById("chartFaturamentoGrupo").getContext("2d");
+            if (chartFaturamentoGrupo) chartFaturamentoGrupo.destroy(); // Destroi instância anterior
+
+            const labels = chartData?.labels || [];
+            const dataValues = chartData?.data || [];
+
+            if (labels.length === 0 || dataValues.every(val => val === 0)) {
+                document.getElementById('chartFaturamentoGrupoError').textContent = "Sem dados para 'Faturamento por Grupo'.";
+                return;
+            } else {
+                 document.getElementById('chartFaturamentoGrupoError').textContent = "";
+            }
+
+            const backgroundColors = labels.map((label, i) => {
+                const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+                return colors[i % colors.length]; // Cicla pelas cores
+            });
+
+            chartFaturamentoGrupo = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Faturamento (R$)',
+                        data: dataValues,
+                        backgroundColor: backgroundColors,
+                        borderColor: 'rgba(15, 23, 42, 0.8)', /* var(--bg-card) mais opaco */
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: 'var(--text-secondary)' } },
+                        title: { display: true, text: 'Faturamento por Grupo', color: 'white', font: { size: 16 } }, /* Título branco */
+                        tooltip: { callbacks: { label: (context) => `Faturamento: ${formatCurrency(context.raw)}` } }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' }, /* Ticks do eixo X branco */
+                            grid: { color: 'var(--border-color)' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: 'white', callback: (value) => formatCurrency(value) }, /* Ticks do eixo Y branco */
+                            grid: { color: 'var(--border-color)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function drawChartFaturamentoDiario(chartData) {
+            const ctx = document.getElementById("chartFaturamentoDiario").getContext("2d");
+            if (chartFaturamentoDiario) chartFaturamentoDiario.destroy(); // Destroi instância anterior
+
+            const labels = chartData?.labels || [];
+            const dataValues = chartData?.data || [];
+
+            if (labels.length === 0 || dataValues.every(val => val === 0)) {
+                document.getElementById('chartFaturamentoDiarioError').textContent = "Sem dados para 'Faturamento Diário'.";
+                return;
+            } else {
+                document.getElementById('chartFaturamentoDiarioError').textContent = "";
+            }
+
+            chartFaturamentoDiario = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Faturamento (R$)',
+                        data: dataValues,
+                        backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                        borderColor: 'var(--accent-cyan)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: 'var(--text-secondary)' } },
+                        title: { display: true, text: 'Faturamento Diário', color: 'white', font: { size: 16 } }, /* Título branco */
+                        tooltip: { callbacks: { label: (context) => `Faturamento: ${formatCurrency(context.raw)}` } }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' }, /* Ticks do eixo X branco */
+                            grid: { color: 'var(--border-color)' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: 'white', callback: (value) => formatCurrency(value) }, /* Ticks do eixo Y branco */
+                            grid: { color: 'var(--border-color)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // --- População de Listas Roláveis (Top Produtos/Fornecedores) ---
+        function populateTopLists(topProdutos, topFornecedores) {
+            const topProdutosListEl = document.getElementById('top-produtos-faturamento-lista');
+            topProdutosListEl.innerHTML = '';
+            if (topProdutos && topProdutos.length > 0) {
+                topProdutos.forEach(item => {
+                    const listItem = document.createElement('div');
+                    listItem.classList.add('list-item');
+                    listItem.innerHTML = `
+                        <span class="list-item-name" title="${item.nome}">${item.nome}</span>
+                        <span class="list-item-value">${formatCurrency(item.faturamento)}</span>
+                        <div class="progress-bar-container"><div class="progress-bar" style="width: ${item.percentual || 0}%;"></div></div>
+                        <span class="list-item-secondary">${(item.percentual || 0).toFixed(2)}% do total</span>
+                    `;
+                    topProdutosListEl.appendChild(listItem);
+                });
+            } else {
+                topProdutosListEl.innerHTML = '<p class="no-data-message">Nenhum produto para exibir.</p>';
+            }
+
+            const topFornecedoresListEl = document.getElementById('top-fornecedores-faturamento-lista');
+            topFornecedoresListEl.innerHTML = '';
+            if (topFornecedores && topFornecedores.length > 0) {
+                topFornecedores.forEach(item => {
+                    const listItem = document.createElement('div');
+                    listItem.classList.add('list-item');
+                    listItem.innerHTML = `
+                        <span class="list-item-name" title="${item.nome}">${item.nome}</span>
+                        <span class="list-item-value">${formatCurrency(item.faturamento)}</span>
+                        <div class="progress-bar-container"><div class="progress-bar" style="width: ${item.percentual || 0}%;"></div></div>
+                        <span class="list-item-secondary">${(item.percentual || 0).toFixed(2)}% do total</span>
+                    `;
+                    topFornecedoresListEl.appendChild(listItem);
+                });
+            } else {
+                topFornecedoresListEl.innerHTML = '<p class="no-data-message">Nenhum fornecedor para exibir.</p>';
+            }
+        }
+
+        // --- Popula o Dropdown de Lojas no Frontend ---
+        function populateLojaDropdown() {
+            const lojaSelect = document.getElementById('loja');
+            lojaSelect.innerHTML = '<option value="">Todas as Lojas</option>'; // Opção padrão
+            for (const id in LOJAS_MAP_FRONTEND) {
+                if (LOJAS_MAP_FRONTEND.hasOwnProperty(id)) {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = LOJAS_MAP_FRONTEND[id];
+                    lojaSelect.appendChild(option);
+                }
+            }
+        }
+
+        // --- Event Listeners e Inicialização ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const fetchDataButton = document.getElementById('fetchDataButton');
+            fetchDataButton.addEventListener('click', fetchDashboardData);
+
+            document.querySelector('.filter-group.period-buttons').querySelectorAll('.btn.secondary').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const periodMatch = event.target.onclick.toString().match(/setPeriod\('(.+?)'\)/);
+                    if (periodMatch && periodMatch[1]) {
+                        setPeriod(periodMatch[1]);
+                    }
+                });
+            });
+            
+            // Popula o dropdown de lojas ao carregar a página
+            populateLojaDropdown();
+
+            // Nenhuma busca automática de dados ao carregar a página
+            // setPeriod('thisMonth'); 
+        });
+    </script>
+</body>
+</html>
+
+  -->
+
+
+
+
+  <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Análise de Vendas</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+    /* --- Variáveis CSS para Cores e Fontes --- */
+    :root {
+        --bg-primary: #020617; /* Fundo principal */
+        --bg-secondary: #0f172a; /* Fundo de elementos secundários (inputs, botões rápidos) */
+        --bg-card: rgba(15, 23, 42, 0.6); /* Fundo dos cards com transparência */
+        --border-color: rgba(56, 189, 248, 0.2); /* Cor da borda para elementos */
+        --glow-color: rgba(56, 189, 248, 0.1); /* Efeito de brilho */
+        --text-primary: #e2e8f0; /* Cor principal do texto (branco/quase branco) */
+        --text-secondary: #94a3b8; /* Cor secundária do texto (cinza claro) */
+        --accent-cyan: #0ea5e9; /* Ciano de destaque */
+        --accent-magenta: #d946ef; /* Magenta de destaque */
+        --accent-green: #22c55e; /* Verde para positivo */
+        --accent-red: #ef4444; /* Vermelho para negativo */
+        --font-mono: 'Roboto Mono', monospace;
+        --font-sans: 'Inter', sans-serif;
+    }
+
+    /* --- Estilos Gerais --- */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    body {
+        background-color: var(--bg-primary);
+        font-family: var(--font-sans);
+        color: var(--text-primary);
+        line-height: 1.6;
+        overflow-x: hidden; /* Evita rolagem horizontal */
+    }
+
+    /* --- Header Principal da Página --- */
+    .header {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        width: 100%;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+    }
+    .header h1 {
+        font-family: var(--font-mono);
+        font-size: 24px;
+        color: var(--accent-cyan);
+        text-shadow: 0 0 5px var(--accent-cyan);
+        flex-shrink: 0;
+    }
+    .header-buttons {
+        display: flex;
+        gap: 10px; /* Espaço entre os botões */
+        align-items: center;
+    }
+
+    /* --- Container Principal do Dashboard --- */
+    .container {
+        margin-top: 80px; /* Aumentado para compensar header que pode quebrar linha */
+        padding: 20px;
+        max-width: 1800px; /* Largura máxima do dashboard */
+        margin-left: auto;
+        margin-right: auto;
+        position: relative;
+        z-index: 1; /* Para estar acima do loader/fundo */
+    }
+
+    /* --- Header de Filtros do Dashboard --- */
+    .dashboard-filters-header {
+        display: flex;
+        flex-wrap: wrap; /* Permite quebrar em várias linhas */
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 25px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        margin-bottom: 20px;
+        gap: 15px; /* Espaçamento entre os grupos de filtros */
+    }
+    .dashboard-filters-header h2 {
+        font-family: var(--font-mono);
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--accent-cyan);
+        text-shadow: 0 0 5px var(--accent-cyan);
+        flex-shrink: 0; /* Não encolhe */
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap; /* Permite quebrar campos individuais */
+    }
+    .filter-group.period-buttons {
+        border-right: 1px solid var(--border-color);
+        padding-right: 15px;
+    }
+    .filter-group label {
+        color: var(--text-secondary);
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    select, input[type="date"], input[type="text"] {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 7px 10px;
+        border-radius: 6px;
+        font-size: 14px;
+        color-scheme: dark; /* Garante que o calendário/dropdown seja escuro */
+        min-width: 120px; /* Largura mínima para inputs */
+    }
+    select:focus, input[type="date"]:focus, input[type="text"]:focus, button:focus {
+        outline: 2px solid var(--accent-cyan);
+        border-color: var(--accent-cyan);
+    }
+
+    /* --- Botões de Ação --- */
+    .btn {
+        padding: 8px 15px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: white;
+        font-weight: 500;
+    }
+    .btn.primary { background-color: var(--accent-cyan); }
+    .btn.primary:hover { background-color: #0d8cc0; box-shadow: 0 0 8px var(--accent-cyan); }
+    .btn.secondary { background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-secondary); }
+    .btn.secondary:hover { background-color: var(--accent-cyan); color: white; border-color: var(--accent-cyan); }
+    .btn.success { background-color: var(--accent-green); }
+    .btn.success:hover { background-color: #1a9c4b; }
+    .btn.danger { background-color: var(--accent-red); }
+    .btn.danger:hover { background-color: #c0392b; }
+
+    /* --- Grid de Cards do Dashboard --- */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr); /* 12 colunas para layout flexível */
+        gap: 20px; /* Espaçamento entre os cards */
+    }
+
+    .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        padding: 25px;
+        box-shadow: 0 0 30px var(--glow-color);
+        transition: all 0.3s ease;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 200px; /* Altura mínima para cards em general */
+    }
+    .card:hover {
+        border-color: rgba(56, 189, 248, 0.5);
+        transform: translateY(-5px);
+    }
+
+    /* --- Tamanhos de Cards no Grid --- */
+    .kpi-card { grid-column: span 3; height: 180px; } /* KPIs menores */
+    .chart-card { grid-column: span 6; height: 400px; } /* Gráficos maiores */
+    .list-kpi-card { grid-column: span 6; height: 400px; }
+
+    /* --- Estilos Internos dos Cards --- */
+    .card-title {
+        font-family: var(--font-mono);
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 15px;
+        color: var(--text-secondary);
+        flex-shrink: 0;
+    }
+    .kpi-value {
+        font-size: 38px;
+        font-weight: 700;
+        color: var(--text-primary);
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .kpi-meta {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 13px;
+        margin-top: 8px;
+        color: var(--text-secondary);
+        justify-content: center;
+    }
+
+    /* Estilos para Gráficos */
+    .chart-container {
+        position: relative;
+        flex-grow: 1;
+        min-height: 0;
+    }
+
+    /* Estilos para Listas Roláveis */
+    .scrollable-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-right: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .scrollable-list::-webkit-scrollbar { width: 6px; }
+    .scrollable-list::-webkit-scrollbar-track { background: transparent; }
+    .scrollable-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+    .list-item {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 5px;
+        border-bottom: 1px dashed var(--border-color);
+        font-size: 15px;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .list-item-name {
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-grow: 1;
+        padding-right: 10px;
+        font-weight: 500;
+    }
+    .list-item-value {
+        font-family: var(--font-mono);
+        font-weight: 700;
+        color: var(--accent-cyan);
+        flex-shrink: 0;
+    }
+    .list-item-secondary {
+        font-size: 12px;
+        color: var(--text-secondary);
+        text-align: right;
+        width: 100%;
+        margin-top: 2px;
+    }
+    .progress-bar-container {
+        width: 100%;
+        height: 4px;
+        background-color: var(--bg-secondary);
+        border-radius: 2px;
+        overflow: hidden;
+        margin-top: 2px;
+    }
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent-magenta), var(--accent-cyan));
+        border-radius: 2px;
+        transition: width 0.5s ease-out;
+    }
+
+    /* --- Loader --- */
+    #loader-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(2, 6, 23, 0.9);
+        display: none; flex-direction: column; justify-content: center;
+        align-items: center; z-index: 9999;
+    }
+    .loader-bars { height: 50px; display: flex; align-items: center; gap: 6px; }
+    .loader-bars div { width: 8px; height: 100%; background-color: var(--accent-cyan); animation: stretch 1.2s infinite ease-in-out; }
+    .loader-bars div:nth-child(2) { animation-delay: -1.1s; }
+    .loader-bars div:nth-child(3) { animation-delay: -1.0s; }
+    .loader-bars div:nth-child(4) { animation-delay: -0.9s; }
+    .loader-text { color: var(--text-primary); margin-top: 20px; font-size: 18px; font-family: var(--font-mono); }
+    @keyframes stretch { 0%, 40%, 100% { transform: scaleY(0.4); } 20% { transform: scaleY(1.0); } }
+
+    /* --- Mensagens de Erro e Sem Dados --- */
+    .error-message, .no-data-message {
+        width: 100%;
+        text-align: center;
+        color: var(--text-secondary);
+        padding: 20px;
+    }
+    .error-message { color: var(--accent-red); }
+
+    
+    /* --- NOVO ESTILO PARA O WRAPPER DOS FILTROS --- */
+    .filters-wrapper {
+        display: flex;
+        flex-wrap: wrap; 
+        align-items: center;
+        gap: 15px; 
+        justify-content: flex-end; 
+        flex-grow: 1; 
+    }
+
+    /* --- RESPONSIVIDADE (SEÇÃO CORRIGIDA) --- */
+    @media (max-width: 1400px) {
+        .dashboard-filters-header {
+            flex-direction: column; /* Empilha o Título e o wrapper de filtros */
+            align-items: center; /* Centraliza o título */
+            gap: 20px; /* Adiciona um espaço entre o título e os filtros */
+        }
+
+        .filters-wrapper {
+            flex-direction: column; /* Empilha todos os controles de filtro */
+            width: 100%;
+            align-items: center; /* Centraliza os filtros empilhados */
+        }
+
+        .filter-group {
+            width: 100%; /* Faz cada grupo de filtro ocupar a largura total */
+            justify-content: center; /* Centraliza o conteúdo de cada grupo (ex: Label e Input) */
+            flex-wrap: wrap;
+        }
+
+        .filter-group.period-buttons {
+            border-right: none;
+            padding-right: 0;
+        }
+
+        .dashboard-filters-header .btn.primary {
+            width: 100%; /* Botão principal ocupa a largura total */
+            max-width: 320px; /* Mas com um limite máximo de largura */
+            margin-top: 5px; 
+        }
+    }
+
+    @media (max-width: 1200px) {
+        .kpi-card, .chart-card, .list-kpi-card { 
+            grid-column: span 6; 
+        }
+    }
+
+    @media (max-width: 768px) {
+        .container {
+             margin-top: 130px; /* Aumenta o espaço para o header que quebra em 2 linhas */
+        }
+        .kpi-card, .chart-card, .list-kpi-card {
+            grid-column: span 12;
+        }
+        .header {
+            flex-direction: column;
+            padding: 10px 15px;
+            height: auto;
+        }
+        .header h1 { margin-bottom: 10px; font-size: 20px; }
+        .header-buttons { margin-top: 5px; }
+
+        .dashboard-filters-header {
+            padding: 15px;
+        }
+        .dashboard-filters-header h2 { font-size: 20px; }
+        
+        .filter-group {
+            gap: 8px;
+        }
+        
+        select, input[type="date"], input[type="text"] {
+            width: 100%;
+            max-width: none;
+        }
+        .kpi-value { font-size: 30px; }
+    }
+    </style>
+</head>
+<body>
+    <div id="loader-overlay">
+        <div class="loader-bars"><div></div><div></div><div></div><div></div></div>
+        <p class="loader-text">Calculando e Carregando Dados...</p>
+    </div>
+
+    <div class="header">
+        <h1>Dashboard de Vendas</h1>
+        <div class="header-buttons">
+            <button class="btn danger" onclick="window.location.href='/logout'">Sair</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <header class="dashboard-filters-header">
+            <h2>Filtros e Controles</h2>
+            <div class="filters-wrapper">
+                <div class="filter-group period-buttons">
+                    <button class="btn secondary" onclick="setPeriod('last7days')">Últimos 7 Dias</button>
+                    <button class="btn secondary" onclick="setPeriod('thisMonth')">Este Mês</button>
+                    <button class="btn secondary" onclick="setPeriod('lastMonth')">Mês Passado</button>
+                </div>
+                <div class="filter-group">
+                    <label for="loja">Loja:</label>
+                    <select id="loja">
+                        <option value="">Todas as Lojas</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="startDate">De:</label>
+                    <input type="date" id="startDate">
+                    <label for="endDate">Até:</label>
+                    <input type="date" id="endDate">
+                </div>
+                <button class="btn primary" id="fetchDataButton">Aplicar Filtros</button>
+            </div>
+        </header>
+        
+        <main class="dashboard-grid">
+            <div class="card kpi-card">
+                <h3 class="card-title">Faturamento (Período)</h3>
+                <p class="kpi-value" id="kpi-faturamento-valor">R$ 0,00</p>
+                <div class="kpi-meta" id="kpi-faturamento-meta"><i class="fas fa-check-circle"></i> Atualizado</div>
+            </div>
+            <div class="card kpi-card">
+                <h3 class="card-title">Lucro (Período)</h3>
+                <p class="kpi-value" id="kpi-lucro-valor">R$ 0,00</p>
+                <div class="kpi-meta" id="kpi-lucro-meta"></div>
+            </div>
+            <div class="card kpi-card">
+                <h3 class="card-title">Quantidade Vendida</h3>
+                <p class="kpi-value" id="kpi-quantidade-valor">0</p>
+                <div class="kpi-meta" id="kpi-quantidade-meta"></div>
+            </div>
+            <div class="card kpi-card">
+                <h3 class="card-title">Ticket Médio Geral</h3>
+                <p class="kpi-value" id="kpi-ticket-medio-valor">R$ 0,00</p>
+                <div class="kpi-meta" id="kpi-ticket-medio-meta"></div>
+            </div>
+
+            <div class="card chart-card">
+                <h3 class="card-title">Faturamento por Grupo</h3>
+                <div class="chart-container">
+                    <canvas id="chartFaturamentoGrupo"></canvas>
+                </div>
+                <div id="chartFaturamentoGrupoError" class="error-message"></div>
+            </div>
+
+            <div class="card chart-card">
+                <h3 class="card-title">Faturamento Diário</h3>
+                <div class="chart-container">
+                    <canvas id="chartFaturamentoDiario"></canvas>
+                </div>
+                <div id="chartFaturamentoDiarioError" class="error-message"></div>
+            </div>
+            
+            <div class="card list-kpi-card">
+                <h3 class="card-title">Top 10 Produtos por Faturamento</h3>
+                <div class="scrollable-list" id="top-produtos-faturamento-lista">
+                    <p class="no-data-message">Nenhum produto para exibir.</p>
+                </div>
+            </div>
+
+            <div class="card list-kpi-card">
+                <h3 class="card-title">Top 10 Fornecedores por Faturamento</h3>
+                <div class="scrollable-list" id="top-fornecedores-faturamento-lista">
+                    <p class="no-data-message">Nenhum fornecedor para exibir.</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // O seu código JavaScript permanece o mesmo. Cole ele aqui.
+        // Nenhuma alteração é necessária no script.
+        let chartFaturamentoGrupo = null;
+        let chartFaturamentoDiario = null;
+        const LOJAS_MAP_FRONTEND = {
+            "1": "PONTA NEGRA", "2": "ALECRIM", "7": "SAC - CENTRO VI", "100": "LAGOA NOVA",
+            "121": "NORTE SHOPPING", "122": "PARNAMIRIM", "131": "ZN2", "137": "MACAIBA",
+            "140": "MARIA LACERDA", "141": "IGAPO"
+        };
+        function formatCurrency(value) {
+            return `R$ ${parseFloat(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+        function formatNumber(value) {
+            return parseFloat(value || 0).toLocaleString('pt-BR');
+        }
+        function getTodayDate() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = (d.getMonth() + 1).toString().padStart(2, '0');
+            const day = d.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        function setPeriod(period) {
+            const today = new Date();
+            let startDate, endDate;
+            today.setMinutes(today.getMinutes() - today.getTimezoneOffset()); 
+            endDate = new Date(today);
+            switch (period) {
+                case 'last7days':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 6);
+                    break;
+                case 'thisMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    break;
+                case 'lastMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+                default:
+                    startDate = new Date(today); 
+            }
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+            fetchDashboardData();
+        }
+        async function fetchDashboardData() {
+            const id_loja = document.getElementById("loja").value;
+            const data_inicio = document.getElementById("startDate").value;
+            const data_fim = document.getElementById("endDate").value;
+            if (!data_inicio || !data_fim) {
+                alert("Por favor, selecione as datas de início e fim.");
+                return;
+            }
+            if (new Date(data_fim) < new Date(data_inicio)) {
+                alert("A data final deve ser posterior à data inicial.");
+                return;
+            }
+            document.getElementById('loader-overlay').style.display = 'flex';
+            document.getElementById('fetchDataButton').disabled = true;
+            let url = `/api/vendas?data_inicio=${data_inicio}&data_fim=${data_fim}`;
+            if (id_loja) {
+                url += `&id_loja=${id_loja}`;
+            }
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Erro na requisição da API: ${response.status} - ${errorText}`);
+                }
+                const data = await response.json();
+                console.log('Dados recebidos da API:', data);
+                updateKPIs(data.kpis);
+                drawChartFaturamentoGrupo(data.chart_faturamento_grupo);
+                drawChartFaturamentoDiario(data.chart_faturamento_diario);
+                populateTopLists(data.top_produtos_faturamento, data.top_fornecedores_faturamento);
+            } catch (error) {
+                console.error('Erro ao buscar dados do dashboard:', error);
+                alert(`Erro ao carregar dados: ${error.message}. Verifique o console para mais detalhes.`);
+                resetDashboardData();
+            } finally {
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('fetchDataButton').disabled = false;
+            }
+        }
+        function resetDashboardData() {
+            document.getElementById('kpi-faturamento-valor').textContent = formatCurrency(0);
+            document.getElementById('kpi-lucro-valor').textContent = formatCurrency(0);
+            document.getElementById('kpi-quantidade-valor').textContent = formatNumber(0);
+            document.getElementById('kpi-ticket-medio-valor').textContent = formatCurrency(0);
+            document.getElementById('kpi-faturamento-meta').innerHTML = `<i class="fas fa-exclamation-circle"></i> Sem dados (${getTodayDate()})`;
+            if (chartFaturamentoGrupo) { chartFaturamentoGrupo.destroy(); chartFaturamentoGrupo = null; }
+            if (chartFaturamentoDiario) { chartFaturamentoDiario.destroy(); chartFaturamentoDiario = null; }
+            document.getElementById('chartFaturamentoGrupoError').textContent = '';
+            document.getElementById('chartFaturamentoDiarioError').textContent = '';
+            document.getElementById('top-produtos-faturamento-lista').innerHTML = '<p class="no-data-message">Nenhum produto para exibir.</p>';
+            document.getElementById('top-fornecedores-faturamento-lista').innerHTML = '<p class="no-data-message">Nenhum fornecedor para exibir.</p>';
+        }
+        function updateKPIs(kpis) {
+            document.getElementById('kpi-faturamento-valor').textContent = formatCurrency(kpis.faturamento || 0);
+            document.getElementById('kpi-lucro-valor').textContent = formatCurrency(kpis.lucro || 0);
+            document.getElementById('kpi-quantidade-valor').textContent = formatNumber(kpis.quantidade_vendida || 0);
+            document.getElementById('kpi-ticket-medio-valor').textContent = formatCurrency(kpis.ticket_medio || 0);
+            const now = new Date();
+            const updateTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            document.getElementById('kpi-faturamento-meta').innerHTML = `<i class="fas fa-check-circle"></i> Atualizado às ${updateTime}`;
+        }
+        function drawChartFaturamentoGrupo(chartData) {
+            const ctx = document.getElementById("chartFaturamentoGrupo").getContext("2d");
+            if (chartFaturamentoGrupo) chartFaturamentoGrupo.destroy();
+            const labels = chartData?.labels || [];
+            const dataValues = chartData?.data || [];
+            if (labels.length === 0 || dataValues.every(val => val === 0)) {
+                document.getElementById('chartFaturamentoGrupoError').textContent = "Sem dados para 'Faturamento por Grupo'.";
+                return;
+            } else {
+                 document.getElementById('chartFaturamentoGrupoError').textContent = "";
+            }
+            chartFaturamentoGrupo = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Faturamento (R$)',
+                        data: dataValues,
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: 'var(--text-secondary)' } }, tooltip: { callbacks: { label: (context) => `Faturamento: ${formatCurrency(context.raw)}` } } },
+                    scales: { x: { ticks: { color: 'white' }, grid: { color: 'var(--border-color)' } }, y: { beginAtZero: true, ticks: { color: 'white', callback: (value) => formatCurrency(value) }, grid: { color: 'var(--border-color)' } } }
+                }
+            });
+        }
+        function drawChartFaturamentoDiario(chartData) {
+            const ctx = document.getElementById("chartFaturamentoDiario").getContext("2d");
+            if (chartFaturamentoDiario) chartFaturamentoDiario.destroy();
+            const labels = chartData?.labels || [];
+            const dataValues = chartData?.data || [];
+            if (labels.length === 0 || dataValues.every(val => val === 0)) {
+                document.getElementById('chartFaturamentoDiarioError').textContent = "Sem dados para 'Faturamento Diário'.";
+                return;
+            } else {
+                document.getElementById('chartFaturamentoDiarioError').textContent = "";
+            }
+            chartFaturamentoDiario = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Faturamento (R$)',
+                        data: dataValues,
+                        backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                        borderColor: 'var(--accent-cyan)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: 'var(--text-secondary)' } }, tooltip: { callbacks: { label: (context) => `Faturamento: ${formatCurrency(context.raw)}` } } },
+                    scales: { x: { ticks: { color: 'white' }, grid: { color: 'var(--border-color)' } }, y: { beginAtZero: true, ticks: { color: 'white', callback: (value) => formatCurrency(value) }, grid: { color: 'var(--border-color)' } } }
+                }
+            });
+        }
+        function populateTopLists(topProdutos, topFornecedores) {
+            const topProdutosListEl = document.getElementById('top-produtos-faturamento-lista');
+            topProdutosListEl.innerHTML = '';
+            if (topProdutos && topProdutos.length > 0) {
+                topProdutos.forEach(item => {
+                    const listItem = document.createElement('div');
+                    listItem.classList.add('list-item');
+                    listItem.innerHTML = `
+                        <span class="list-item-name" title="${item.nome}">${item.nome}</span>
+                        <span class="list-item-value">${formatCurrency(item.faturamento)}</span>
+                        <div class="progress-bar-container"><div class="progress-bar" style="width: ${item.percentual || 0}%;"></div></div>
+                        <span class="list-item-secondary">${(item.percentual || 0).toFixed(2)}% do total</span>
+                    `;
+                    topProdutosListEl.appendChild(listItem);
+                });
+            } else {
+                topProdutosListEl.innerHTML = '<p class="no-data-message">Nenhum produto para exibir.</p>';
+            }
+            const topFornecedoresListEl = document.getElementById('top-fornecedores-faturamento-lista');
+            topFornecedoresListEl.innerHTML = '';
+            if (topFornecedores && topFornecedores.length > 0) {
+                topFornecedores.forEach(item => {
+                    const listItem = document.createElement('div');
+                    listItem.classList.add('list-item');
+                    listItem.innerHTML = `
+                        <span class="list-item-name" title="${item.nome}">${item.nome}</span>
+                        <span class="list-item-value">${formatCurrency(item.faturamento)}</span>
+                        <div class="progress-bar-container"><div class="progress-bar" style="width: ${item.percentual || 0}%;"></div></div>
+                        <span class="list-item-secondary">${(item.percentual || 0).toFixed(2)}% do total</span>
+                    `;
+                    topFornecedoresListEl.appendChild(listItem);
+                });
+            } else {
+                topFornecedoresListEl.innerHTML = '<p class="no-data-message">Nenhum fornecedor para exibir.</p>';
+            }
+        }
+        function populateLojaDropdown() {
+            const lojaSelect = document.getElementById('loja');
+            lojaSelect.innerHTML = '<option value="">Todas as Lojas</option>';
+            for (const id in LOJAS_MAP_FRONTEND) {
+                if (LOJAS_MAP_FRONTEND.hasOwnProperty(id)) {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = LOJAS_MAP_FRONTEND[id];
+                    lojaSelect.appendChild(option);
+                }
+            }
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('fetchDataButton').addEventListener('click', fetchDashboardData);
+            populateLojaDropdown();
+            // Nenhuma busca automática de dados ao carregar a página
+        });
+    </script>
+</body>
+</html>

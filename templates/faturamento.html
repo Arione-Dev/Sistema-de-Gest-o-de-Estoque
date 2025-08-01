@@ -1,0 +1,3097 @@
+
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Dashboard Faturamento</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        /* --- SEUS ESTILOS CSS COMPLETOS --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #f4f4f4; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .header { background-color: #34495e; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; width: 100%; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); z-index: 1000; }
+        .header h1 { font-family: Arial, sans-serif; font-size: 24px; }
+        :root { --bg-primary: #020617; --bg-secondary: #0f172a; --bg-card: rgba(15, 23, 42, 0.6); --border-color: rgba(56, 189, 248, 0.2); --glow-color: rgba(56, 189, 248, 0.1); --text-primary: #e2e8f0; --text-secondary: #94a3b8; --accent-cyan: #0ea5e9; --accent-magenta: #d946ef; --accent-green: #22c55e; --accent-red: #ef4444; }
+        .container { margin-top: 80px; padding: 20px; max-width: 1800px; margin-left: auto; margin-right: auto; background-color: var(--bg-primary); color: var(--text-primary); position: relative; overflow: hidden; border-radius: 12px; }
+        .dashboard-content { position: relative; z-index: 1; }
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; backdrop-filter: blur(10px); margin-bottom: 20px; }
+        .dashboard-header h2 { font-family: 'Roboto Mono', monospace; font-size: 24px; font-weight: 700; color: var(--accent-cyan); text-shadow: 0 0 8px var(--accent-cyan); }
+        .header-right-group { display: flex; align-items: center; gap: 15px; }
+        .dashboard-grid { display: grid; gap: 20px; grid-template-columns: repeat(12, 1fr); }
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; backdrop-filter: blur(10px); padding: 25px; box-shadow: 0 0 30px var(--glow-color); transition: all 0.3s ease; z-index: 1; display: flex; flex-direction: column; }
+        .card:hover { border-color: rgba(56, 189, 248, 0.5); transform: translateY(-5px); }
+        .chart-container { position: relative; flex-grow: 1; min-height: 0; }
+        .kpi-card { grid-column: span 3; }
+        .main-chart-card { grid-column: span 6; height: 450px;}
+        .radar-chart-card { grid-column: span 3; height: 450px; }
+        .table-card { grid-column: span 12; }
+        .card-title { font-family: 'Roboto Mono', monospace; font-size: 18px; font-weight: 500; margin-bottom: 20px; color: var(--text-secondary); }
+        .kpi-value { font-size: 36px; font-weight: 700; color: var(--text-primary); }
+        .kpi-trend { display: flex; align-items: center; gap: 5px; font-size: 14px; margin-top: 5px; overflow-wrap: break-word; }
+        .kpi-trend.positive { color: var(--accent-green); }
+        .kpi-trend.negative { color: var(--accent-red); }
+        .table-toolbar { display: flex; justify-content: flex-start; margin-bottom: 15px; }
+        .search-input { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 15px; color: var(--text-primary); width: 300px; }
+        .data-table-container { max-height: 300px; overflow-y: auto; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .data-table thead { position: sticky; top: 0; background: var(--bg-secondary); }
+        .btn-voltar, .logout-btn, .search-btn { padding: 8px 15px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; color: white; }
+        .btn-voltar:hover { background-color: #16a085; } .logout-btn { background-color: #e74c3c; } .logout-btn:hover { background-color: #c0392b; } .search-btn { background-color: #3498db; } .search-btn:hover { background-color: #2980b9; }
+        #loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.8); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        .loader-bars { height: 50px; display: flex; align-items: center; gap: 6px; }
+        .loader-bars div { width: 8px; height: 100%; background-color: var(--accent-cyan); animation: stretch 1.2s infinite ease-in-out; }
+        .loader-bars div:nth-child(2) { animation-delay: -1.1s; } .loader-bars div:nth-child(3) { animation-delay: -1.0s; } .loader-bars div:nth-child(4) { animation-delay: -0.9s; }
+        .loader-text { color: var(--text-primary); margin-top: 20px; font-size: 18px; font-family: 'Roboto Mono', monospace; }
+        @keyframes stretch { 0%, 40%, 100% { transform: scaleY(0.4); } 20% { transform: scaleY(1.0); } }
+        /* --- ESTILOS PARA OS CAMPOS DE DATA --- */
+        .date-picker-group { display: flex; align-items: center; gap: 8px; }
+        .date-picker-group label { font-family: 'Roboto Mono', monospace; font-size: 14px; color: var(--text-secondary); }
+        .date-input { background-color: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 10px; border-radius: 8px; font-family: 'Inter', sans-serif; color-scheme: dark; }
+        .date-input::-webkit-calendar-picker-indicator { filter: invert(80%) brightness(120%); cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="loader-overlay"><div class="loader-bars"><div></div><div></div><div></div><div></div></div><p class="loader-text">Calculando...</p></div>
+    <div class="header"><h1>Faturamento</h1><div class="header-buttons"><button class="btn-voltar" onclick="window.location.href='/'" style="background-color: #1abc9c;">Voltar</button><button class="logout-btn" onclick="window.location.href='/logout'" style="background-color: #e74c3c;">Sair</button></div></div>
+    <div class="container">
+        <div class="dashboard-content">
+            <header class="dashboard-header">
+                <h2>Dashboard de Vendas </h2>
+                <div class="header-right-group">
+                    <div class="date-picker-group">
+                        <label for="startDate">Comparar Dia:</label>
+                        <input type="date" id="startDate" class="date-input">
+                        <label for="endDate">Com o Dia:</label>
+                        <input type="date" id="endDate" class="date-input">
+                    </div>
+                    <button id="fetchDataButton" class="search-btn">Buscar Dados</button>
+                    <div class="user-profile"><span id="user-name"></span></div>
+                </div>
+            </header>
+            <main class="dashboard-grid">
+                <div class="card kpi-card"><h3 class="card-title">Faturamento (Dia Mais Recente)</h3><p class="kpi-value" id="kpi-receita-valor">Aguardando...</p><div class="kpi-trend" id="kpi-receita-atualizacao"></div></div>
+                <div class="card kpi-card"><h3 class="card-title">Resultado da Comparação</h3><p class="kpi-value" id="comparativo-referencia">Aguardando...</p><div class="kpi-trend" id="comparativo-status"></div></div>
+                <div class="card kpi-card"><h3 class="card-title">Itens Vendidos (Dia Mais Recente)</h3><p class="kpi-value" id="total-itens-valor">0</p></div>
+                <div class="card kpi-card"><h3 class="card-title">Lojas com Erro</h3><p class="kpi-value" id="lojas-erro-valor">0</p><div class="kpi-trend" id="lojas-erro-lista">Nenhuma</div></div>
+                <div class="card main-chart-card"><h3 class="card-title">Ranking de Faturamento (Dia Recente vs. Dia Anterior)</h3><div class="chart-container"><canvas id="mainChart"></canvas></div></div>
+                <div class="card radar-chart-card"><h3 class="card-title">Top 5 Grupos (Dia Mais Recente)</h3><div class="chart-container"><canvas id="radarChart"></canvas></div></div>
+                <div class="card table-card"><div class="table-toolbar"><input type="text" class="search-input" id="tableFilterInput" placeholder="Filtrar produtos..."></div><div class="data-table-container"><table class="data-table"><thead><tr><th>Produto ID</th><th>Nome do Produto</th><th>Grupo</th><th>Vendas (Dia Recente)</th></tr></thead><tbody id="dataTableBody"></tbody></table></div></div>
+            </main>
+        </div>
+    </div>
+    
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let mainChart, topGroupsChart;
+
+    async function atualizarDashboard() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        if (!startDate || !endDate) {
+            alert("Por favor, selecione as duas datas para comparar.");
+            return;
+        }
+
+        const loader = document.getElementById('loader-overlay');
+        loader.style.display = 'flex';
+        const fetchButton = document.getElementById('fetchDataButton');
+        fetchButton.disabled = true;
+        fetchButton.textContent = 'Buscando...';
+
+        try {
+            const apiUrl = new URL(window.location.origin + '/api/dashboard/dados-diarios');
+            apiUrl.searchParams.append('inicio', startDate);
+            apiUrl.searchParams.append('final', endDate);
+
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.erro || `Erro na API: ${response.status}`);
+            }
+            const data = await response.json();
+            
+            // Verificações seguras para cada parte dos dados
+            if (data && data.kpi_faturamento) {
+                document.getElementById('kpi-receita-valor').textContent = data.kpi_faturamento.valor_formatado;
+                document.getElementById('kpi-receita-atualizacao').innerHTML = `<i class="fas fa-check-circle"></i> Atualizado às ${data.kpi_faturamento.atualizado_em}`;
+            }
+            if (data && data.kpi_comparativo) { // Nome corrigido para 'kpi_comparativo'
+                document.getElementById('comparativo-referencia').textContent = `Dia ${endDate.split('-').reverse().join('/')} vs ${startDate.split('-').reverse().join('/')}`;
+                const statusEl = document.getElementById('comparativo-status');
+                statusEl.textContent = data.kpi_comparativo.texto;
+                statusEl.className = 'kpi-trend ' + data.kpi_comparativo.status;
+            }
+            if (data && data.info_processamento) {
+                const lojasComErro = data.info_processamento.lojas_com_erro || [];
+                document.getElementById('lojas-erro-valor').textContent = lojasComErro.length;
+                document.getElementById('lojas-erro-lista').textContent = lojasComErro.length > 0 ? "Lojas: " + lojasComErro.map(e => e.loja).join(', ') : "Nenhuma";
+            }
+            if (data && data.kpi_total_itens) {
+                document.getElementById('total-itens-valor').textContent = data.kpi_total_itens.valor.toLocaleString('pt-BR');
+            }
+            if (data && data.tabela_top_produtos) {
+                const produtos = data.tabela_top_produtos;
+                const tabelaBody = document.getElementById('dataTableBody');
+                tabelaBody.innerHTML = '';
+                if (!produtos || produtos.length === 0) {
+                    tabelaBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum produto vendido no dia mais recente.</td></tr>';
+                } else {
+                    produtos.forEach(p => { tabelaBody.innerHTML += `<tr><td>${p.produto_id || ''}</td><td>${p.nome || ''}</td><td>${p.categoria || ''}</td><td>${p.total_vendido || 0}</td></tr>`; });
+                }
+            }
+            if (mainChart && data && data.bar_chart_faturamento_loja) {
+                const chartData = data.bar_chart_faturamento_loja;
+                if (chartData.labels && chartData.dataset_dia_fim && chartData.dataset_dia_inicio) {
+                    mainChart.data.labels = chartData.labels;
+                    mainChart.data.datasets[0].data = chartData.dataset_dia_inicio; // Dia Início
+                    mainChart.data.datasets[1].data = chartData.dataset_dia_fim;      // Dia Fim
+                    mainChart.update();
+                }
+            }
+            if (topGroupsChart && data && data.radar_chart_desempenho_grupo) {
+                const radarData = data.radar_chart_desempenho_grupo;
+                if(radarData.labels && radarData.data) {
+                    topGroupsChart.data.labels = radarData.labels;
+                    topGroupsChart.data.datasets[0].data = radarData.data;
+                    topGroupsChart.update();
+                }
+            }
+        } catch (error) {
+            console.error("Falha ao buscar ou processar dados do dashboard:", error);
+            document.getElementById('kpi-receita-valor').textContent = "Erro";
+            document.getElementById('kpi-receita-atualizacao').innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${error.message}`;
+        } finally {
+            loader.style.display = 'none';
+            fetchButton.textContent = 'Buscar Dados';
+            fetchButton.disabled = false;
+        }
+    }
+
+    function iniciarComponentesVisuais() {
+        document.getElementById('fetchDataButton').addEventListener('click', atualizarDashboard);
+        document.getElementById('tableFilterInput').addEventListener('keyup', () => {
+            const query = document.getElementById('tableFilterInput').value.toLowerCase();
+            document.querySelectorAll('#dataTableBody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none'; });
+        });
+        
+        const chartTextColor = '#94a3b8', chartGridColor = 'rgba(148, 163, 184, 0.1)';
+        const topLabelsPlugin = { id: 'topLabels', afterDatasetsDraw(chart) { const { ctx, data } = chart; ctx.save(); const todayDatasetMeta = chart.getDatasetMeta(1); todayDatasetMeta.data.forEach((bar, index) => { const salesToday = data.datasets[1].data[index]; const salesTarget = data.datasets[0].data[index]; if (salesTarget > 0) { const performanceRatio = salesToday / salesTarget; let labelText = '', labelColor = ''; if (performanceRatio < 1) { const missingPercentage = (1 - performanceRatio) * 100; labelText = `▼ ${missingPercentage.toFixed(0)}%`; labelColor = '#ef4444'; } else { const growthPercentage = (performanceRatio - 1) * 100; labelText = `▲ ${growthPercentage.toFixed(0)}%`; labelColor = '#22c55e'; } ctx.font = 'bold 12px "Roboto Mono", monospace'; ctx.fillStyle = labelColor; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText(labelText, bar.x, bar.y - 5); } }); ctx.restore(); } };
+
+        const mainChartCtx = document.getElementById('mainChart').getContext('2d');
+        mainChart = new Chart(mainChartCtx, {
+            type: 'bar',
+            data: { labels: [], datasets: [ { label: 'Dia Início', data: [], backgroundColor: 'rgba(239, 68, 68, 0.5)', borderRadius: 4 }, { label: 'Dia Fim', data: [], backgroundColor: 'rgba(34, 197, 94, 0.7)', borderRadius: 4 } ]},
+            options: {
+                maintainAspectRatio: false, layout: { padding: { top: 30 } },
+                scales: { x: { ticks: { color: chartTextColor }, grid: { display: false } }, y: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } } },
+                plugins: { legend: { position: 'top', labels: { color: chartTextColor } }, tooltip: { callbacks: { label: (context) => { let label = context.dataset.label || ''; if (label) { label += ': '; } label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.raw); return label; } } } }
+            },
+            plugins: [topLabelsPlugin]
+        });
+
+        const polarChartCtx = document.getElementById('radarChart').getContext('2d');
+        topGroupsChart = new Chart(polarChartCtx, {
+            type: 'polarArea',
+            data: { labels: [], datasets: [{ label: 'Faturamento por Grupo', data: [], backgroundColor: [ 'rgba(14, 165, 233, 0.7)', 'rgba(217, 70, 239, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(99, 102, 241, 0.7)' ], borderWidth: 1, borderColor: '#0f172a' }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { r: { grid: { color: chartGridColor }, ticks: { display: false }, pointLabels: { display: true, centerPointLabels: true, font: { size: 12, family: "'Roboto Mono', monospace" }, color: chartTextColor } } }, plugins: { legend: { display: false } } }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        iniciarComponentesVisuais();
+        
+        // --- LÓGICA CORRIGIDA ---
+        // Adiciona um evento para o botão que chama a função de carregar dados
+        document.getElementById('fetchDataButton').addEventListener('click', () => {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            if (startDate && endDate) {
+                atualizarDashboard(startDate, endDate);
+            } else {
+                alert("Por favor, selecione as datas de início e fim.");
+            }
+        });
+    });
+</script>
+</body>
+</html> -->
+
+
+
+
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Comparativo de Vendas</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+
+        /* Adicione este CSS dentro da sua tag <style> */
+.quick-search-group {
+    display: flex;
+    gap: 10px;
+    border-right: 1px solid var(--border-color);
+    padding-right: 15px;
+}
+.quick-btn {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.quick-btn:hover {
+    background-color: var(--accent-cyan);
+    color: white;
+    border-color: var(--accent-cyan);
+}
+.date-input {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 7px;
+    border-radius: 6px;
+    color-scheme: dark; /* Garante que o calendário fique escuro */
+}
+        /* --- ESTILOS GERAIS E DO MENU SUPERIOR --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #f4f4f4; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+
+        .header {
+            background-color: #34495e; color: white; padding: 15px 20px; display: flex;
+            justify-content: space-between; align-items: center; position: fixed;
+            top: 0; width: 100%; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); z-index: 1000;
+        }
+        .header h1 { font-family: Arial, sans-serif; font-size: 24px; }
+        
+        /* --- ESTILOS DO DASHBOARD --- */
+        :root {
+            --bg-primary: #020617; --bg-secondary: #0f172a; --bg-card: rgba(15, 23, 42, 0.6);
+            --border-color: rgba(56, 189, 248, 0.2); --glow-color: rgba(56, 189, 248, 0.1);
+            --text-primary: #e2e8f0; --text-secondary: #94a3b8; --accent-cyan: #0ea5e9;
+            --accent-magenta: #d946ef; --accent-green: #22c55e; --accent-red: #ef4444;
+        }
+        .container {
+            margin-top: 80px; padding: 20px; max-width: 1800px; margin-left: auto; margin-right: auto;
+            background-color: var(--bg-primary); color: var(--text-primary); position: relative;
+            overflow: hidden; border-radius: 12px;
+            transition: margin-top 0.3s ease;
+        }
+        .dashboard-content { position: relative; z-index: 1; }
+        .dashboard-header {
+            display: flex; justify-content: space-between; align-items: center; padding: 15px 25px;
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            backdrop-filter: blur(10px); margin-bottom: 20px;
+        }
+        .dashboard-header h2 { font-family: 'Roboto Mono', monospace; font-size: 24px; font-weight: 700; color: var(--accent-cyan); text-shadow: 0 0 8px var(--accent-cyan); }
+        
+        .header-right-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .dashboard-grid { display: grid; gap: 20px; grid-template-columns: repeat(12, 1fr); }
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            backdrop-filter: blur(10px); padding: 25px; box-shadow: 0 0 30px var(--glow-color);
+            transition: all 0.3s ease; z-index: 1; display: flex; flex-direction: column;
+        }
+        .card:hover { border-color: rgba(56, 189, 248, 0.5); transform: translateY(-5px); }
+        .chart-container { position: relative; flex-grow: 1; min-height: 0; }
+        
+        .kpi-card { grid-column: span 3; }
+        .main-chart-card { grid-column: span 6; height: 450px;}
+        .radar-chart-card { grid-column: span 3; height: 450px; }
+        .table-card { grid-column: span 12; }
+        .card-title { font-family: 'Roboto Mono', monospace; font-size: 18px; font-weight: 500; margin-bottom: 20px; color: var(--text-secondary); }
+        .kpi-value { font-size: 36px; font-weight: 700; color: var(--text-primary); }
+        .kpi-trend { display: flex; align-items: center; gap: 5px; font-size: 14px; margin-top: 5px; overflow-wrap: break-word; }
+        .kpi-trend.positive { color: var(--accent-green); }
+        .kpi-trend.negative { color: var(--accent-red); }
+        
+        .table-toolbar { display: flex; justify-content: flex-start; margin-bottom: 15px; }
+        .search-input { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 15px; color: var(--text-primary); width: 300px; }
+        
+        .data-table-container { max-height: 300px; overflow-y: auto; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .data-table thead { position: sticky; top: 0; background: var(--bg-secondary); }
+        
+        .btn-voltar, .logout-btn, .search-btn {
+            padding: 8px 15px; border: none; border-radius: 4px; font-size: 14px;
+            cursor: pointer; transition: background-color 0.3s ease; color: white;
+        }
+        .btn-voltar { background-color: #1abc9c; }
+        .btn-voltar:hover { background-color: #16a085; }
+        .logout-btn { background-color: #e74c3c; }
+        .logout-btn:hover { background-color: #c0392b; }
+        .search-btn { background-color: #3498db; }
+        .search-btn:hover { background-color: #2980b9; }
+
+        /* --- ESTILOS DA ANIMAÇÃO DE CARREGAMENTO --- */
+        #loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(15, 23, 42, 0.8); /* Cor de fundo --bg-secondary com opacidade */
+            display: none; /* Inicia oculto */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .loader-bars {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .loader-bars div {
+            width: 8px;
+            height: 100%; /* A altura será controlada pelo scaleY */
+            background-color: var(--accent-cyan);
+            animation: stretch 1.2s infinite ease-in-out;
+        }
+        .loader-bars div:nth-child(2) { animation-delay: -1.1s; }
+        .loader-bars div:nth-child(3) { animation-delay: -1.0s; }
+        .loader-bars div:nth-child(4) { animation-delay: -0.9s; }
+        .loader-text {
+            color: var(--text-primary);
+            margin-top: 20px;
+            font-size: 18px;
+            font-family: 'Roboto Mono', monospace;
+        }
+        @keyframes stretch {
+            0%, 40%, 100% {
+                transform: scaleY(0.4);
+            }
+            20% {
+                transform: scaleY(1.0);
+            }
+        }
+
+        /* --- ESTILOS PARA MODO TELA CHEIA (F11) --- */
+        body:fullscreen .header {
+            display: none;
+        }
+        body:fullscreen .container {
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 1200px) { .kpi-card, .main-chart-card, .radar-chart-card { grid-column: span 6; } }
+        @media (max-width: 768px) { .kpi-card, .main-chart-card, .radar-chart-card { grid-column: span 12; } }
+    </style>
+</head>
+<body>
+    <div id="loader-overlay"><div class="loader-bars"><div></div><div></div><div></div><div></div></div><p class="loader-text">Calculando...</p></div>
+    <div class="header"><h1>Faturamento</h1><div class="header-buttons"><button class="btn-voltar" onclick="window.location.href='/'" style="background-color: #1abc9c;">Voltar</button><button class="logout-btn" onclick="window.location.href='/logout'" style="background-color: #e74c3c;">Sair</button></div></div>
+    <div class="container">
+        <div class="dashboard-content">
+            <!-- <header class="dashboard-header">
+                <h2>Dashboard de Vendas</h2>
+                <div class="header-right-group">
+                    <div class="date-picker-group">
+                        <label for="startDate">Comparar Dia:</label>
+                        <input type="date" id="startDate" class="date-input">
+                        <label for="endDate">Com o Dia:</label>
+                        <input type="date" id="endDate" class="date-input">
+                    </div>
+                    <button id="fetchDataButton" class="search-btn" style="background-color: #3498db;">Comparar</button>
+                </div>
+            </header> --
+            <header class="dashboard-header">
+    <h2>Dashboard de Vendas</h2>
+    <div class="header-right-group">
+        <div class="quick-search-group">
+            <button class="quick-btn" onclick="setPeriod('last7days')">Últimos 7 Dias</button>
+            <button class="quick-btn" onclick="setPeriod('thisMonth')">Este Mês</button>
+            <button class="quick-btn" onclick="setPeriod('lastMonth')">Mês Passado</button>
+        </div>
+        
+        <div class="date-picker-group">
+            <label for="startDate">Período de:</label>
+            <input type="date" id="startDate" class="date-input">
+            <label for="endDate">Até:</label>
+            <input type="date" id="endDate" class="date-input">
+        </div>
+        <button id="fetchDataButton" class="search-btn" style="background-color: #3498db;">Comparar com Ano Anterior</button>
+    </div>
+</header>
+            <main class="dashboard-grid">
+                <div class="card kpi-card"><h3 class="card-title">Faturamento (Dia Mais Recente)</h3><p class="kpi-value" id="kpi-receita-valor">Aguardando...</p><div class="kpi-trend" id="kpi-receita-atualizacao"></div></div>
+                <div class="card kpi-card"><h3 class="card-title">Resultado da Comparação</h3><p class="kpi-value" id="comparativo-referencia">Aguardando...</p><div class="kpi-trend" id="comparativo-status"></div></div>
+                <div class="card kpi-card"><h3 class="card-title">Itens Vendidos (Dia Mais Recente)</h3><p class="kpi-value" id="total-itens-valor">0</p></div>
+                <div class="card kpi-card"><h3 class="card-title">Lojas com Erro</h3><p class="kpi-value" id="lojas-erro-valor">0</p><div class="kpi-trend" id="lojas-erro-lista"></div></div>
+                <div class="card main-chart-card"><h3 class="card-title">Ranking de Faturamento (Dia Recente vs. Dia Anterior)</h3><div class="chart-container"><canvas id="mainChart"></canvas></div></div>
+                <div class="card radar-chart-card"><h3 class="card-title">Top 5 Grupos (Dia Mais Recente)</h3><div class="chart-container"><canvas id="radarChart"></canvas></div></div>
+                <div class="card table-card"><div class="table-toolbar"><input type="text" class="search-input" id="tableFilterInput" placeholder="Filtrar produtos..."></div><div class="data-table-container"><table class="data-table"><thead><tr><th>Produto ID</th><th>Nome</th><th>Grupo</th><th>Vendas (Dia Recente)</th></tr></thead><tbody id="dataTableBody"></tbody></table></div></div>
+            </main>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let mainChart, topGroupsChart;
+// Adicione esta nova função ao seu <script>
+function setPeriod(period) {
+    const today = new Date();
+    let startDate, endDate;
+
+    // Desabilita o fuso horário para consistência
+    today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+
+    endDate = new Date(today);
+
+    switch (period) {
+        case 'last7days':
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 6); // Hoje + 6 dias atrás = 7 dias
+            break;
+        case 'thisMonth':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            break;
+        case 'lastMonth':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+            break;
+    }
+    
+    // Formata e define os valores nos inputs
+    document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+    document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+    
+    // Dispara a busca
+    atualizarDashboard();
+}
+
+// Substitua sua função antiga por esta
+async function atualizarDashboard() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    if (!startDate || !endDate) {
+        alert("Por favor, selecione um período de início e fim.");
+        return;
+    }
+
+    document.getElementById('loader-overlay').style.display = 'flex';
+    document.getElementById('fetchDataButton').disabled = true;
+
+    try {
+        const apiUrl = new URL(window.location.origin + '/api/dashboard/dados-diarios');
+        apiUrl.searchParams.append('inicio', startDate);
+        apiUrl.searchParams.append('final', endDate);
+        const response = await fetch(apiUrl);
+
+        if (!response.ok) {
+            throw new Error(`Erro na API: ${response.status} - ${await response.text()}`);
+        }
+        const data = await response.json();
+        
+        // Atualiza o card de comparativo para refletir os períodos
+        document.getElementById('comparativo-referencia').textContent = `Período Atual vs Ano Anterior`;
+        
+        // O resto da lógica de preenchimento de dados permanece a mesma
+        document.getElementById('kpi-receita-valor').textContent = data?.kpi_faturamento?.valor_formatado || 'N/A';
+        document.getElementById('kpi-receita-atualizacao').innerHTML = data?.kpi_faturamento?.atualizado_em ? `<i class="fas fa-check-circle"></i> Atualizado às ${data.kpi_faturamento.atualizado_em}` : '';
+        const statusEl = document.getElementById('comparativo-status');
+        statusEl.textContent = data?.kpi_comparativo?.texto || 'Dados indisponíveis';
+        statusEl.className = 'kpi-trend ' + (data?.kpi_comparativo?.status || '');
+        document.getElementById('total-itens-valor').textContent = data?.kpi_total_itens?.valor?.toLocaleString('pt-BR') || '0';
+        document.getElementById('lojas-erro-valor').textContent = data?.info_processamento?.lojas_com_erro?.length || '0';
+        const tabelaBody = document.getElementById('dataTableBody');
+        tabelaBody.innerHTML = '';
+        if (data.tabela_top_produtos && data.tabela_top_produtos.length > 0) {
+            data.tabela_top_produtos.forEach(p => { tabelaBody.innerHTML += `<tr><td>${p.produto_id}</td><td>${p.nome}</td><td>${p.categoria}</td><td>${p.total_vendido}</td></tr>`; });
+        } else {
+            tabelaBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum produto encontrado.</td></tr>';
+        }
+        if (data.bar_chart_faturamento_loja) {
+            mainChart.data.labels = data.bar_chart_faturamento_loja.labels;
+            mainChart.data.datasets[0].data = data.bar_chart_faturamento_loja.dataset_dia_inicio; // Agora representa o Período Anterior
+            mainChart.data.datasets[1].data = data.bar_chart_faturamento_loja.dataset_dia_fim;    // Agora representa o Período Atual
+            mainChart.options.plugins.legend.labels.text = (ctx) => ['Período Anterior', 'Período Atual'][ctx.datasetIndex]; // Atualiza a legenda
+            mainChart.update();
+        }
+        if (data.radar_chart_desempenho_grupo) {
+            topGroupsChart.data.labels = data.radar_chart_desempenho_grupo.labels;
+            topGroupsChart.data.datasets[0].data = data.radar_chart_desempenho_grupo.data;
+            topGroupsChart.update();
+        }
+        
+    } catch (e) {
+        console.error("Erro ao carregar o dashboard:", e);
+        document.getElementById('kpi-receita-valor').textContent = 'Erro Geral';
+    } finally {
+        document.getElementById('loader-overlay').style.display = 'none';
+        document.getElementById('fetchDataButton').disabled = false;
+    }
+}
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const fetchButton = document.getElementById('fetchDataButton');
+            fetchButton.addEventListener('click', atualizarDashboard);
+
+            const chartTextColor = '#94a3b8';
+            const chartGridColor = 'rgba(148, 163, 184, 0.1)';
+            
+            // Plugin para desenhar os percentuais em cima das barras (como na sua imagem)
+            const topLabelsPlugin = { 
+                id: 'topLabels', 
+                afterDatasetsDraw(chart) { 
+                    const { ctx, data } = chart; 
+                    ctx.save(); 
+                    const todayDatasetMeta = chart.getDatasetMeta(1); // Dataset 1 é o 'Dia Fim'
+                    todayDatasetMeta.data.forEach((bar, index) => { 
+                        const salesToday = data.datasets[1].data[index]; 
+                        const salesTarget = data.datasets[0].data[index]; // Dataset 0 é o 'Dia Início'
+                        if (salesTarget > 0) { 
+                            const performanceRatio = salesToday / salesTarget; 
+                            let labelText = '', labelColor = ''; 
+                            if (performanceRatio < 1) { 
+                                const missingPercentage = (1 - performanceRatio) * 100; 
+                                labelText = `▼ ${missingPercentage.toFixed(0)}%`; 
+                                labelColor = '#ef4444'; 
+                            } else { 
+                                const growthPercentage = (performanceRatio - 1) * 100; 
+                                labelText = `▲ ${growthPercentage.toFixed(0)}%`; 
+                                labelColor = '#22c55e'; 
+                            } 
+                            ctx.font = 'bold 12px "Roboto Mono", monospace'; 
+                            ctx.fillStyle = labelColor; 
+                            ctx.textAlign = 'center'; 
+                            ctx.textBaseline = 'bottom'; 
+                            ctx.fillText(labelText, bar.x, bar.y - 5); 
+                        } 
+                    }); 
+                    ctx.restore(); 
+                } 
+            };
+
+            // Configuração do Gráfico Principal
+            const mainChartCtx = document.getElementById('mainChart').getContext('2d');
+            mainChart = new Chart(mainChartCtx, {
+                type: 'bar',
+                data: { labels: [], datasets: [ 
+                    { label: 'Dia Início', data: [], backgroundColor: 'rgba(239, 68, 68, 0.5)', borderRadius: 4 }, 
+                    { label: 'Dia Fim', data: [], backgroundColor: 'rgba(34, 197, 94, 0.7)', borderRadius: 4 } 
+                ]},
+                options: { 
+                    maintainAspectRatio: false, 
+                    layout: { padding: { top: 30 } }, 
+                    scales: { x: { ticks: { color: chartTextColor }, grid: { display: false } }, y: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } } }, 
+                    plugins: { 
+                        legend: { position: 'top', labels: { color: chartTextColor } }, 
+                        tooltip: { callbacks: { label: (context) => `R$ ${context.raw.toLocaleString('pt-BR', {minimumFractionDigits: 2})}` } } 
+                    } 
+                },
+                plugins: [topLabelsPlugin] // Ativação do plugin
+            });
+
+            // Configuração do Gráfico Radar
+            const polarChartCtx = document.getElementById('radarChart').getContext('2d');
+            topGroupsChart = new Chart(polarChartCtx, {
+                type: 'polarArea',
+                data: { labels: [], datasets: [{ label: 'Faturamento por Grupo', data: [], backgroundColor: [ 'rgba(14, 165, 233, 0.7)', 'rgba(217, 70, 239, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(99, 102, 241, 0.7)' ], borderWidth: 1, borderColor: '#0f172a' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { grid: { color: chartGridColor }, ticks: { display: false }, pointLabels: { display: true, centerPointLabels: true, font: { size: 12, family: "'Roboto Mono', monospace" }, color: chartTextColor } } }, plugins: { legend: { display: false } } }
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ -->
+
+
+
+
+
+
+
+<!-- 
+ <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Comparativo de Vendas</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        /* --- ESTILOS GERAIS E DO MENU SUPERIOR --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #f4f4f4; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+
+        .header {
+            background-color: #34495e; color: white; padding: 15px 20px; display: flex;
+            justify-content: space-between; align-items: center; position: fixed;
+            top: 0; width: 100%; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); z-index: 1000;
+        }
+        .header h1 { font-family: Arial, sans-serif; font-size: 24px; }
+        
+        /* --- ESTILOS DO DASHBOARD --- */
+        :root {
+            --bg-primary: #020617; --bg-secondary: #0f172a; --bg-card: rgba(15, 23, 42, 0.6);
+            --border-color: rgba(56, 189, 248, 0.2); --glow-color: rgba(56, 189, 248, 0.1);
+            --text-primary: #e2e8f0; --text-secondary: #94a3b8; --accent-cyan: #0ea5e9;
+            --accent-magenta: #d946ef; --accent-green: #22c55e; --accent-red: #ef4444;
+        }
+        .container {
+            margin-top: 80px; padding: 20px; max-width: 1800px; margin-left: auto; margin-right: auto;
+            background-color: var(--bg-primary); color: var(--text-primary); position: relative;
+            overflow: hidden; border-radius: 12px;
+            transition: margin-top 0.3s ease;
+        }
+        .dashboard-content { position: relative; z-index: 1; }
+        .dashboard-header {
+            display: flex; justify-content: space-between; align-items: center; padding: 15px 25px;
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            backdrop-filter: blur(10px); margin-bottom: 20px;
+        }
+        .dashboard-header h2 { font-family: 'Roboto Mono', monospace; font-size: 24px; font-weight: 700; color: var(--accent-cyan); text-shadow: 0 0 8px var(--accent-cyan); }
+        
+        .header-right-group { display: flex; align-items: center; gap: 15px; }
+        
+        .quick-search-group {
+            display: flex;
+            gap: 10px;
+            border-right: 1px solid var(--border-color);
+            padding-right: 15px;
+        }
+        .quick-btn {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quick-btn:hover {
+            background-color: var(--accent-cyan);
+            color: white;
+            border-color: var(--accent-cyan);
+        }
+        .date-input {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 7px;
+            border-radius: 6px;
+            color-scheme: dark; /* Garante que o calendário fique escuro */
+        }
+        .date-picker-group label { color: var(--text-secondary); font-size: 14px; }
+
+
+        .dashboard-grid { display: grid; gap: 20px; grid-template-columns: repeat(12, 1fr); }
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            backdrop-filter: blur(10px); padding: 25px; box-shadow: 0 0 30px var(--glow-color);
+            transition: all 0.3s ease; z-index: 1; display: flex; flex-direction: column;
+        }
+        .card:hover { border-color: rgba(56, 189, 248, 0.5); transform: translateY(-5px); }
+        .chart-container { position: relative; flex-grow: 1; min-height: 0; }
+        
+        .kpi-card { grid-column: span 3; }
+        .main-chart-card { grid-column: span 6; height: 450px;}
+        .radar-chart-card { grid-column: span 3; height: 450px; }
+        #top-produtos-card { grid-column: span 3; height: 450px; } /* Novo card */
+        .table-card { grid-column: span 12; }
+
+        .card-title { font-family: 'Roboto Mono', monospace; font-size: 18px; font-weight: 500; margin-bottom: 20px; color: var(--text-secondary); }
+        .kpi-value { font-size: 36px; font-weight: 700; color: var(--text-primary); }
+        .kpi-trend { display: flex; align-items: center; gap: 5px; font-size: 14px; margin-top: 5px; overflow-wrap: break-word; }
+        .kpi-trend.positive { color: var(--accent-green); }
+        .kpi-trend.negative { color: var(--accent-red); }
+        
+        .table-toolbar { display: flex; justify-content: flex-start; margin-bottom: 15px; }
+        .search-input { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 15px; color: var(--text-primary); width: 300px; }
+        
+        .data-table-container { max-height: 300px; overflow-y: auto; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .data-table thead { position: sticky; top: 0; background: var(--bg-secondary); }
+        
+        .btn-voltar, .logout-btn, .search-btn {
+            padding: 8px 15px; border: none; border-radius: 4px; font-size: 14px;
+            cursor: pointer; transition: background-color 0.3s ease; color: white;
+        }
+        .btn-voltar { background-color: #1abc9c; }
+        .btn-voltar:hover { background-color: #16a085; }
+        .logout-btn { background-color: #e74c3c; }
+        .logout-btn:hover { background-color: #c0392b; }
+        .search-btn { background-color: #3498db; }
+        .search-btn:hover { background-color: #2980b9; }
+
+        /* --- LOADER --- */
+        #loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(15, 23, 42, 0.8);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 9999;
+        }
+        .loader-bars { height: 50px; display: flex; align-items: center; gap: 6px; }
+        .loader-bars div { width: 8px; height: 100%; background-color: var(--accent-cyan); animation: stretch 1.2s infinite ease-in-out; }
+        .loader-bars div:nth-child(2) { animation-delay: -1.1s; }
+        .loader-bars div:nth-child(3) { animation-delay: -1.0s; }
+        .loader-bars div:nth-child(4) { animation-delay: -0.9s; }
+        .loader-text { color: var(--text-primary); margin-top: 20px; font-size: 18px; font-family: 'Roboto Mono', monospace; }
+        @keyframes stretch { 0%, 40%, 100% { transform: scaleY(0.4); } 20% { transform: scaleY(1.0); } }
+
+        /* ================== CSS PARA O NOVO CARD TOP 10 PRODUTOS ================== */
+        .top-list-container {
+            overflow-y: auto;
+            height: 100%;
+            padding-right: 10px; /* Espaço para a barra de rolagem */
+        }
+        .top-list-container::-webkit-scrollbar { width: 4px; }
+        .top-list-container::-webkit-scrollbar-track { background: transparent; }
+        .top-list-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .list-item { display: flex; flex-direction: column; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        .list-item:last-child { border-bottom: none; margin-bottom: 0; }
+        .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .item-name { font-size: 14px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; }
+        .item-value { font-size: 14px; font-weight: 700; color: var(--accent-cyan); }
+        .progress-bar-container { width: 100%; height: 8px; background-color: var(--bg-secondary); border-radius: 4px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent-magenta), var(--accent-cyan)); border-radius: 4px; transition: width 0.5s ease-out; }
+        .item-percentage { font-size: 12px; font-weight: 500; color: var(--text-secondary); text-align: right; margin-top: 3px; }
+        .placeholder-text { color: var(--text-secondary); height: 100%; display: flex; align-items: center; justify-content: center; }
+        
+        /* --- RESPONSIVIDADE --- */
+        @media (max-width: 1200px) { .kpi-card, .main-chart-card, .radar-chart-card, #top-produtos-card { grid-column: span 6; } }
+        @media (max-width: 768px) { .kpi-card, .main-chart-card, .radar-chart-card, #top-produtos-card { grid-column: span 12; } }
+    </style>
+</head>
+<body>
+    <div id="loader-overlay"><div class="loader-bars"><div></div><div></div><div></div><div></div></div><p class="loader-text">Calculando...</p></div>
+    <div class="header"><h1>Faturamento</h1><div class="header-buttons"><button class="btn-voltar" onclick="window.location.href='/'" style="background-color: #1abc9c;">Voltar</button><button class="logout-btn" onclick="window.location.href='/logout'" style="background-color: #e74c3c;">Sair</button></div></div>
+    
+    <div class="container">
+        <div class="dashboard-content">
+            <header class="dashboard-header">
+                <h2>Dashboard de Vendas</h2>
+                <div class="header-right-group">
+                    <div class="quick-search-group">
+                        <button class="quick-btn" onclick="setPeriod('last7days')">Últimos 7 Dias</button>
+                        <button class="quick-btn" onclick="setPeriod('thisMonth')">Este Mês</button>
+                        <button class="quick-btn" onclick="setPeriod('lastMonth')">Mês Passado</button>
+                    </div>
+                    <div class="date-picker-group">
+                        <label for="startDate">Período de:</label>
+                        <input type="date" id="startDate" class="date-input">
+                        <label for="endDate">Até:</label>
+                        <input type="date" id="endDate" class="date-input">
+                    </div>
+                    <button id="fetchDataButton" class="search-btn" style="background-color: #3498db;">Comparar com Ano Anterior</button>
+                </div>
+            </header>
+            
+            <main class="dashboard-grid">
+                <div class="card kpi-card"><h3 class="card-title">Faturamento (Período Atual)</h3><p class="kpi-value" id="kpi-receita-valor">Aguardando...</p><div class="kpi-trend" id="kpi-receita-atualizacao"></div></div>
+                <div class="card kpi-card"><h3 class="card-title">Resultado da Comparação</h3><p class="kpi-value" id="comparativo-referencia">Aguardando...</p><div class="kpi-trend" id="comparativo-status"></div></div>
+                <div class="card kpi-card"><h3 class="card-title">Itens Vendidos (Período Atual)</h3><p class="kpi-value" id="total-itens-valor">0</p></div>
+                <div class="card kpi-card"><h3 class="card-title">Lojas com Erro</h3><p class="kpi-value" id="lojas-erro-valor">0</p><div class="kpi-trend" id="lojas-erro-lista"></div></div>
+                
+                <div class="card main-chart-card"><h3 class="card-title">Ranking Faturamento (Atual vs. Anterior)</h3><div class="chart-container"><canvas id="mainChart"></canvas></div></div>
+                <div class="card radar-chart-card"><h3 class="card-title">Top 5 Grupos (Período Atual)</h3><div class="chart-container"><canvas id="radarChart"></canvas></div></div>
+                
+                <div class="card" id="top-produtos-card">
+                    <h3 class="card-title">Top 10 Produtos por Faturamento</h3>
+                    <div class="top-list-container" id="top-produtos-lista">
+                        <p class="placeholder-text">Aguardando dados...</p>
+                    </div>
+                </div>
+
+                <div class="card table-card">
+                    <div class="table-toolbar"><input type="text" class="search-input" id="tableFilterInput" placeholder="Filtrar produtos..."></div>
+                    <div class="data-table-container"><table class="data-table"><thead><tr><th>Produto ID</th><th>Nome</th><th>Grupo</th><th>Vendas (Período Atual)</th></tr></thead><tbody id="dataTableBody"></tbody></table></div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let mainChart, topGroupsChart;
+
+        function setPeriod(period) {
+            const today = new Date();
+            let startDate, endDate;
+            today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+            endDate = new Date(today);
+
+            switch (period) {
+                case 'last7days':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 6);
+                    break;
+                case 'thisMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    break;
+                case 'lastMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+            }
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+            atualizarDashboard();
+        }
+
+        async function atualizarDashboard() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            if (!startDate || !endDate) {
+                alert("Por favor, selecione um período de início e fim.");
+                return;
+            }
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            document.getElementById('fetchDataButton').disabled = true;
+
+            try {
+                const apiUrl = new URL(window.location.origin + '/api/dashboard/dados-diarios');
+                apiUrl.searchParams.append('inicio', startDate);
+                apiUrl.searchParams.append('final', endDate);
+                const response = await fetch(apiUrl);
+                if (!response.ok) { throw new Error(`Erro na API: ${response.status} - ${await response.text()}`); }
+                const data = await response.json();
+
+                // Card Faturamento
+                document.getElementById('kpi-receita-valor').textContent = data?.kpi_faturamento?.valor_formatado || 'N/A';
+                document.getElementById('kpi-receita-atualizacao').innerHTML = data?.kpi_faturamento?.atualizado_em ? `<i class="fas fa-check-circle"></i> Atualizado às ${data.kpi_faturamento.atualizado_em}` : '';
+                
+                // Card Comparativo
+                document.getElementById('comparativo-referencia').textContent = `Período Atual vs Ano Anterior`;
+                const statusEl = document.getElementById('comparativo-status');
+                statusEl.textContent = data?.kpi_comparativo?.texto || 'Dados indisponíveis';
+                statusEl.className = 'kpi-trend ' + (data?.kpi_comparativo?.status || '');
+                
+                // Outros KPIs
+                document.getElementById('total-itens-valor').textContent = data?.kpi_total_itens?.valor?.toLocaleString('pt-BR') || '0';
+                document.getElementById('lojas-erro-valor').textContent = data?.info_processamento?.lojas_com_erro?.length || '0';
+                
+                // Tabela de Produtos
+                const tabelaBody = document.getElementById('dataTableBody');
+                tabelaBody.innerHTML = '';
+                if (data.tabela_top_produtos && data.tabela_top_produtos.length > 0) {
+                    data.tabela_top_produtos.forEach(p => { tabelaBody.innerHTML += `<tr><td>${p.produto_id}</td><td>${p.nome}</td><td>${p.categoria}</td><td>${p.total_vendido}</td></tr>`; });
+                } else {
+                    tabelaBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum produto encontrado.</td></tr>';
+                }
+                
+                // Gráfico Principal (Ranking Lojas)
+                if (data.bar_chart_faturamento_loja) {
+                    mainChart.data.labels = data.bar_chart_faturamento_loja.labels;
+                    mainChart.data.datasets[0].data = data.bar_chart_faturamento_loja.dataset_dia_inicio;<div class="card kpi-card
+                    mainChart.data.datasets[1].data = data.bar_chart_faturamento_loja.dataset_dia_fim;
+                    mainChart.update();
+                }
+                
+                // Gráfico Polar (Top 5 Grupos)
+                if (data.radar_chart_desempenho_grupo) {
+                    topGroupsChart.data.labels = data.radar_chart_desempenho_grupo.labels;
+                    topGroupsChart.data.datasets[0].data = data.radar_chart_desempenho_grupo.data;
+                    topGroupsChart.update();
+                }
+
+                // Novo Card (Top 10 Produtos por Faturamento)
+                const topProdutosLista = document.getElementById('top-produtos-lista');
+                topProdutosLista.innerHTML = ''; 
+                if (data.kpi_top_produtos_faturamento && data.kpi_top_produtos_faturamento.length > 0) {
+                    data.kpi_top_produtos_faturamento.forEach(produto => {
+                        const itemHtml = `
+                            <div class="list-item">
+                                <div class="item-header">
+                                    <span class="item-name" title="${produto.nome}">${produto.nome}</span>
+                                    <span class="item-value">${produto.faturamento_formatado}</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: ${produto.percentual}%;"></div>
+                                </div>
+                                <div class="item-percentage">
+                                    ${produto.percentual.toFixed(2)}% do total
+                                </div>
+                            </div>
+                        `;
+                        topProdutosLista.innerHTML += itemHtml;
+                    });
+                } else {
+                    topProdutosLista.innerHTML = '<p class="placeholder-text">Nenhum produto para exibir.</p>';
+                }
+
+            } catch (e) {
+                console.error("Erro ao carregar o dashboard:", e);
+                document.getElementById('kpi-receita-valor').textContent = 'Erro Geral';
+            } finally {
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('fetchDataButton').disabled = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const fetchButton = document.getElementById('fetchDataButton');
+            fetchButton.addEventListener('click', atualizarDashboard);
+
+            const chartTextColor = '#94a3b8';
+            const chartGridColor = 'rgba(148, 163, 184, 0.1)';
+            
+            const topLabelsPlugin = { id: 'topLabels', afterDatasetsDraw(chart) { /* ... (plugin para labels no topo das barras) */ } };
+
+            // Gráfico Principal
+            mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [ 
+                    { label: 'Período Anterior', data: [], backgroundColor: 'rgba(239, 68, 68, 0.5)', borderRadius: 4 }, 
+                    { label: 'Período Atual', data: [], backgroundColor: 'rgba(34, 197, 94, 0.7)', borderRadius: 4 } 
+                ]},
+                options: { maintainAspectRatio: false, layout: { padding: { top: 30 } }, scales: { x: { ticks: { color: chartTextColor }, grid: { display: false } }, y: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } } }, plugins: { legend: { position: 'top', labels: { color: chartTextColor } }, tooltip: { callbacks: { label: (context) => `R$ ${context.raw.toLocaleString('pt-BR', {minimumFractionDigits: 2})}` } } } },
+                plugins: [topLabelsPlugin]
+            });
+
+            // Gráfico Polar
+            topGroupsChart = new Chart(document.getElementById('radarChart').getContext('2d'), {
+                type: 'polarArea',
+                data: { labels: [], datasets: [{ label: 'Faturamento por Grupo', data: [], backgroundColor: [ 'rgba(14, 165, 233, 0.7)', 'rgba(217, 70, 239, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(99, 102, 241, 0.7)' ], borderWidth: 1, borderColor: '#0f172a' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { grid: { color: chartGridColor }, ticks: { display: false }, pointLabels: { display: true, centerPointLabels: true, font: { size: 12, family: "'Roboto Mono', monospace" }, color: chartTextColor } } }, plugins: { legend: { display: false } } }
+            });
+        });
+    </script>
+</body>
+</html> -->
+
+
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Comparativo de Vendas</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+
+
+/* ================== CSS PARA OS NOVOS CARDS DE LISTA (TICKET MÉDIO) ================== */
+.kpi-list-card {
+    grid-column: span 3; /* Ocupa o mesmo espaço que os antigos */
+}
+
+.kpi-list {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Espaçamento entre os itens da lista */
+}
+
+.kpi-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border-color);
+}
+.kpi-list-item:last-child {
+    border-bottom: none;
+}
+
+.kpi-list-item .item-name {
+    font-size: 14px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kpi-list-item .item-value {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Roboto Mono', monospace;
+    color: var(--text-primary);
+}
+
+        /* --- ESTILOS GERAIS E DO MENU SUPERIOR --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #f4f4f4; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+
+        .header {
+            background-color: #34495e; color: white; padding: 15px 20px; display: flex;
+            justify-content: space-between; align-items: center; position: fixed;
+            top: 0; width: 100%; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); z-index: 1000;
+        }
+        .header h1 { font-family: Arial, sans-serif; font-size: 24px; }
+        
+        /* --- ESTILOS DO DASHBOARD --- */
+        :root {
+            --bg-primary: #020617; --bg-secondary: #0f172a; --bg-card: rgba(15, 23, 42, 0.6);
+            --border-color: rgba(56, 189, 248, 0.2); --glow-color: rgba(56, 189, 248, 0.1);
+            --text-primary: #e2e8f0; --text-secondary: #94a3b8; --accent-cyan: #0ea5e9;
+            --accent-magenta: #d946ef; --accent-green: #22c55e; --accent-red: #ef4444;
+        }
+        .container {
+            margin-top: 80px; padding: 20px; max-width: 1800px; margin-left: auto; margin-right: auto;
+            background-color: var(--bg-primary); color: var(--text-primary); position: relative;
+            overflow: hidden; border-radius: 12px;
+            transition: margin-top 0.3s ease;
+        }
+        .dashboard-content { position: relative; z-index: 1; }
+        .dashboard-header {
+            display: flex; justify-content: space-between; align-items: center; padding: 15px 25px;
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            backdrop-filter: blur(10px); margin-bottom: 20px;
+        }
+        .dashboard-header h2 { font-family: 'Roboto Mono', monospace; font-size: 24px; font-weight: 700; color: var(--accent-cyan); text-shadow: 0 0 8px var(--accent-cyan); }
+        
+        .header-right-group { display: flex; align-items: center; gap: 15px; }
+        
+        .quick-search-group {
+            display: flex;
+            gap: 10px;
+            border-right: 1px solid var(--border-color);
+            padding-right: 15px;
+        }
+        .quick-btn {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quick-btn:hover {
+            background-color: var(--accent-cyan);
+            color: white;
+            border-color: var(--accent-cyan);
+        }
+        .date-input {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 7px;
+            border-radius: 6px;
+            color-scheme: dark; /* Garante que o calendário fique escuro */
+        }
+        .date-picker-group label { color: var(--text-secondary); font-size: 14px; }
+
+
+        .dashboard-grid { display: grid; gap: 20px; grid-template-columns: repeat(12, 1fr); }
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            backdrop-filter: blur(10px); padding: 25px; box-shadow: 0 0 30px var(--glow-color);
+            transition: all 0.3s ease; z-index: 1; display: flex; flex-direction: column;
+        }
+        .card:hover { border-color: rgba(56, 189, 248, 0.5); transform: translateY(-5px); }
+        .chart-container { position: relative; flex-grow: 1; min-height: 0; }
+        
+        .kpi-card { grid-column: span 3; }
+        .main-chart-card { grid-column: span 6; height: 450px;}
+        .radar-chart-card { grid-column: span 3; height: 450px; }
+        #top-produtos-card { grid-column: span 3; height: 450px; } /* Novo card */
+        .table-card { grid-column: span 12; }
+
+        .card-title { font-family: 'Roboto Mono', monospace; font-size: 18px; font-weight: 500; margin-bottom: 20px; color: var(--text-secondary); }
+        .kpi-value { font-size: 36px; font-weight: 700; color: var(--text-primary); }
+        .kpi-trend { display: flex; align-items: center; gap: 5px; font-size: 14px; margin-top: 5px; overflow-wrap: break-word; }
+        .kpi-trend.positive { color: var(--accent-green); }
+        .kpi-trend.negative { color: var(--accent-red); }
+        
+        .table-toolbar { display: flex; justify-content: flex-start; margin-bottom: 15px; }
+        .search-input { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 15px; color: var(--text-primary); width: 300px; }
+        
+        .data-table-container { max-height: 300px; overflow-y: auto; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .data-table thead { position: sticky; top: 0; background: var(--bg-secondary); }
+        
+        .btn-voltar, .logout-btn, .search-btn {
+            padding: 8px 15px; border: none; border-radius: 4px; font-size: 14px;
+            cursor: pointer; transition: background-color 0.3s ease; color: white;
+        }
+        .btn-voltar { background-color: #1abc9c; }
+        .btn-voltar:hover { background-color: #16a085; }
+        .logout-btn { background-color: #e74c3c; }
+        .logout-btn:hover { background-color: #c0392b; }
+        .search-btn { background-color: #3498db; }
+        .search-btn:hover { background-color: #2980b9; }
+
+        /* --- LOADER --- */
+        #loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(15, 23, 42, 0.8);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 9999;
+        }
+        .loader-bars { height: 50px; display: flex; align-items: center; gap: 6px; }
+        .loader-bars div { width: 8px; height: 100%; background-color: var(--accent-cyan); animation: stretch 1.2s infinite ease-in-out; }
+        .loader-bars div:nth-child(2) { animation-delay: -1.1s; }
+        .loader-bars div:nth-child(3) { animation-delay: -1.0s; }
+        .loader-bars div:nth-child(4) { animation-delay: -0.9s; }
+        .loader-text { color: var(--text-primary); margin-top: 20px; font-size: 18px; font-family: 'Roboto Mono', monospace; }
+        @keyframes stretch { 0%, 40%, 100% { transform: scaleY(0.4); } 20% { transform: scaleY(1.0); } }
+
+        /* ================== CSS PARA O NOVO CARD TOP 10 PRODUTOS ================== */
+        .top-list-container {
+            overflow-y: auto;
+            height: 100%;
+            padding-right: 10px; /* Espaço para a barra de rolagem */
+        }
+        .top-list-container::-webkit-scrollbar { width: 4px; }
+        .top-list-container::-webkit-scrollbar-track { background: transparent; }
+        .top-list-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .list-item { display: flex; flex-direction: column; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        .list-item:last-child { border-bottom: none; margin-bottom: 0; }
+        .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .item-name { font-size: 14px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; }
+        .item-value { font-size: 14px; font-weight: 700; color: var(--accent-cyan); }
+        .progress-bar-container { width: 100%; height: 8px; background-color: var(--bg-secondary); border-radius: 4px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent-magenta), var(--accent-cyan)); border-radius: 4px; transition: width 0.5s ease-out; }
+        .item-percentage { font-size: 12px; font-weight: 500; color: var(--text-secondary); text-align: right; margin-top: 3px; }
+        .placeholder-text { color: var(--text-secondary); height: 100%; display: flex; align-items: center; justify-content: center; }
+        
+        /* --- RESPONSIVIDADE --- */
+        @media (max-width: 1200px) { .kpi-card, .main-chart-card, .radar-chart-card, #top-produtos-card { grid-column: span 6; } }
+        @media (max-width: 768px) { .kpi-card, .main-chart-card, .radar-chart-card, #top-produtos-card { grid-column: span 12; } }
+    </style>
+</head>
+<body>
+    <div id="loader-overlay"><div class="loader-bars"><div></div><div></div><div></div><div></div></div><p class="loader-text">Calculando...</p></div>
+    <div class="header"><h1>Faturamento</h1><div class="header-buttons"><button class="btn-voltar" onclick="window.location.href='/'" style="background-color: #1abc9c;">Voltar</button><button class="logout-btn" onclick="window.location.href='/logout'" style="background-color: #e74c3c;">Sair</button></div></div>
+    
+    <div class="container">
+        <div class="dashboard-content">
+            <header class="dashboard-header">
+                <h2>Dashboard de Vendas</h2>
+                <div class="header-right-group">
+                    <div class="quick-search-group">
+                        <button class="quick-btn" onclick="setPeriod('last7days')">Últimos 7 Dias</button>
+                        <button class="quick-btn" onclick="setPeriod('thisMonth')">Este Mês</button>
+                        <button class="quick-btn" onclick="setPeriod('lastMonth')">Mês Passado</button>
+                    </div>
+                    <div class="date-picker-group">
+                        <label for="startDate">Período de:</label>
+                        <input type="date" id="startDate" class="date-input">
+                        <label for="endDate">Até:</label>
+                        <input type="date" id="endDate" class="date-input">
+                    </div>
+                    <button id="fetchDataButton" class="search-btn" style="background-color: #3498db;">Comparar com Ano Anterior</button>
+                </div>
+            </header>
+            
+            <main class="dashboard-grid">
+                <div class="card kpi-card"><h3 class="card-title">Faturamento (Período Atual)</h3><p class="kpi-value" id="kpi-receita-valor">Aguardando...</p><div class="kpi-trend" id="kpi-receita-atualizacao"></div></div>
+                <div class="card kpi-card"><h3 class="card-title">Resultado da Comparação</h3><p class="kpi-value" id="comparativo-referencia">Aguardando...</p><div class="kpi-trend" id="comparativo-status"></div></div>
+                <div class="card kpi-list-card">
+    <h3 class="card-title">Ticket Médio por Grupo</h3>
+    <div class="kpi-list" id="ticket-medio-grupo">
+        <p class="placeholder-text">Aguardando dados...</p>
+    </div>
+</div>
+<div class="card kpi-list-card">
+    <h3 class="card-title">Ticket Médio por Loja</h3>
+    <div class="kpi-list" id="ticket-medio-loja">
+        <p class="placeholder-text">Aguardando dados...</p>
+    </div>
+</div>
+                
+                <div class="card main-chart-card"><h3 class="card-title">Ranking Faturamento (Atual vs. Anterior)</h3><div class="chart-container"><canvas id="mainChart"></canvas></div></div>
+                <div class="card radar-chart-card"><h3 class="card-title">Top 5 Grupos (Período Atual)</h3><div class="chart-container"><canvas id="radarChart"></canvas></div></div>
+                
+                <div class="card" id="top-produtos-card">
+                    <h3 class="card-title">Top 10 Produtos por Faturamento</h3>
+                    <div class="top-list-container" id="top-produtos-lista">
+                        <p class="placeholder-text">Aguardando dados...</p>
+                    </div>
+                </div>
+
+                <div class="card table-card">
+                    <div class="table-toolbar"><input type="text" class="search-input" id="tableFilterInput" placeholder="Filtrar produtos..."></div>
+                    <div class="data-table-container"><table class="data-table"><thead><tr><th>Produto ID</th><th>Nome</th><th>Grupo</th><th>Vendas (Período Atual)</th></tr></thead><tbody id="dataTableBody"></tbody></table></div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let mainChart, topGroupsChart;
+
+        function setPeriod(period) {
+            const today = new Date();
+            let startDate, endDate;
+            today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+            endDate = new Date(today);
+
+            switch (period) {
+                case 'last7days':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 6);
+                    break;
+                case 'thisMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    break;
+                case 'lastMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+            }
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+            atualizarDashboard();
+        }
+
+        // async function atualizarDashboard() {
+        //     const startDate = document.getElementById('startDate').value;
+        //     const endDate = document.getElementById('endDate').value;
+        //     if (!startDate || !endDate) {
+        //         alert("Por favor, selecione um período de início e fim.");
+        //         return;
+        //     }
+
+        //     document.getElementById('loader-overlay').style.display = 'flex';
+        //     document.getElementById('fetchDataButton').disabled = true;
+
+        //     try {
+        //         const apiUrl = new URL(window.location.origin + '/api/dashboard/dados-diarios');
+        //         apiUrl.searchParams.append('inicio', startDate);
+        //         apiUrl.searchParams.append('final', endDate);
+        //         const response = await fetch(apiUrl);
+        //         if (!response.ok) { throw new Error(`Erro na API: ${response.status} - ${await response.text()}`); }
+        //         const data = await response.json();
+
+        //         // Card Faturamento
+        //         document.getElementById('kpi-receita-valor').textContent = data?.kpi_faturamento?.valor_formatado || 'N/A';
+        //         document.getElementById('kpi-receita-atualizacao').innerHTML = data?.kpi_faturamento?.atualizado_em ? `<i class="fas fa-check-circle"></i> Atualizado às ${data.kpi_faturamento.atualizado_em}` : '';
+                
+        //         // Card Comparativo
+        //         document.getElementById('comparativo-referencia').textContent = `Período Atual vs Ano Anterior`;
+        //         const statusEl = document.getElementById('comparativo-status');
+        //         statusEl.textContent = data?.kpi_comparativo?.texto || 'Dados indisponíveis';
+        //         statusEl.className = 'kpi-trend ' + (data?.kpi_comparativo?.status || '');
+                
+        //         // Outros KPIs
+        //         document.getElementById('total-itens-valor').textContent = data?.kpi_total_itens?.valor?.toLocaleString('pt-BR') || '0';
+        //         document.getElementById('lojas-erro-valor').textContent = data?.info_processamento?.lojas_com_erro?.length || '0';
+                
+        //         // Tabela de Produtos
+        //         const tabelaBody = document.getElementById('dataTableBody');
+        //         tabelaBody.innerHTML = '';
+        //         if (data.tabela_top_produtos && data.tabela_top_produtos.length > 0) {
+        //             data.tabela_top_produtos.forEach(p => { tabelaBody.innerHTML += `<tr><td>${p.produto_id}</td><td>${p.nome}</td><td>${p.categoria}</td><td>${p.total_vendido}</td></tr>`; });
+        //         } else {
+        //             tabelaBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum produto encontrado.</td></tr>';
+        //         }
+                
+        //         // Gráfico Principal (Ranking Lojas)
+        //         if (data.bar_chart_faturamento_loja) {
+        //             mainChart.data.labels = data.bar_chart_faturamento_loja.labels;
+        //             mainChart.data.datasets[0].data = data.bar_chart_faturamento_loja.dataset_dia_inicio;
+        //             mainChart.data.datasets[1].data = data.bar_chart_faturamento_loja.dataset_dia_fim;
+        //             mainChart.update();
+        //         }
+                
+        //         // Gráfico Polar (Top 5 Grupos)
+        //         if (data.radar_chart_desempenho_grupo) {
+        //             topGroupsChart.data.labels = data.radar_chart_desempenho_grupo.labels;
+        //             topGroupsChart.data.datasets[0].data = data.radar_chart_desempenho_grupo.data;
+        //             topGroupsChart.update();
+        //         }
+
+        //         // Novo Card (Top 10 Produtos por Faturamento)
+        //         const topProdutosLista = document.getElementById('top-produtos-lista');
+        //         topProdutosLista.innerHTML = ''; 
+        //         if (data.kpi_top_produtos_faturamento && data.kpi_top_produtos_faturamento.length > 0) {
+        //             data.kpi_top_produtos_faturamento.forEach(produto => {
+        //                 const itemHtml = `
+        //                     <div class="list-item">
+        //                         <div class="item-header">
+        //                             <span class="item-name" title="${produto.nome}">${produto.nome}</span>
+        //                             <span class="item-value">${produto.faturamento_formatado}</span>
+        //                         </div>
+        //                         <div class="progress-bar-container">
+        //                             <div class="progress-bar" style="width: ${produto.percentual}%;"></div>
+        //                         </div>
+        //                         <div class="item-percentage">
+        //                             ${produto.percentual.toFixed(2)}% do total
+        //                         </div>
+        //                     </div>
+        //                 `;
+        //                 topProdutosLista.innerHTML += itemHtml;
+        //             });
+        //         } else {
+        //             topProdutosLista.innerHTML = '<p class="placeholder-text">Nenhum produto para exibir.</p>';
+        //         }
+
+        //     } catch (e) {
+        //         console.error("Erro ao carregar o dashboard:", e);
+        //         document.getElementById('kpi-receita-valor').textContent = 'Erro Geral';
+        //     } finally {
+        //         document.getElementById('loader-overlay').style.display = 'none';
+        //         document.getElementById('fetchDataButton').disabled = false;
+        //     }
+        // }]
+        
+
+async function atualizarDashboard() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    if (!startDate || !endDate) {
+        alert("Por favor, selecione um período de início e fim.");
+        return;
+    }
+
+    document.getElementById('loader-overlay').style.display = 'flex';
+    document.getElementById('fetchDataButton').disabled = true;
+
+    try {
+        const apiUrl = new URL(window.location.origin + '/api/dashboard/dados-diarios');
+        apiUrl.searchParams.append('inicio', startDate);
+        apiUrl.searchParams.append('final', endDate);
+        const response = await fetch(apiUrl);
+        if (!response.ok) { throw new Error(`Erro na API: ${response.status} - ${await response.text()}`); }
+        const data = await response.json();
+
+        // Card Faturamento
+        document.getElementById('kpi-receita-valor').textContent = data?.kpi_faturamento?.valor_formatado || 'N/A';
+        document.getElementById('kpi-receita-atualizacao').innerHTML = data?.kpi_faturamento?.atualizado_em ? `<i class="fas fa-check-circle"></i> Atualizado às ${data.kpi_faturamento.atualizado_em}` : '';
+        
+        // Card Comparativo
+        document.getElementById('comparativo-referencia').textContent = `Período Atual vs Ano Anterior`;
+        const statusEl = document.getElementById('comparativo-status');
+        statusEl.textContent = data?.kpi_comparativo?.texto || 'Dados indisponíveis';
+        statusEl.className = 'kpi-trend ' + (data?.kpi_comparativo?.status || '');
+        
+        // Outros KPIs (total-itens-valor and lojas-erro-valor are not directly visible in the image, assuming they exist elsewhere or were removed)
+        // document.getElementById('total-itens-valor').textContent = data?.kpi_total_itens?.valor?.toLocaleString('pt-BR') || '0';
+        // document.getElementById('lojas-erro-valor').textContent = data?.info_processamento?.lojas_com_erro?.length || '0';
+        
+        // Tabela de Produtos
+        const tabelaBody = document.getElementById('dataTableBody');
+        tabelaBody.innerHTML = '';
+        if (data.tabela_top_produtos && data.tabela_top_produtos.length > 0) {
+            data.tabela_top_produtos.forEach(p => { tabelaBody.innerHTML += `<tr><td>${p.produto_id}</td><td>${p.nome}</td><td>${p.categoria}</td><td>${p.total_vendido}</td></tr>`; });
+        } else {
+            tabelaBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum produto encontrado.</td></tr>';
+        }
+        
+        // Gráfico Principal (Ranking Faturamento)
+        if (data.bar_chart_faturamento_loja) {
+            mainChart.data.labels = data.bar_chart_faturamento_loja.labels;
+            mainChart.data.datasets[0].data = data.bar_chart_faturamento_loja.dataset_dia_inicio;
+            mainChart.data.datasets[1].data = data.bar_chart_faturamento_loja.dataset_dia_fim;
+            mainChart.update();
+        }
+        
+        // Gráfico Polar (Top 5 Grupos)
+        if (data.radar_chart_desempenho_grupo) {
+            topGroupsChart.data.labels = data.radar_chart_desempenho_grupo.labels;
+            topGroupsChart.data.datasets[0].data = data.radar_chart_desempenho_grupo.data;
+            topGroupsChart.update();
+        }
+
+        // Novo Card (Top 10 Produtos por Faturamento)
+        const topProdutosLista = document.getElementById('top-produtos-lista');
+        topProdutosLista.innerHTML = ''; 
+        if (data.kpi_top_produtos_faturamento && data.kpi_top_produtos_faturamento.length > 0) {
+            data.kpi_top_produtos_faturamento.forEach(produto => {
+                const itemHtml = `
+                    <div class="list-item">
+                        <div class="item-header">
+                            <span class="item-name" title="${produto.nome}">${produto.nome}</span>
+                            <span class="item-value">${produto.faturamento_formatado}</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${produto.percentual}%;"></div>
+                        </div>
+                        <div class="item-percentage">
+                            ${produto.percentual.toFixed(2)}% do total
+                        </div>
+                    </div>
+                `;
+                topProdutosLista.innerHTML += itemHtml;
+            });
+        } else {
+            topProdutosLista.innerHTML = '<p class="placeholder-text">Nenhum produto para exibir.</p>';
+        }
+
+        // Populate Ticket Médio por Grupo
+        const ticketMedioGrupoEl = document.getElementById('ticket-medio-grupo');
+        ticketMedioGrupoEl.innerHTML = ''; // Clear previous content
+        if (data.kpi_ticket_medio_grupo && data.kpi_ticket_medio_grupo.length > 0) {
+            data.kpi_ticket_medio_grupo.forEach(item => {
+                const listItem = document.createElement('div');
+                listItem.classList.add('kpi-list-item');
+                listItem.innerHTML = `
+                    <span class="item-name">${item.nome}</span>
+                    <span class="item-value">R$ ${item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                `;
+                ticketMedioGrupoEl.appendChild(listItem);
+            });
+        } else {
+            ticketMedioGrupoEl.innerHTML = '<p class="placeholder-text">Aguardando dados...</p>';
+        }
+
+        // Populate Ticket Médio por Loja
+        const ticketMedioLojaEl = document.getElementById('ticket-medio-loja');
+        ticketMedioLojaEl.innerHTML = ''; // Clear previous content
+        if (data.kpi_ticket_medio_loja && data.kpi_ticket_medio_loja.length > 0) {
+            data.kpi_ticket_medio_loja.forEach(item => {
+                const listItem = document.createElement('div');
+                listItem.classList.add('kpi-list-item');
+                listItem.innerHTML = `
+                    <span class="item-name">${item.nome}</span>
+                    <span class="item-value">R$ ${item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                `;
+                ticketMedioLojaEl.appendChild(listItem);
+            });
+        } else {
+            ticketMedioLojaEl.innerHTML = '<p class="placeholder-text">Aguardando dados...</p>';
+        }
+
+    } catch (e) {
+        console.error("Erro ao carregar o dashboard:", e);
+        document.getElementById('kpi-receita-valor').textContent = 'Erro Geral';
+        // You might want to also set placeholder text for the new KPIs on error
+        document.getElementById('ticket-medio-grupo').innerHTML = '<p class="placeholder-text">Erro ao carregar dados.</p>';
+        document.getElementById('ticket-medio-loja').innerHTML = '<p class="placeholder-text">Erro ao carregar dados.</p>';
+    } finally {
+        document.getElementById('loader-overlay').style.display = 'none';
+        document.getElementById('fetchDataButton').disabled = false;
+    }
+}
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const fetchButton = document.getElementById('fetchDataButton');
+            fetchButton.addEventListener('click', atualizarDashboard);
+
+            const chartTextColor = '#94a3b8';
+            const chartGridColor = 'rgba(148, 163, 184, 0.1)';
+            
+            const topLabelsPlugin = {
+                id: 'topLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx, data } = chart;
+                    ctx.save();
+                    const metaAnterior = chart.getDatasetMeta(0);
+                    const metaAtual = chart.getDatasetMeta(1);
+                    metaAtual.data.forEach((bar, index) => {
+                        const faturamentoAtual = data.datasets[1].data[index];
+                        const faturamentoAnterior = data.datasets[0].data[index];
+                        if (faturamentoAnterior > 0) {
+                            const percentual = ((faturamentoAtual / faturamentoAnterior) - 1) * 100;
+                            let textoLabel = '';
+                            let corLabel = '';
+                            if (percentual >= 0) {
+                                textoLabel = `▲ ${percentual.toFixed(0)}%`;
+                                corLabel = '#22c55e';
+                            } else {
+                                textoLabel = `▼ ${Math.abs(percentual).toFixed(0)}%`;
+                                corLabel = '#ef4444';
+                            }
+                            ctx.font = 'bold 12px "Roboto Mono", monospace';
+                            ctx.fillStyle = corLabel;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillText(textoLabel, bar.x, bar.y - 5);
+                        }
+                    });
+                    ctx.restore();
+                }
+            };
+
+            // Gráfico Principal
+            mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [ 
+                    { label: 'Período Anterior', data: [], backgroundColor: 'rgba(239, 68, 68, 0.5)', borderRadius: 4 }, 
+                    { label: 'Período Atual', data: [], backgroundColor: 'rgba(34, 197, 94, 0.7)', borderRadius: 4 } 
+                ]},
+                options: { 
+                    maintainAspectRatio: false, 
+                    layout: { padding: { top: 30 } }, 
+                    scales: { 
+                        x: { ticks: { color: chartTextColor }, grid: { display: false } }, 
+                        y: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } } 
+                    }, 
+                    plugins: { 
+                        legend: { position: 'top', labels: { color: chartTextColor } }, 
+                        tooltip: { callbacks: { label: (context) => `R$ ${context.raw.toLocaleString('pt-BR', {minimumFractionDigits: 2})}` } } 
+                    } 
+                },
+                plugins: [topLabelsPlugin] // Ativação do plugin
+            });
+
+            // Gráfico Polar
+            topGroupsChart = new Chart(document.getElementById('radarChart').getContext('2d'), {
+                type: 'polarArea',
+                data: { labels: [], datasets: [{ label: 'Faturamento por Grupo', data: [], backgroundColor: [ 'rgba(14, 165, 233, 0.7)', 'rgba(217, 70, 239, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(99, 102, 241, 0.7)' ], borderWidth: 1, borderColor: '#0f172a' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { grid: { color: chartGridColor }, ticks: { display: false }, pointLabels: { display: true, centerPointLabels: true, font: { size: 12, family: "'Roboto Mono', monospace" }, color: chartTextColor } } }, plugins: { legend: { display: false } } }
+            });
+        });
+    </script>
+</body>
+</html> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Comparativo de Vendas</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        /* --- ESTILOS GERAIS E DO MENU SUPERIOR --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #f4f4f4; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+
+        .header {
+            background-color: #34495e; color: white; padding: 15px 20px; display: flex;
+            justify-content: space-between; align-items: center; position: fixed;
+            top: 0; width: 100%; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); z-index: 1000;
+        }
+        .header h1 { font-family: Arial, sans-serif; font-size: 24px; }
+        
+        /* --- ESTILOS DO DASHBOARD --- */
+        :root {
+            --bg-primary: #020617;
+            --bg-secondary: #0f172a;
+            --bg-card: rgba(15, 23, 42, 0.6);
+            --border-color: rgba(56, 189, 248, 0.2);
+            --glow-color: rgba(56, 189, 248, 0.1);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent-cyan: #0ea5e9;
+            --accent-magenta: #d946ef;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+        }
+        .container {
+            margin-top: 80px; padding: 20px; max-width: 1800px; margin-left: auto; margin-right: auto;
+            background-color: var(--bg-primary); color: var(--text-primary); position: relative;
+            overflow: hidden; border-radius: 12px;
+            transition: margin-top 0.3s ease;
+        }
+        .dashboard-content { position: relative; z-index: 1; }
+        .dashboard-header {
+            display: flex; justify-content: space-between; align-items: center; padding: 15px 25px;
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            backdrop-filter: blur(10px); margin-bottom: 20px;
+        }
+        .dashboard-header h2 { font-family: 'Roboto Mono', monospace; font-size: 24px; font-weight: 700; color: var(--accent-cyan); text-shadow: 0 0 8px var(--accent-cyan); }
+        
+        .header-right-group { display: flex; align-items: center; gap: 15px; }
+        
+        .quick-search-group {
+            display: flex;
+            gap: 10px;
+            border-right: 1px solid var(--border-color);
+            padding-right: 15px;
+        }
+        .quick-btn {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quick-btn:hover {
+            background-color: var(--accent-cyan);
+            color: white;
+            border-color: var(--accent-cyan);
+        }
+        .date-input {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 7px;
+            border-radius: 6px;
+            color-scheme: dark; /* Garante que o calendário fique escuro */
+        }
+        .date-picker-group label { color: var(--text-secondary); font-size: 14px; }
+
+
+        .dashboard-grid { display: grid; gap: 20px; grid-template-columns: repeat(12, 1fr); }
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            backdrop-filter: blur(10px); padding: 25px; box-shadow: 0 0 30px var(--glow-color);
+            transition: all 0.3s ease; z-index: 1;
+            /* IMPORTANTE: Adiciona flexbox para o layout interno dos cards */
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover { border-color: rgba(56, 189, 248, 0.5); transform: translateY(-5px); }
+        .chart-container { position: relative; flex-grow: 1; min-height: 0; }
+        
+        .kpi-card {
+            grid-column: span 3;
+            height: 200px; /* <--- Altura fixa para os cards KPI (ajuste conforme necessário) */
+        }
+        .main-chart-card { grid-column: span 6; height: 450px;}
+        .radar-chart-card { grid-column: span 3; height: 450px; }
+        #top-produtos-card { grid-column: span 3; height: 450px; } /* Card Top 10 Produtos */
+        .table-card { grid-column: span 12; }
+
+        .card-title { font-family: 'Roboto Mono', monospace; font-size: 18px; font-weight: 500; margin-bottom: 20px; color: var(--text-secondary); }
+        .kpi-value { font-size: 36px; font-weight: 700; color: var(--text-primary); }
+        .kpi-trend { display: flex; align-items: center; gap: 5px; font-size: 14px; margin-top: 5px; overflow-wrap: break-word; }
+        .kpi-trend.positive { color: var(--accent-green); }
+        .kpi-trend.negative { color: var(--accent-red); }
+        
+        .table-toolbar { display: flex; justify-content: flex-start; margin-bottom: 15px; }
+        .search-input { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 15px; color: var(--text-primary); width: 300px; }
+        
+        .data-table-container { max-height: 300px; overflow-y: auto; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .data-table thead { position: sticky; top: 0; background: var(--bg-secondary); }
+        
+        .btn-voltar, .logout-btn, .search-btn {
+            padding: 8px 15px; border: none; border-radius: 4px; font-size: 14px;
+            cursor: pointer; transition: background-color 0.3s ease; color: white;
+        }
+        .btn-voltar { background-color: #1abc9c; }
+        .btn-voltar:hover { background-color: #16a085; }
+        .logout-btn { background-color: #e74c3c; }
+        .logout-btn:hover { background-color: #c0392b; }
+        .search-btn { background-color: #3498db; }
+        .search-btn:hover { background-color: #2980b9; }
+
+        /* --- LOADER --- */
+        #loader-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(15, 23, 42, 0.8);
+            display: none; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 9999;
+        }
+        .loader-bars { height: 50px; display: flex; align-items: center; gap: 6px; }
+        .loader-bars div { width: 8px; height: 100%; background-color: var(--accent-cyan); animation: stretch 1.2s infinite ease-in-out; }
+        .loader-bars div:nth-child(2) { animation-delay: -1.1s; }
+        .loader-bars div:nth-child(3) { animation-delay: -1.0s; }
+        .loader-bars div:nth-child(4) { animation-delay: -0.9s; }
+        .loader-text { color: var(--text-primary); margin-top: 20px; font-size: 18px; font-family: 'Roboto Mono', monospace; }
+        @keyframes stretch { 0%, 40%, 100% { transform: scaleY(0.4); } 20% { transform: scaleY(1.0); } }
+
+        /* ================== CSS PARA OS CARDS DE LISTA COM ROLAGEM (TICKET MÉDIO) ================== */
+        /* Define o tamanho fixo e o layout flexível para o card que contém a lista */
+        .kpi-list-card {
+            grid-column: span 3; /* Garante que ocupe 3 colunas, como os outros KPIs */
+            height: 200px; /* <--- ALTURA FIXA DO CARD. AJUSTE ESTE VALOR PARA O TAMANHO DESEJADO. */
+            
+            /* Configuração flexbox para organizar o título e a lista internamente */
+            display: flex;
+            flex-direction: column; /* Título em cima, lista embaixo */
+        }
+
+        /* O container da lista que terá a rolagem */
+        .kpi-list { /* Renomeado para kpi-list como no seu HTML atual */
+            flex-grow: 1; /* <--- ESSENCIAL: Faz a lista ocupar todo o espaço vertical restante dentro do card */
+            overflow-y: auto; /* <--- ADICIONA A BARRA DE ROLAGEM VERTICAL QUANDO O CONTEÚDO EXCEDER */
+            
+            padding-right: 5px; /* Espaço para a barra de rolagem não sobrepor o texto */
+            
+            /* Estilo da lista interna */
+            display: flex;
+            flex-direction: column;
+            gap: 12px; /* Espaçamento entre os itens da lista */
+        }
+
+        /* Estilização da barra de rolagem para .kpi-list */
+        .kpi-list::-webkit-scrollbar {
+            width: 4px; /* Largura da barra */
+        }
+        .kpi-list::-webkit-scrollbar-track {
+            background: transparent; /* Fundo transparente da trilha */
+        }
+        .kpi-list::-webkit-scrollbar-thumb {
+            background: var(--border-color); /* Cor do "polegar" da barra de rolagem */
+            border-radius: 4px; /* Borda arredondada */
+        }
+
+        /* Estilo de cada item individual da lista (Nome e Valor) */
+        .kpi-list-item {
+            display: flex;
+            justify-content: space-between; /* Alinha nome à esquerda, valor à direita */
+            align-items: baseline; /* Alinha pela base do texto */
+            padding-bottom: 8px; /* Espaço antes da borda inferior */
+            border-bottom: 1px dashed var(--border-color); /* Linha separadora */
+        }
+        .kpi-list-item:last-child {
+            border-bottom: none; /* Remove a linha do último item */
+        }
+
+        .kpi-list-item .item-name {
+            font-size: 14px;
+            color: var(--text-secondary);
+            white-space: nowrap; /* Evita quebra de linha do nome */
+            overflow: hidden; /* Esconde o que exceder */
+            text-overflow: ellipsis; /* Adiciona "..." */
+            max-width: 70%; /* Garante espaço para o valor */
+        }
+
+        .kpi-list-item .item-value {
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'Roboto Mono', monospace;
+            color: var(--text-primary);
+        }
+
+        /* Estilo do texto "Aguardando dados..." dentro das listas */
+        .kpi-list .placeholder-text {
+            height: 100%; /* Ocupa a altura total do container para centralizar */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        /* ================== CSS PARA O CARD TOP 10 PRODUTOS (MANTIDO O ESTILO ORIGINAL) ================== */
+        /* O card #top-produtos-card já tem height e flex-direction: column definidos na seção .card */
+        
+        .top-list-container {
+            overflow-y: auto; /* Garante a rolagem */
+            flex-grow: 1; /* Ocupa o espaço restante */
+            padding-right: 10px; /* Espaço para a barra de rolagem */
+        }
+        .top-list-container::-webkit-scrollbar { width: 4px; }
+        .top-list-container::-webkit-scrollbar-track { background: transparent; }
+        .top-list-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        
+        .list-item {
+            display: flex;
+            flex-direction: column; /* Nome/valor em uma linha, barra de progresso abaixo */
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .list-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        /* item-name e item-value já foram definidos globalmente acima. Se quiserem ser diferentes
+           para o Top Produtos, você pode sobrescrever aqui com .list-item .item-name, etc. */
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-magenta), var(--accent-cyan));
+            border-radius: 4px;
+            transition: width 0.5s ease-out;
+        }
+        .item-percentage {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-align: right;
+            margin-top: 3px;
+        }
+        /* Placeholder para Top 10 Produtos (já existe uma definição global) */
+        /* .placeholder-text {
+            color: var(--text-secondary);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        } */
+        
+        /* --- RESPONSIVIDADE --- */
+        @media (max-width: 1200px) { .kpi-card, .main-chart-card, .radar-chart-card, #top-produtos-card { grid-column: span 6; } }
+        @media (max-width: 768px) { .kpi-card, .main-chart-card, .radar-chart-card, #top-produtos-card { grid-column: span 12; } }
+    </style>
+</head>
+<body>
+    <div id="loader-overlay"><div class="loader-bars"><div></div><div></div><div></div><div></div></div><p class="loader-text">Calculando...</p></div>
+    <div class="header"><h1>Faturamento</h1><div class="header-buttons"><button class="btn-voltar" onclick="window.location.href='/'" style="background-color: #1abc9c;">Voltar</button><button class="logout-btn" onclick="window.location.href='/logout'" style="background-color: #e74c3c;">Sair</button></div></div>
+    
+    <div class="container">
+        <div class="dashboard-content">
+            <header class="dashboard-header">
+                <h2>Dashboard de Vendas</h2>
+                <div class="header-right-group">
+                    <div class="quick-search-group">
+                        <button class="quick-btn" onclick="setPeriod('last7days')">Últimos 7 Dias</button>
+                        <button class="quick-btn" onclick="setPeriod('thisMonth')">Este Mês</button>
+                        <button class="quick-btn" onclick="setPeriod('lastMonth')">Mês Passado</button>
+                    </div>
+                    <div class="date-picker-group">
+                        <label for="startDate">Período de:</label>
+                        <input type="date" id="startDate" class="date-input">
+                        <label for="endDate">Até:</label>
+                        <input type="date" id="endDate" class="date-input">
+                    </div>
+                    <button id="fetchDataButton" class="search-btn" style="background-color: #3498db;">Comparar com Ano Anterior</button>
+                </div>
+            </header>
+            
+            <main class="dashboard-grid">
+                <div class="card kpi-card"><h3 class="card-title">Faturamento (Período Atual)</h3><p class="kpi-value" id="kpi-receita-valor">Aguardando...</p><div class="kpi-trend" id="kpi-receita-atualizacao"></div></div>
+                <div class="card kpi-card"><h3 class="card-title">Resultado da Comparação</h3><p class="kpi-value" id="comparativo-referencia">Aguardando...</p><div class="kpi-trend" id="comparativo-status"></div></div>
+                
+                <div class="card kpi-list-card">
+                    <h3 class="card-title">Ticket Médio por Grupo</h3>
+                    <div class="kpi-list" id="ticket-medio-grupo">
+                        <p class="placeholder-text">Aguardando dados...</p>
+                    </div>
+                </div>
+                <div class="card kpi-list-card">
+                    <h3 class="card-title">Ticket Médio por Loja</h3>
+                    <div class="kpi-list" id="ticket-medio-loja">
+                        <p class="placeholder-text">Aguardando dados...</p>
+                    </div>
+                </div>
+                
+                <div class="card main-chart-card"><h3 class="card-title">Ranking Faturamento (Atual vs. Anterior)</h3><div class="chart-container"><canvas id="mainChart"></canvas></div></div>
+                <div class="card radar-chart-card"><h3 class="card-title">Top 5 Grupos (Período Atual)</h3><div class="chart-container"><canvas id="radarChart"></canvas></div></div>
+                
+                <div class="card" id="top-produtos-card">
+                    <h3 class="card-title">Top 10 Produtos por Faturamento</h3>
+                    <div class="top-list-container" id="top-produtos-lista">
+                        <p class="placeholder-text">Aguardando dados...</p>
+                    </div>
+                </div>
+
+                <div class="card table-card">
+                    <div class="table-toolbar"><input type="text" class="search-input" id="tableFilterInput" placeholder="Filtrar produtos..."></div>
+                    <div class="data-table-container"><table class="data-table"><thead><tr><th>Produto ID</th><th>Nome</th><th>Grupo</th><th>Vendas (Período Atual)</th></tr></thead><tbody id="dataTableBody"></tbody></table></div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let mainChart, topGroupsChart;
+
+        function setPeriod(period) {
+            const today = new Date();
+            let startDate, endDate;
+            today.setMinutes(today.getMinutes() - today.getTimezoneOffset()); // Ajuste de fuso horário
+            endDate = new Date(today); // Data final é hoje ou último dia do mês/anterior
+
+            switch (period) {
+                case 'last7days':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 6);
+                    break;
+                case 'thisMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    break;
+                case 'lastMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0); // Último dia do mês anterior
+                    break;
+            }
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+            atualizarDashboard(); // Chama a função para buscar e exibir os dados
+        }
+
+        async function atualizarDashboard() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            if (!startDate || !endDate) {
+                alert("Por favor, selecione um período de início e fim.");
+                return;
+            }
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            document.getElementById('fetchDataButton').disabled = true;
+
+            try {
+                const apiUrl = new URL(window.location.origin + '/api/dashboard/dados-diarios');
+                apiUrl.searchParams.append('inicio', startDate);
+                apiUrl.searchParams.append('final', endDate);
+                const response = await fetch(apiUrl);
+                if (!response.ok) { throw new Error(`Erro na API: ${response.status} - ${await response.text()}`); }
+                const data = await response.json();
+
+                // Card Faturamento
+                document.getElementById('kpi-receita-valor').textContent = data?.kpi_faturamento?.valor_formatado || 'N/A';
+                document.getElementById('kpi-receita-atualizacao').innerHTML = data?.kpi_faturamento?.atualizado_em ? `<i class="fas fa-check-circle"></i> Atualizado às ${data.kpi_faturamento.atualizado_em}` : '';
+                
+                // Card Comparativo
+                document.getElementById('comparativo-referencia').textContent = `Período Atual vs Ano Anterior`;
+                const statusEl = document.getElementById('comparativo-status');
+                statusEl.textContent = data?.kpi_comparativo?.texto || 'Dados indisponíveis';
+                statusEl.className = 'kpi-trend ' + (data?.kpi_comparativo?.status || '');
+                
+                // Tabela de Produtos
+                const tabelaBody = document.getElementById('dataTableBody');
+                tabelaBody.innerHTML = '';
+                if (data.tabela_top_produtos && data.tabela_top_produtos.length > 0) {
+                    data.tabela_top_produtos.forEach(p => { 
+                        tabelaBody.innerHTML += `<tr><td>${p.produto_id}</td><td>${p.nome}</td><td>${p.categoria}</td><td>${p.total_vendido}</td></tr>`; 
+                    });
+                } else {
+                    tabelaBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum produto encontrado.</td></tr>';
+                }
+                
+                // Gráfico Principal (Ranking Faturamento)
+                if (data.bar_chart_faturamento_loja) {
+                    mainChart.data.labels = data.bar_chart_faturamento_loja.labels;
+                    mainChart.data.datasets[0].data = data.bar_chart_faturamento_loja.dataset_dia_inicio;
+                    mainChart.data.datasets[1].data = data.bar_chart_faturamento_loja.dataset_dia_fim;
+                    mainChart.update();
+                }
+                
+                // Gráfico Polar (Top 5 Grupos)
+                if (data.radar_chart_desempenho_grupo) {
+                    topGroupsChart.data.labels = data.radar_chart_desempenho_grupo.labels;
+                    topGroupsChart.data.datasets[0].data = data.radar_chart_desempenho_grupo.data;
+                    topGroupsChart.update();
+                }
+
+                // Card Top 10 Produtos por Faturamento (com barra de progresso)
+                const topProdutosLista = document.getElementById('top-produtos-lista');
+                topProdutosLista.innerHTML = ''; 
+                if (data.kpi_top_produtos_faturamento && data.kpi_top_produtos_faturamento.length > 0) {
+                    data.kpi_top_produtos_faturamento.forEach(produto => {
+                        const itemHtml = `
+                            <div class="list-item">
+                                <div class="item-header">
+                                    <span class="item-name" title="${produto.nome}">${produto.nome}</span>
+                                    <span class="item-value">${produto.faturamento_formatado}</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: ${produto.percentual}%;"></div>
+                                </div>
+                                <div class="item-percentage">
+                                    ${produto.percentual.toFixed(2)}% do total
+                                </div>
+                            </div>
+                        `;
+                        topProdutosLista.innerHTML += itemHtml;
+                    });
+                } else {
+                    topProdutosLista.innerHTML = '<p class="placeholder-text">Nenhum produto para exibir.</p>';
+                }
+
+                // Populate Ticket Médio por Grupo (com rolagem)
+                const ticketMedioGrupoEl = document.getElementById('ticket-medio-grupo');
+                ticketMedioGrupoEl.innerHTML = ''; // Limpa o conteúdo anterior
+                if (data.kpi_ticket_medio_grupo && data.kpi_ticket_medio_grupo.length > 0) {
+                    data.kpi_ticket_medio_grupo.forEach(item => {
+                        const listItem = document.createElement('div');
+                        listItem.classList.add('kpi-list-item'); // Usa a classe para estilizar cada item da lista
+                        listItem.innerHTML = `
+                            <span class="item-name" title="${item.nome}">${item.nome}</span>
+                            <span class="item-value">R$ ${item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        `;
+                        ticketMedioGrupoEl.appendChild(listItem);
+                    });
+                } else {
+                    ticketMedioGrupoEl.innerHTML = '<p class="placeholder-text">Aguardando dados...</p>';
+                }
+
+                // Populate Ticket Médio por Loja (com rolagem)
+                const ticketMedioLojaEl = document.getElementById('ticket-medio-loja');
+                ticketMedioLojaEl.innerHTML = ''; // Limpa o conteúdo anterior
+                if (data.kpi_ticket_medio_loja && data.kpi_ticket_medio_loja.length > 0) {
+                    data.kpi_ticket_medio_loja.forEach(item => {
+                        const listItem = document.createElement('div');
+                        listItem.classList.add('kpi-list-item'); // Usa a classe para estilizar cada item da lista
+                        listItem.innerHTML = `
+                            <span class="item-name" title="${item.nome}">${item.nome}</span>
+                            <span class="item-value">R$ ${item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        `;
+                        ticketMedioLojaEl.appendChild(listItem);
+                    });
+                } else {
+                    ticketMedioLojaEl.innerHTML = '<p class="placeholder-text">Aguardando dados...</p>';
+                }
+
+            } catch (e) {
+                console.error("Erro ao carregar o dashboard:", e);
+                document.getElementById('kpi-receita-valor').textContent = 'Erro Geral';
+                document.getElementById('comparativo-referencia').textContent = 'Erro Geral';
+                document.getElementById('comparativo-status').textContent = 'Não foi possível carregar os dados.';
+                document.getElementById('comparativo-status').className = 'kpi-trend negative';
+
+                document.getElementById('ticket-medio-grupo').innerHTML = '<p class="placeholder-text">Erro ao carregar dados.</p>';
+                document.getElementById('ticket-medio-loja').innerHTML = '<p class="placeholder-text">Erro ao carregar dados.</p>';
+                document.getElementById('top-produtos-lista').innerHTML = '<p class="placeholder-text">Erro ao carregar dados.</p>';
+                document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="4" style="text-align:center;">Erro ao carregar dados da tabela.</td></tr>';
+            } finally {
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('fetchDataButton').disabled = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const fetchButton = document.getElementById('fetchDataButton');
+            fetchButton.addEventListener('click', atualizarDashboard);
+
+            // Set default date period on load (e.g., this month)
+            setPeriod('thisMonth'); // Chama para carregar os dados ao iniciar
+
+            const chartTextColor = '#94a3b8';
+            const chartGridColor = 'rgba(148, 163, 184, 0.1)';
+            
+            const topLabelsPlugin = {
+                id: 'topLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx, data } = chart;
+                    ctx.save();
+                    const metaAnterior = chart.getDatasetMeta(0);
+                    const metaAtual = chart.getDatasetMeta(1);
+                    metaAtual.data.forEach((bar, index) => {
+                        const faturamentoAtual = data.datasets[1].data[index];
+                        const faturamentoAnterior = data.datasets[0].data[index];
+                        if (faturamentoAnterior > 0) {
+                            const percentual = ((faturamentoAtual / faturamentoAnterior) - 1) * 100;
+                            let textoLabel = '';
+                            let corLabel = '';
+                            if (percentual >= 0) {
+                                textoLabel = `▲ ${percentual.toFixed(0)}%`;
+                                corLabel = '#22c55e';
+                            } else {
+                                textoLabel = `▼ ${Math.abs(percentual).toFixed(0)}%`;
+                                corLabel = '#ef4444';
+                            }
+                            ctx.font = 'bold 12px "Roboto Mono", monospace';
+                            ctx.fillStyle = corLabel;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillText(textoLabel, bar.x, bar.y - 5);
+                        }
+                    });
+                    ctx.restore();
+                }
+            };
+
+            // Gráfico Principal
+            mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [ 
+                    { label: 'Período Anterior', data: [], backgroundColor: 'rgba(239, 68, 68, 0.5)', borderRadius: 4 }, 
+                    { label: 'Período Atual', data: [], backgroundColor: 'rgba(34, 197, 94, 0.7)', borderRadius: 4 } 
+                ]},
+                options: { 
+                    maintainAspectRatio: false, 
+                    layout: { padding: { top: 30 } }, 
+                    scales: { 
+                        x: { ticks: { color: chartTextColor }, grid: { display: false } }, 
+                        y: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } } 
+                    }, 
+                    plugins: { 
+                        legend: { position: 'top', labels: { color: chartTextColor } }, 
+                        tooltip: { callbacks: { label: (context) => `R$ ${context.raw.toLocaleString('pt-BR', {minimumFractionDigits: 2})}` } } 
+                    } 
+                },
+                plugins: [topLabelsPlugin] // Ativação do plugin
+            });
+
+            // Gráfico Polar
+            topGroupsChart = new Chart(document.getElementById('radarChart').getContext('2d'), {
+                type: 'polarArea',
+                data: { labels: [], datasets: [{ label: 'Faturamento por Grupo', data: [], backgroundColor: [ 'rgba(14, 165, 233, 0.7)', 'rgba(217, 70, 239, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(99, 102, 241, 0.7)' ], borderWidth: 1, borderColor: '#0f172a' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { grid: { color: chartGridColor }, ticks: { display: false }, pointLabels: { display: true, centerPointLabels: true, font: { size: 12, family: "'Roboto Mono', monospace" }, color: chartTextColor } } }, plugins: { legend: { display: false } } }
+            });
+        });
+    </script>
+</body>
+</html> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Comparativo de Vendas</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        .header-buttons {
+    display: flex; /* Para que os botões fiquem lado a lado */
+    gap: 10px;    /* <--- ADICIONE ESTA LINHA: Espaço entre os botões */
+    align-items: center; 
+    
+}
+    
+    /* --- ESTILOS GERAIS E DO MENU SUPERIOR --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #f4f4f4;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden; /* Evita rolagem horizontal indesejada */
+}
+
+.header {
+    background-color: #34495e;
+    color: white;
+    padding: 15px 20px; /* Consistência no padding horizontal */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed; /* Mantém o cabeçalho fixo no topo */
+    top: 0;
+    width: 100%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000; /* Garante que o cabeçalho fique acima de outros elementos */
+}
+
+.header h1 {
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+    flex-shrink: 0; /* Impede que o título encolha */
+}
+
+/* --- ESTILOS DO DASHBOARD --- */
+:root {
+    --bg-primary: #020617;
+    --bg-secondary: #0f172a;
+    --bg-card: rgba(15, 23, 42, 0.6);
+    --border-color: rgba(56, 189, 248, 0.2);
+    --glow-color: rgba(56, 189, 248, 0.1);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --accent-cyan: #0ea5e9;
+    --accent-magenta: #d946ef;
+    --accent-green: #22c55e;
+    --accent-red: #ef4444;
+}
+
+.container {
+    margin-top: 64px; /* Compensa a altura do cabeçalho fixo */
+    padding: 20px;
+    max-width: 1800px;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    transition: margin-top 0.3s ease; /* Mantido caso haja futuras transições de margin-top */
+}
+
+.dashboard-content {
+    position: relative;
+    z-index: 1;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between; /* Alinha o título à esquerda e os controles à direita */
+    align-items: center; /* Centraliza verticalmente os itens */
+    padding: 15px 25px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Permite que os itens quebrem a linha em telas menores */
+    gap: 15px; /* Espaçamento entre os itens flex */
+}
+
+.dashboard-header h2 {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    text-shadow: 0 0 8px var(--accent-cyan);
+    flex-shrink: 0; /* Impede o encolhimento do título */
+    text-align: left; /* Garante que o título se alinhe à esquerda */
+}
+
+.header-right-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap; /* Permite que os botões e inputs quebrem a linha */
+    justify-content: flex-end; /* Alinha à direita por padrão */
+    flex-grow: 1; /* Permite que o grupo ocupe o espaço restante */
+}
+
+.quick-search-group {
+    display: flex;
+    gap: 10px;
+    border-right: 1px solid var(--border-color);
+    padding-right: 15px;
+    flex-wrap: wrap; /* Permite que os botões de período quebrem a linha */
+}
+
+.quick-btn {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0; /* Impede que os botões encolham muito */
+}
+
+.quick-btn:hover {
+    background-color: var(--accent-cyan);
+    color: white;
+    border-color: var(--accent-cyan);
+}
+
+.date-picker-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap; /* Permite que os inputs de data quebrem a linha */
+}
+
+.date-input {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 7px;
+    border-radius: 6px;
+    color-scheme: dark;
+    max-width: 150px; /* Limita a largura dos inputs de data */
+    flex-grow: 1; /* Permite que cresça até o max-width */
+}
+
+.date-picker-group label {
+    color: var(--text-secondary);
+    font-size: 14px;
+    flex-shrink: 0; /* Impede o encolhimento do label */
+}
+
+.search-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    color: white;
+    background-color: #3498db;
+}
+
+.search-btn:hover {
+    background-color: #2980b9;
+}
+
+/* --- GRID DO DASHBOARD E CARDS --- */
+.dashboard-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(12, 1fr); /* 12 colunas para layout flexível */
+}
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    padding: 25px;
+    box-shadow: 0 0 30px var(--glow-color);
+    transition: all 0.3s ease;
+    z-index: 1;
+    display: flex;
+    flex-direction: column; /* Organiza o título e o conteúdo em coluna */
+    min-height: 200px; /* Garante uma altura mínima para todos os cards */
+}
+
+.card:hover {
+    border-color: rgba(56, 189, 248, 0.5);
+    transform: translateY(-5px);
+}
+
+/* Tamanhos específicos para os cards no grid */
+.kpi-card {
+    grid-column: span 3; /* Ocupa 3 colunas, para os KPIs menores */
+    height: 200px; /* Altura fixa para KPIs de Faturamento e Comparação */
+}
+
+.kpi-list-card {
+    grid-column: span 3; /* Ocupa 3 colunas, para os KPIs de lista (Ticket Médio) */
+    height: 200px; /* Altura fixa para os cards de lista */
+}
+
+.main-chart-card {
+    grid-column: span 6; /* Ocupa 6 colunas para o gráfico principal */
+    height: 450px;
+}
+
+.radar-chart-card {
+    grid-column: span 3; /* Ocupa 3 colunas para o gráfico radar */
+    height: 450px;
+}
+
+#top-produtos-card {
+    grid-column: span 3; /* Ocupa 3 colunas para o top produtos */
+    height: 450px;
+}
+
+.table-card {
+    grid-column: span 12; /* Ocupa todas as 12 colunas para a tabela */
+}
+
+/* --- ESTILOS DE COMPONENTES DENTRO DOS CARDS --- */
+.card-title {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    color: var(--text-secondary);
+    flex-shrink: 0; /* Impede que o título encolha */
+}
+
+.kpi-value {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1; /* Ajusta a altura da linha para números grandes */
+    word-break: break-all; /* Permite quebra de palavra forçada */
+    overflow-wrap: break-word; /* Permite quebra de palavra para se ajustar ao container */
+    white-space: normal; /* Permite quebra de linha normal */
+    flex-grow: 1; /* Permite que o valor ocupe o espaço principal */
+    display: flex; /* Para centralizar verticalmente o valor se houver espaço extra */
+    align-items: center; /* Centraliza verticalmente */
+    min-height: 50px; /* Altura mínima para o valor principal */
+}
+
+.kpi-trend {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    margin-top: 4px; /* Espaçamento entre o valor e o texto de tendência */
+    color: var(--text-secondary);
+    white-space: nowrap; /* Tenta manter a linha inteira */
+    overflow: hidden; /* Esconde o que excede */
+    text-overflow: ellipsis; /* Adiciona "..." */
+    flex-shrink: 0; /* Impede o encolhimento */
+}
+
+.kpi-trend.positive { color: var(--accent-green); }
+.kpi-trend.negative { color: var(--accent-red); }
+
+.chart-container {
+    position: relative;
+    flex-grow: 1; /* Permite que o gráfico ocupe o espaço restante no card */
+    min-height: 0; /* Essencial para que flex-grow funcione corretamente com gráficos */
+}
+
+/* --- ESTILOS DE TABELA --- */
+.table-toolbar {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 15px;
+    flex-wrap: wrap; /* Permite que a barra de ferramentas quebre a linha */
+    gap: 10px; /* Espaçamento entre itens da toolbar */
+}
+
+.search-input {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 15px;
+    color: var(--text-primary);
+    width: 100%; /* Inicia com largura total em telas pequenas */
+    max-width: 300px; /* Limita a largura máxima em telas maiores */
+    flex-grow: 1; /* Permite que cresça até o max-width */
+}
+
+.data-table-container {
+    max-height: 300px; /* Altura máxima para a tabela rolável */
+    overflow-y: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table thead {
+    position: sticky; /* Mantém o cabeçalho da tabela fixo ao rolar */
+    top: 0;
+    background: var(--bg-secondary);
+    z-index: 2; /* Garante que o cabeçalho da tabela fique acima das linhas ao rolar */
+}
+
+/* --- ESTILOS DE BOTÕES GERAIS --- */
+.btn-voltar,
+.logout-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    color: white;
+}
+
+.btn-voltar { background-color: #1abc9c; }
+.btn-voltar:hover { background-color: #16a085; }
+.logout-btn { background-color: #e74c3c; }
+.logout-btn:hover { background-color: #c0392b; }
+
+
+/* --- LOADER --- */
+#loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.8);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loader-bars {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.loader-bars div {
+    width: 8px;
+    height: 100%;
+    background-color: var(--accent-cyan);
+    animation: stretch 1.2s infinite ease-in-out;
+}
+
+.loader-bars div:nth-child(2) { animation-delay: -1.1s; }
+.loader-bars div:nth-child(3) { animation-delay: -1.0s; }
+.loader-bars div:nth-child(4) { animation-delay: -0.9s; }
+
+.loader-text {
+    color: var(--text-primary);
+    margin-top: 20px;
+    font-size: 18px;
+    font-family: 'Roboto Mono', monospace;
+}
+
+@keyframes stretch {
+    0%, 40%, 100% { transform: scaleY(0.4); }
+    20% { transform: scaleY(1.0); }
+}
+
+/* ================== CSS PARA OS CARDS DE LISTA COM ROLAGEM (TICKET MÉDIO) ================== */
+/* As regras para .kpi-list-card já estão sob .kpi-card ou kpi-list-card acima, com altura e display flex */
+
+.kpi-list {
+    flex-grow: 1; /* Faz a lista ocupar todo o espaço vertical restante dentro do card */
+    overflow-y: auto; /* Adiciona a barra de rolagem vertical quando o conteúdo exceder */
+    padding-right: 5px; /* Espaço para a barra de rolagem não sobrepor o texto */
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Espaçamento entre os itens da lista */
+}
+
+/* Estilização da barra de rolagem para .kpi-list */
+.kpi-list::-webkit-scrollbar { width: 4px; }
+.kpi-list::-webkit-scrollbar-track { background: transparent; }
+.kpi-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+/* Estilo de cada item individual da lista (Nome e Valor) */
+.kpi-list-item {
+    display: flex;
+    justify-content: space-between; /* Alinha nome à esquerda, valor à direita */
+    align-items: baseline; /* Alinha pela base do texto */
+    padding-bottom: 8px; /* Espaço antes da borda inferior */
+    border-bottom: 1px dashed var(--border-color); /* Linha separadora */
+}
+.kpi-list-item:last-child { border-bottom: none; }
+
+.kpi-list-item .item-name {
+    font-size: 14px;
+    color: var(--text-secondary);
+    white-space: nowrap; /* Evita quebra de linha do nome */
+    overflow: hidden; /* Esconde o que exceder */
+    text-overflow: ellipsis; /* Adiciona "..." */
+    max-width: calc(100% - 80px); /* Ajuste para deixar mais espaço para o valor */
+    flex-shrink: 1; /* Permite que o nome encolha se o valor for muito grande */
+}
+
+.kpi-list-item .item-value {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Roboto Mono', monospace;
+    color: var(--text-primary);
+    white-space: nowrap; /* Tenta manter o valor na mesma linha */
+    flex-shrink: 0; /* Impede que o valor encolha */
+}
+
+/* Estilo do texto "Aguardando dados..." dentro das listas */
+.kpi-list .placeholder-text {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+/* ================== CSS PARA O CARD TOP 10 PRODUTOS (MANTIDO O ESTILO ORIGINAL) ================== */
+/* As regras para #top-produtos-card já estão definidas sob .card ou #top-produtos-card acima */
+
+.top-list-container {
+    overflow-y: auto;
+    flex-grow: 1;
+    padding-right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.top-list-container::-webkit-scrollbar { width: 4px; }
+.top-list-container::-webkit-scrollbar-track { background: transparent; }
+.top-list-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+.list-item {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+.list-item:last-child { border-bottom: none; margin-bottom: 0; }
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+/* Estilos específicos para item-name e item-value dentro do top-produtos-card */
+.top-list-container .list-item .item-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 70%; /* Mantém espaço para o valor ao lado */
+    flex-shrink: 1;
+}
+.top-list-container .list-item .item-value {
+    font-size: 14px; /* Mantido menor para caber com a barra de progresso */
+    font-weight: 700;
+    color: var(--accent-cyan);
+    white-space: nowrap; /* Tenta manter o valor na mesma linha */
+    flex-shrink: 0;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background-color: var(--bg-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-magenta), var(--accent-cyan));
+    border-radius: 4px;
+    transition: width 0.5s ease-out;
+}
+.item-percentage {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-align: right;
+    margin-top: 3px;
+}
+
+/* --- RESPONSIVIDADE --- */
+@media (max-width: 1400px) { /* Breakpoint para telas médias */
+    .dashboard-header {
+        flex-direction: column; /* Coloca o título e o grupo de controles em coluna */
+        align-items: center; /* Centraliza tudo no cabeçalho do dashboard */
+        text-align: center;
+    }
+    .header-right-group {
+        flex-direction: column; /* Coloca os grupos de botões em coluna */
+        align-items: center; /* Centraliza os botões */
+        width: 100%; /* Ocupa a largura total para melhor quebra */
+        padding-top: 10px; /* Espaço entre o título do dashboard e os controles */
+    }
+    .quick-search-group {
+        border-right: none; /* Remove a borda vertical em telas menores */
+        padding-right: 0;
+        width: 100%; /* Ocupa a largura total */
+        justify-content: center; /* Centraliza os botões de período */
+        margin-bottom: 10px; /* Espaço entre os grupos de botões */
+    }
+    .date-picker-group {
+        width: 100%; /* Ocupa a largura total */
+        justify-content: center; /* Centraliza os inputs de data */
+    }
+    .date-input {
+        max-width: 100%; /* Permite que os inputs de data se expandam */
+    }
+}
+
+@media (max-width: 1200px) {
+    .kpi-card, .kpi-list-card, .main-chart-card, .radar-chart-card, #top-produtos-card {
+        grid-column: span 6; /* Cards ocupam metade da largura em tablets */
+    }
+}
+
+@media (max-width: 768px) {
+    .kpi-card, .kpi-list-card, .main-chart-card, .radar-chart-card, #top-produtos-card, .table-card {
+        grid-column: span 12; /* Todos os cards ocupam a largura total em celulares */
+    }
+    .header {
+        padding: 15px 10px; /* Padding menor no cabeçalho principal */
+        flex-wrap: wrap; /* Permite que os itens do cabeçalho principal quebrem */
+        justify-content: center; /* Centraliza itens */
+        height: auto; /* Altura automática se quebrar */
+    }
+    .header h1, .header-buttons {
+        width: 100%;
+        text-align: center;
+    }
+    .header-buttons {
+        margin-top: 10px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+    .quick-btn, .search-btn {
+        flex-grow: 1; /* Botões se esticam para preencher o espaço */
+        max-width: none;
+    }
+    .search-input {
+        max-width: none; /* Campo de busca se estica */
+    }
+}
+    </style>
+</head>
+<body>
+    <div id="loader-overlay"><div class="loader-bars"><div></div><div></div><div></div><div></div></div><p class="loader-text">Calculando...</p></div>
+    <div class="header"><h1>Faturamento</h1><div class="header-buttons"><button class="btn-voltar" onclick="window.location.href='/'" style="background-color: #1abc9c;">Voltar</button><button class="logout-btn" onclick="window.location.href='/logout'" style="background-color: #e74c3c;">Sair</button></div></div>
+    
+    <div class="container">
+        <div class="dashboard-content">
+            <header class="dashboard-header">
+                <h2>Dashboard de Vendas</h2>
+                <div class="header-right-group">
+                    <div class="quick-search-group">
+                        <button class="quick-btn" onclick="setPeriod('last7days')">Últimos 7 Dias</button>
+                        <button class="quick-btn" onclick="setPeriod('thisMonth')">Este Mês</button>
+                        <button class="quick-btn" onclick="setPeriod('lastMonth')">Mês Passado</button>
+                    </div>
+                    <div class="date-picker-group">
+                        <label for="startDate">Período de:</label>
+                        <input type="date" id="startDate" class="date-input">
+                        <label for="endDate">Até:</label>
+                        <input type="date" id="endDate" class="date-input">
+                    </div>
+                    <button id="fetchDataButton" class="search-btn" style="background-color: #3498db;">Comparar com Ano Anterior</button>
+                </div>
+            </header>
+            
+            <main class="dashboard-grid">
+                <div class="card kpi-card"><h3 class="card-title">Faturamento (Período Atual)</h3><p class="kpi-value" id="kpi-receita-valor">Aguardando...</p><div class="kpi-trend" id="kpi-receita-atualizacao"></div></div>
+                <div class="card kpi-card"><h3 class="card-title">Resultado da Comparação</h3><p class="kpi-value" id="comparativo-referencia">Aguardando...</p><div class="kpi-trend" id="comparativo-status"></div></div>
+                
+                <div class="card kpi-list-card">
+                    <h3 class="card-title">Ticket Médio por Grupo</h3>
+                    <div class="kpi-list" id="ticket-medio-grupo">
+                        <p class="placeholder-text">Aguardando dados...</p>
+                    </div>
+                </div>
+                <div class="card kpi-list-card">
+                    <h3 class="card-title">Ticket Médio por Loja</h3>
+                    <div class="kpi-list" id="ticket-medio-loja">
+                        <p class="placeholder-text">Aguardando dados...</p>
+                    </div>
+                </div>
+                
+                <div class="card main-chart-card"><h3 class="card-title">Ranking Faturamento (Atual vs. Anterior)</h3><div class="chart-container"><canvas id="mainChart"></canvas></div></div>
+                <div class="card radar-chart-card"><h3 class="card-title">Top 5 Grupos (Período Atual)</h3><div class="chart-container"><canvas id="radarChart"></canvas></div></div>
+                
+                <div class="card" id="top-produtos-card">
+                    <h3 class="card-title">Top 10 Produtos por Faturamento</h3>
+                    <div class="top-list-container" id="top-produtos-lista">
+                        <p class="placeholder-text">Aguardando dados...</p>
+                    </div>
+                </div>
+
+                <div class="card table-card">
+                    <div class="table-toolbar"><input type="text" class="search-input" id="tableFilterInput" placeholder="Filtrar produtos..."></div>
+                    <div class="data-table-container"><table class="data-table"><thead><tr><th>Produto ID</th><th>Nome</th><th>Grupo</th><th>Vendas (Período Atual)</th></tr></thead><tbody id="dataTableBody"></tbody></table></div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let mainChart, topGroupsChart;
+
+        function setPeriod(period) {
+            const today = new Date();
+            let startDate, endDate;
+            today.setMinutes(today.getMinutes() - today.getTimezoneOffset()); // Ajuste de fuso horário
+            endDate = new Date(today); // Data final é hoje ou último dia do mês/anterior
+
+            switch (period) {
+                case 'last7days':
+                    startDate = new Date(today);
+                    startDate.setDate(today.getDate() - 6);
+                    break;
+                case 'thisMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    break;
+                case 'lastMonth':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0); // Último dia do mês anterior
+                    break;
+            }
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+            atualizarDashboard(); // Chama a função para buscar e exibir os dados
+        }
+
+        async function atualizarDashboard() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            if (!startDate || !endDate) {
+                alert("Por favor, selecione um período de início e fim.");
+                return;
+            }
+
+            document.getElementById('loader-overlay').style.display = 'flex';
+            document.getElementById('fetchDataButton').disabled = true;
+
+            try {
+                const apiUrl = new URL(window.location.origin + '/api/dashboard/dados-diarios');
+                apiUrl.searchParams.append('inicio', startDate);
+                apiUrl.searchParams.append('final', endDate);
+                const response = await fetch(apiUrl);
+                if (!response.ok) { throw new Error(`Erro na API: ${response.status} - ${await response.text()}`); }
+                const data = await response.json();
+
+                // Card Faturamento
+                document.getElementById('kpi-receita-valor').textContent = data?.kpi_faturamento?.valor_formatado || 'N/A';
+                document.getElementById('kpi-receita-atualizacao').innerHTML = data?.kpi_faturamento?.atualizado_em ? `<i class="fas fa-check-circle"></i> Atualizado às ${data.kpi_faturamento.atualizado_em}` : '';
+                
+                // Card Comparativo
+                document.getElementById('comparativo-referencia').textContent = `Período Atual vs Ano Anterior`;
+                const statusEl = document.getElementById('comparativo-status');
+                statusEl.textContent = data?.kpi_comparativo?.texto || 'Dados indisponíveis';
+                statusEl.className = 'kpi-trend ' + (data?.kpi_comparativo?.status || '');
+                
+                // Tabela de Produtos
+                const tabelaBody = document.getElementById('dataTableBody');
+                tabelaBody.innerHTML = '';
+                if (data.tabela_top_produtos && data.tabela_top_produtos.length > 0) {
+                    data.tabela_top_produtos.forEach(p => { 
+                        tabelaBody.innerHTML += `<tr><td>${p.produto_id}</td><td>${p.nome}</td><td>${p.categoria}</td><td>${p.total_vendido}</td></tr>`; 
+                    });
+                } else {
+                    tabelaBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum produto encontrado.</td></tr>';
+                }
+                
+                // Gráfico Principal (Ranking Faturamento)
+                if (data.bar_chart_faturamento_loja) {
+                    mainChart.data.labels = data.bar_chart_faturamento_loja.labels;
+                    mainChart.data.datasets[0].data = data.bar_chart_faturamento_loja.dataset_dia_inicio;
+                    mainChart.data.datasets[1].data = data.bar_chart_faturamento_loja.dataset_dia_fim;
+                    mainChart.update();
+                }
+                
+                // Gráfico Polar (Top 5 Grupos)
+                if (data.radar_chart_desempenho_grupo) {
+                    topGroupsChart.data.labels = data.radar_chart_desempenho_grupo.labels;
+                    topGroupsChart.data.datasets[0].data = data.radar_chart_desempenho_grupo.data;
+                    topGroupsChart.update();
+                }
+
+                // Card Top 10 Produtos por Faturamento (com barra de progresso)
+                const topProdutosLista = document.getElementById('top-produtos-lista');
+                topProdutosLista.innerHTML = ''; 
+                if (data.kpi_top_produtos_faturamento && data.kpi_top_produtos_faturamento.length > 0) {
+                    data.kpi_top_produtos_faturamento.forEach(produto => {
+                        const itemHtml = `
+                            <div class="list-item">
+                                <div class="item-header">
+                                    <span class="item-name" title="${produto.nome}">${produto.nome}</span>
+                                    <span class="item-value">${produto.faturamento_formatado}</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: ${produto.percentual}%;"></div>
+                                </div>
+                                <div class="item-percentage">
+                                    ${produto.percentual.toFixed(2)}% do total
+                                </div>
+                            </div>
+                        `;
+                        topProdutosLista.innerHTML += itemHtml;
+                    });
+                } else {
+                    topProdutosLista.innerHTML = '<p class="placeholder-text">Nenhum produto para exibir.</p>';
+                }
+
+                // Populate Ticket Médio por Grupo (com rolagem)
+                const ticketMedioGrupoEl = document.getElementById('ticket-medio-grupo');
+                ticketMedioGrupoEl.innerHTML = ''; // Limpa o conteúdo anterior
+                if (data.kpi_ticket_medio_grupo && data.kpi_ticket_medio_grupo.length > 0) {
+                    data.kpi_ticket_medio_grupo.forEach(item => {
+                        const listItem = document.createElement('div');
+                        listItem.classList.add('kpi-list-item'); // Usa a classe para estilizar cada item da lista
+                        listItem.innerHTML = `
+                            <span class="item-name" title="${item.nome}">${item.nome}</span>
+                            <span class="item-value">R$ ${item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        `;
+                        ticketMedioGrupoEl.appendChild(listItem);
+                    });
+                } else {
+                    ticketMedioGrupoEl.innerHTML = '<p class="placeholder-text">Aguardando dados...</p>';
+                }
+
+                // Populate Ticket Médio por Loja (com rolagem)
+                const ticketMedioLojaEl = document.getElementById('ticket-medio-loja');
+                ticketMedioLojaEl.innerHTML = ''; // Limpa o conteúdo anterior
+                if (data.kpi_ticket_medio_loja && data.kpi_ticket_medio_loja.length > 0) {
+                    data.kpi_ticket_medio_loja.forEach(item => {
+                        const listItem = document.createElement('div');
+                        listItem.classList.add('kpi-list-item'); // Usa a classe para estilizar cada item da lista
+                        listItem.innerHTML = `
+                            <span class="item-name" title="${item.nome}">${item.nome}</span>
+                            <span class="item-value">R$ ${item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        `;
+                        ticketMedioLojaEl.appendChild(listItem);
+                    });
+                } else {
+                    ticketMedioLojaEl.innerHTML = '<p class="placeholder-text">Aguardando dados...</p>';
+                }
+
+            } catch (e) {
+                console.error("Erro ao carregar o dashboard:", e);
+                document.getElementById('kpi-receita-valor').textContent = 'Erro Geral';
+                document.getElementById('comparativo-referencia').textContent = 'Erro Geral';
+                document.getElementById('comparativo-status').textContent = 'Não foi possível carregar os dados.';
+                document.getElementById('comparativo-status').className = 'kpi-trend negative';
+
+                document.getElementById('ticket-medio-grupo').innerHTML = '<p class="placeholder-text">Erro ao carregar dados.</p>';
+                document.getElementById('ticket-medio-loja').innerHTML = '<p class="placeholder-text">Erro ao carregar dados.</p>';
+                document.getElementById('top-produtos-lista').innerHTML = '<p class="placeholder-text">Erro ao carregar dados.</p>';
+                document.getElementById('dataTableBody').innerHTML = '<tr><td colspan="4" style="text-align:center;">Erro ao carregar dados da tabela.</td></tr>';
+            } finally {
+                document.getElementById('loader-overlay').style.display = 'none';
+                document.getElementById('fetchDataButton').disabled = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const fetchButton = document.getElementById('fetchDataButton');
+            fetchButton.addEventListener('click', atualizarDashboard);
+
+            const header = document.querySelector('.header');
+
+            
+            
+const tableFilterInput = document.getElementById('tableFilterInput');
+    const dataTableBody = document.getElementById('dataTableBody'); // O tbody da sua tabela
+
+    tableFilterInput.addEventListener('input', function() {
+        const filterText = this.value.toLowerCase(); // Pega o texto digitado e converte para minúsculas
+        const rows = dataTableBody.getElementsByTagName('tr'); // Pega todas as linhas da tabela
+
+        for (let i = 0; i < rows.length; i++) {
+            let row = rows[i];
+            // Pega todo o texto da linha para verificar se contém o filtro
+            let rowText = row.textContent.toLowerCase();
+
+            if (rowText.includes(filterText)) {
+                row.style.display = ''; // Mostra a linha se o texto corresponder
+            } else {
+                row.style.display = 'none'; // Esconde a linha se o texto não corresponder
+            }
+        }
+    });
+    // Função para verificar o estado de tela cheia e ajustar a visibilidade do header
+    function handleFullscreenChange() {
+        if (document.fullscreenElement) {
+            // Em modo tela cheia
+            header.style.display = 'none'; // Ou adicione uma classe CSS que oculta
+        } else {
+            // Saindo do modo tela cheia
+            header.style.display = 'flex'; // Ou remova a classe CSS
+        }
+    }
+
+    // Adiciona o evento de escuta para mudanças no estado de tela cheia
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Para compatibilidade com WebKit
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);   // Para compatibilidade com Firefox
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);   // Para compatibilidade com IE/Edge (antigo)
+
+
+            const chartTextColor = '#94a3b8';
+            const chartGridColor = 'rgba(148, 163, 184, 0.1)';
+            
+            const topLabelsPlugin = {
+                id: 'topLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx, data } = chart;
+                    ctx.save();
+                    const metaAnterior = chart.getDatasetMeta(0);
+                    const metaAtual = chart.getDatasetMeta(1);
+                    metaAtual.data.forEach((bar, index) => {
+                        const faturamentoAtual = data.datasets[1].data[index];
+                        const faturamentoAnterior = data.datasets[0].data[index];
+                        if (faturamentoAnterior > 0) {
+                            const percentual = ((faturamentoAtual / faturamentoAnterior) - 1) * 100;
+                            let textoLabel = '';
+                            let corLabel = '';
+                            if (percentual >= 0) {
+                                textoLabel = `▲ ${percentual.toFixed(0)}%`;
+                                corLabel = '#22c55e';
+                            } else {
+                                textoLabel = `▼ ${Math.abs(percentual).toFixed(0)}%`;
+                                corLabel = '#ef4444';
+                            }
+                            ctx.font = 'bold 12px "Roboto Mono", monospace';
+                            ctx.fillStyle = corLabel;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillText(textoLabel, bar.x, bar.y - 5);
+                        }
+                    });
+                    ctx.restore();
+                }
+            };
+
+            // Gráfico Principal
+            mainChart = new Chart(document.getElementById('mainChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [ 
+                    { label: 'Período Anterior', data: [], backgroundColor: 'rgba(239, 68, 68, 0.5)', borderRadius: 4 }, 
+                    { label: 'Período Atual', data: [], backgroundColor: 'rgba(34, 197, 94, 0.7)', borderRadius: 4 } 
+                ]},
+                options: { 
+                    maintainAspectRatio: false, 
+                    layout: { padding: { top: 30 } }, 
+                    scales: { 
+                        x: { ticks: { color: chartTextColor }, grid: { display: false } }, 
+                        y: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } } 
+                    }, 
+                    plugins: { 
+                        legend: { position: 'top', labels: { color: chartTextColor } }, 
+                        tooltip: { callbacks: { label: (context) => `R$ ${context.raw.toLocaleString('pt-BR', {minimumFractionDigits: 2})}` } } 
+                    } 
+                },
+                plugins: [topLabelsPlugin] // Ativação do plugin
+            });
+
+            // Gráfico Polar
+            topGroupsChart = new Chart(document.getElementById('radarChart').getContext('2d'), {
+                type: 'polarArea',
+                data: { labels: [], datasets: [{ label: 'Faturamento por Grupo', data: [], backgroundColor: [ 'rgba(14, 165, 233, 0.7)', 'rgba(217, 70, 239, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(99, 102, 241, 0.7)' ], borderWidth: 1, borderColor: '#0f172a' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { grid: { color: chartGridColor }, ticks: { display: false }, pointLabels: { display: true, centerPointLabels: true, font: { size: 12, family: "'Roboto Mono', monospace" }, color: chartTextColor } } }, plugins: { legend: { display: false } } }
+            });
+        });
+    </script>
+</body>
+</html>

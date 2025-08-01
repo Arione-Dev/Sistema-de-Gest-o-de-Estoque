@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visualização de Rotas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      body { font-family: "Inter", sans-serif; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      .animated-item, .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-8">
+      <header class="mb-8 flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">Painel de Rotas</h1>
+          <p class="text-base text-gray-500 mt-1">Visualize e filtre as rotas semanais dos promotores.</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <a href="/cadastro_promotores" class="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-md transition-all duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                <span>Novo Cadastro</span>
+            </a>
+            <button id="toggle-view-btn" class="flex items-center space-x-2 px-4 py-2 bg-white text-gray-700 font-semibold rounded-lg hover:bg-gray-50 border border-gray-300 shadow-sm transition-all duration-200"></button>
+        </div>
+      </header>
+
+      <div class="bg-white p-6 rounded-2xl shadow-lg mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+          <div>
+            <label for="filter-store" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Loja</label>
+            <select id="filter-store" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"></select>
+          </div>
+          <div>
+            <label for="filter-day" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Dia</label>
+            <select id="filter-day" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"></select>
+          </div>
+          <div>
+            <label for="filter-brand" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Marca/Fornecedor</label>
+            <select id="filter-brand" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"></select>
+          </div>
+          <div class="flex space-x-3">
+            <button id="filter-btn" class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-md">Filtrar</button>
+            <button id="clear-filter-btn" class="w-full px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300">Limpar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="views-container">
+        <div id="loading-indicator" class="text-center py-20">
+            <p class="text-lg font-semibold text-gray-600">Carregando dados das rotas...</p>
+            <p class="text-sm text-gray-400 mt-1">Por favor, aguarde.</p>
+        </div>
+        <div id="view-cards" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4"></div>
+        <div id="view-table" class="hidden overflow-x-auto bg-white rounded-2xl shadow-lg">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Promotor</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dias de Trabalho</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lojas Atendidas</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fornecedores</th>
+                <th scope="col" class="relative px-6 py-3"><span class="sr-only">Ações</span></th>
+              </tr>
+            </thead>
+            <tbody id="routes-table-body" class="bg-white divide-y divide-gray-200"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="suppliers-modal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div id="modal-content" class="modal-enter bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="flex justify-between items-center p-5 border-b border-gray-200">
+                <h3 id="modal-title" class="text-xl font-bold text-gray-800">Fornecedores</h3>
+                <button id="modal-close-btn" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="modal-body" class="p-6 max-h-80 overflow-y-auto"></div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // --- ELEMENTOS DO DOM ---
+    const viewCardsContainer = document.getElementById("view-cards");
+    const viewTableContainer = document.getElementById("view-table");
+    const tableBody = document.getElementById("routes-table-body");
+    const filterStoreEl = document.getElementById("filter-store");
+    const filterDayEl = document.getElementById("filter-day");
+    const filterBrandEl = document.getElementById("filter-brand");
+    const filterBtn = document.getElementById("filter-btn");
+    const clearFilterBtn = document.getElementById("clear-filter-btn");
+    const toggleViewBtn = document.getElementById("toggle-view-btn");
+    const loadingIndicator = document.getElementById("loading-indicator");
+    const modal = document.getElementById("suppliers-modal");
+    const modalTitle = document.getElementById("modal-title");
+    const modalBody = document.getElementById("modal-body");
+    const modalCloseBtn = document.getElementById("modal-close-btn");
+
+    // --- VARIÁVEIS DE ESTADO ---
+    let allRoutes = [];
+    let currentFilteredRoutes = [];
+    let currentView = "cards";
+
+    const daysOfWeekMap = {
+        segunda: { name: "Segunda", order: 1 },
+        terca: { name: "Terça", order: 2 },
+        quarta: { name: "Quarta", order: 3 },
+        quinta: { name: "Quinta", order: 4 },
+        sexta: { name: "Sexta", order: 5 },
+        sabado: { name: "Sábado", order: 6 },
+    };
+
+    // --- FUNÇÕES AUXILIARES ---
+    function getFirstTwoNames(fullName) {
+        if (!fullName) return "";
+        return fullName.split(' ').slice(0, 2).join(' ');
+    }
+
+    // --- FUNÇÕES DE RENDERIZAÇÃO ---
+    function renderCardView(routes) {
+        viewCardsContainer.innerHTML = "";
+        const daysOfWeekArray = Object.entries(daysOfWeekMap).sort(([, a], [, b]) => a.order - b.order);
+        daysOfWeekArray.forEach(([dayId, dayInfo]) => {
+            const dayColumn = document.createElement("div");
+            dayColumn.id = `day-${dayId}`;
+            dayColumn.className = "bg-gray-50 p-4 rounded-xl space-y-4";
+            dayColumn.innerHTML = `<h2 class="text-lg font-bold text-gray-800 text-center border-b pb-2">${dayInfo.name}-feira</h2>`;
+            viewCardsContainer.appendChild(dayColumn);
+        });
+
+        routes.forEach((route) => {
+            const dayColumn = viewCardsContainer.querySelector(`#day-${route.day}`);
+            if (dayColumn) {
+                let brandDisplay = '';
+                if (route.brand && route.brand.includes(',')) {
+                    brandDisplay = `<button data-promoter="${route.promoterName}" data-suppliers="${route.brand}" class="view-suppliers-btn text-[11px] font-semibold text-green-600 cursor-pointer hover:underline" title="Clique para ver a lista">Ver Fornecedores</button>`;
+                } else {
+                    brandDisplay = `<p class="text-[11px] text-gray-400 truncate" title="${route.brand || ''}">${route.brand || 'N/A'}</p>`;
+                }
+                const shortName = getFirstTwoNames(route.promoterName);
+                const card = document.createElement("div");
+                card.className = "animated-item bg-white p-4 rounded-lg shadow-md text-center relative";
+                card.innerHTML = `
+                    <a href="/cadastro_promotores?id=${route.promoterId}" class="absolute top-1 right-1 text-gray-400 hover:text-indigo-600 p-1 rounded-full transition-colors" title="Editar Promotor">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </a>
+                    <div class="flex flex-col items-center space-y-2">
+                        <img src="${route.promoterPhoto || 'https://placehold.co/100x100/E2E8F0/4A5568?text=Foto'}" alt="${route.promoterName}" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-md mb-2">
+                        <div class="min-w-0">
+                            <p class="font-semibold text-gray-900 truncate" title="${route.promoterName}">${shortName}</p>
+                            ${brandDisplay}
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-t">
+                        <p class="text-sm font-medium text-gray-700">${route.store}</p>
+                        <p class="text-sm text-gray-500 flex items-center justify-center space-x-1 mt-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span>${route.startTime || '--:--'} - ${route.endTime || '--:--'}</span>
+                        </p>
+                    </div>`;
+                dayColumn.appendChild(card);
+            }
+        });
+        viewCardsContainer.querySelectorAll(".bg-gray-50").forEach(col => { if (col.children.length === 1) { col.innerHTML += `<p class="text-sm text-gray-400 text-center pt-4">Nenhuma rota agendada.</p>`; } });
+    }
+
+    function renderTableView(routes) {
+        tableBody.innerHTML = "";
+        const nonSundayRoutes = routes.filter(route => !route.day || route.day !== 'domingo');
+        if (nonSundayRoutes.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-10 px-6 text-gray-500">Nenhuma rota encontrada.</td></tr>`;
+            return;
+        }
+
+        const promotersMap = {};
+        nonSundayRoutes.forEach(route => {
+            if (!promotersMap[route.promoterId]) {
+                promotersMap[route.promoterId] = {
+                    promoterId: route.promoterId,
+                    promoterName: route.promoterName,
+                    promoterPhoto: route.promoterPhoto,
+                    brand: route.brand,
+                    days: new Set(),
+                    stores: new Set(),
+                };
+            }
+            promotersMap[route.promoterId].days.add(route.day);
+            promotersMap[route.promoterId].stores.add(route.store);
+        });
+
+        const promotersArray = Object.values(promotersMap).sort((a,b) => a.promoterName.localeCompare(b.promoterName));
+
+        promotersArray.forEach(promoter => {
+            const shortName = getFirstTwoNames(promoter.promoterName);
+            const workingDays = [...promoter.days].map(day => daysOfWeekMap[day]?.name || day).join(', ');
+            const attendedStores = [...promoter.stores].join(', ');
+            
+            let brandDisplay = `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800" title="${promoter.brand || ''}">${promoter.brand || 'N/A'}</span>`;
+            if (promoter.brand && promoter.brand.includes(',')) {
+                brandDisplay = `<button data-promoter="${promoter.promoterName}" data-suppliers="${promoter.brand}" class="view-suppliers-btn px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 hover:bg-green-200" title="Clique para ver a lista">Ver Fornecedores</button>`;
+            }
+
+            const row = document.createElement("tr");
+            row.className = "animated-item hover:bg-gray-50 transition-colors duration-200";
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 h-10 w-10"><img class="h-10 w-10 rounded-full object-cover" src="${promoter.promoterPhoto || 'https://placehold.co/100x100/E2E8F0/4A5568?text=Foto'}" alt=""></div>
+                        <div class="ml-4"><div class="text-sm font-medium text-gray-900" title="${promoter.promoterName}">${shortName}</div></div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${workingDays}</div></td>
+                <td class="px-6 py-4 whitespace-nowrap"><div class="text-sm text-gray-900">${attendedStores}</div></td>
+                <td class="px-6 py-4 whitespace-nowrap text-xs">${brandDisplay}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <a href="/cadastro_promotores?id=${promoter.promoterId}" class="text-gray-400 hover:text-indigo-600" title="Editar Promotor">
+                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </a>
+                </td>`;
+            tableBody.appendChild(row);
+        });
+    }
+    
+    function renderCurrentView() { /* ...código igual... */ }
+    function populateFilters(routes) { /* ...código igual... */ }
+    function applyFilters() { /* ...código igual... */ }
+    function clearFilters() { /* ...código igual... */ }
+    function updateToggleButon() { /* ...código igual... */ }
+    function toggleView() { /* ...código igual... */ }
+    function openModal(promoterName, suppliersString) { /* ...código igual... */ }
+    function closeModal() { /* ...código igual... */ }
+    async function initializeApp() { /* ...código igual... */ }
+
+    // --- CÓDIGOS COMPLETOS DAS FUNÇÕES OMITIDAS ACIMA ---
+    function renderCurrentView() { if (currentView === "cards") { renderCardView(currentFilteredRoutes); } else { renderTableView(currentFilteredRoutes); } }
+    function populateFilters(routes) { const stores = [...new Set(routes.map(r => r.store).filter(Boolean))].sort(); const brands = [...new Set(routes.flatMap(r => r.brand ? r.brand.split(', ') : []).filter(Boolean))].sort(); const days = Object.entries(daysOfWeekMap).sort(([, a], [, b]) => a.order - b.order); filterStoreEl.innerHTML = '<option value="all">Todas as Lojas</option>'; filterBrandEl.innerHTML = '<option value="all">Todas as Marcas</option>'; filterDayEl.innerHTML = '<option value="all">Todos os Dias</option>'; stores.forEach(store => filterStoreEl.innerHTML += `<option value="${store}">${store}</option>`); brands.forEach(brand => filterBrandEl.innerHTML += `<option value="${brand}">${brand}</option>`); days.forEach(([id, data]) => filterDayEl.innerHTML += `<option value="${id}">${data.name}</option>`); }
+    function applyFilters() { const selectedStore = filterStoreEl.value; const selectedDay = filterDayEl.value; const selectedBrand = filterBrandEl.value; currentFilteredRoutes = allRoutes.filter(route => (selectedStore === "all" || route.store === selectedStore) && (selectedDay === "all" || route.day === selectedDay) && (selectedBrand === "all" || (route.brand && route.brand.includes(selectedBrand)))); renderCurrentView(); }
+    function clearFilters() { filterStoreEl.value = "all"; filterDayEl.value = "all"; filterBrandEl.value = "all"; currentFilteredRoutes = [...allRoutes]; renderCurrentView(); }
+    function updateToggleButon() { if (currentView === "cards") { toggleViewBtn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M3 6h18M3 18h18"></path></svg><span>Visualizar Tabela</span>`; } else { toggleViewBtn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg><span>Visualizar em Cards</span>`; } }
+    function toggleView() { viewCardsContainer.classList.toggle("hidden"); viewTableContainer.classList.toggle("hidden"); currentView = currentView === "cards" ? "table" : "cards"; updateToggleButon(); renderCurrentView(); }
+    function openModal(promoterName, suppliersString) { modalTitle.textContent = `Fornecedores de ${promoterName}`; const suppliers = suppliersString.split(', '); modalBody.innerHTML = `<ul class="space-y-3">${suppliers.map(s => `<li class="bg-gray-100 p-3 rounded-md text-gray-700 font-medium">${s}</li>`).join('')}</ul>`; modal.classList.remove('hidden'); }
+    function closeModal() { modal.classList.add('hidden'); }
+    async function initializeApp() { try { const response = await fetch('/api/rotas'); if (!response.ok) throw new Error(`Erro na rede: ${response.status}`); const routesFromAPI = await response.json(); allRoutes = routesFromAPI; currentFilteredRoutes = [...allRoutes]; loadingIndicator.classList.add('hidden'); if (currentView === 'cards') { viewCardsContainer.classList.remove('hidden'); } else { viewTableContainer.classList.remove('hidden'); } populateFilters(allRoutes); updateToggleButon(); renderCurrentView(); } catch (error) { console.error("Falha ao buscar dados das rotas:", error); loadingIndicator.innerHTML = `<p class="text-lg font-semibold text-red-600">Falha ao carregar os dados.</p><p class="text-sm text-gray-500 mt-1">Por favor, verifique sua conexão ou contate o suporte.</p>`; } }
+
+    // --- EVENT LISTENERS ---
+    filterBtn.addEventListener("click", applyFilters);
+    clearFilterBtn.addEventListener("click", clearFilters);
+    toggleViewBtn.addEventListener("click", toggleView);
+    viewCardsContainer.addEventListener('click', function(event) {
+        const target = event.target.closest('.view-suppliers-btn');
+        if (target) {
+            const promoterName = target.dataset.promoter;
+            const suppliersString = target.dataset.suppliers;
+            openModal(promoterName, suppliersString);
+        }
+    });
+    // Adiciona o event listener para a tabela também
+    tableBody.addEventListener('click', function(event) {
+        const target = event.target.closest('.view-suppliers-btn');
+        if (target) {
+            const promoterName = target.dataset.promoter;
+            const suppliersString = target.dataset.suppliers;
+            openModal(promoterName, suppliersString);
+        }
+    });
+    modalCloseBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
+    window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !modal.classList.contains('hidden')) closeModal(); });
+
+    // --- INICIALIZAÇÃO ---
+    initializeApp();
+});
+</script>
+</body>
+</html>

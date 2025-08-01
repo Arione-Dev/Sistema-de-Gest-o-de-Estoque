@@ -1,0 +1,290 @@
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ajuste por Fornecedor/Loja - Gestão de Estoque (PDA)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        body {
+            background-color: #f4f4f4;
+            color: #333;
+            line-height: 1.4;
+            font-size: 14px;
+        }
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 8px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 {
+            font-size: 1.1rem;
+            margin: 0;
+        }
+        .container {
+            max-width: 100%;
+            margin: 10px auto;
+            padding: 0 8px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .form-control, .input-group-text {
+            font-size: 0.9rem;
+            padding: 5px 8px;
+            height: auto;
+        }
+        .btn {
+            padding: 5px 10px;
+            font-size: 0.9rem;
+            margin: 3px 0;
+        }
+        .btn-sm {
+            padding: 3px 6px;
+            font-size: 0.8rem;
+        }
+        .table {
+            width: 100%;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+        .table th, .table td {
+            padding: 4px;
+            vertical-align: middle;
+        }
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .negative {
+            background-color: #ffdddd;
+        }
+        .positive {
+            background-color: #ddffdd;
+        }
+        .zero {
+            background-color: #ffffcc;
+        }
+        .error {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin: 8px 0;
+            padding: 5px;
+            border-radius: 4px;
+            background-color: #f8d7da;
+        }
+        .loading {
+            display: none;
+            color: #0d6efd;
+            text-align: center;
+            padding: 5px;
+        }
+        .pagination {
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+        .filter-info {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            padding: 5px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+        .badge {
+            font-size: 0.7rem;
+            padding: 3px 5px;
+        }
+        @media (max-width: 576px) {
+            body {
+                font-size: 13px;
+            }
+            .table {
+                font-size: 0.75rem;
+            }
+            .btn {
+                padding: 4px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-boxes"></i> Ajuste Fornecedor/Loja - Estoque</h1>
+    </div>
+    
+    <div class="container">
+        <div class="card">
+            <form method="POST" action="{{ url_for('pda_ajuste_fornec_lojas') }}">
+                <div class="row g-2 mb-2">
+                    <div class="col-12 col-sm-6">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user-tie"></i></span>
+                            <input type="number" id="fornecedor" name="fornecedor" class="form-control" 
+                                   placeholder="Cód. Fornecedor" value="{{ fornecedor or '' }}">
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-tags"></i></span>
+                            <input type="text" id="grupo" name="grupo" class="form-control" 
+                                   placeholder="Grupo" value="{{ grupo or '' }}">
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-store"></i></span>
+                            <input type="number" id="loja" name="loja" class="form-control" 
+                                   placeholder="Loja" value="{{ loja or '1' }}">
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label class="form-check">
+                            <input type="checkbox" name="exibir_zerados" value="1" {% if exibir_zerados %}checked{% endif %} class="form-check-input">
+                            Exibir itens com estoque zerado
+                        </label>
+                    </div>
+                    <div class="col-12 d-flex align-items-center">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search"></i> Filtrar
+                        </button>
+                        <button type="submit" name="action" value="enviar" class="btn btn-success">
+                            <i class="fas fa-paper-plane"></i> Enviar
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div id="loading" class="loading">
+                <i class="fas fa-spinner fa-spin"></i> Carregando...
+            </div>
+
+            {% if erro %}
+                <div class="error">
+                    <i class="fas fa-exclamation-circle"></i> {{ erro }}
+                </div>
+            {% endif %}
+
+            {% if produtos %}
+                <div class="filter-info">
+                    <span class="badge bg-primary">Loja: {{ loja or '1' }}</span>
+                    {% if fornecedor %}
+                        <span class="badge bg-secondary">Fornecedor: {{ fornecedor }}</span>
+                    {% endif %}
+                    {% if grupo %}
+                        <span class="badge bg-info text-dark">Grupo: {{ grupo }}</span>
+                    {% endif %}
+                    <span class="badge bg-success">Itens: {{ produtos|length }} de {{ total }}</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm" id="produtos-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Grupo</th>
+                                <th>Código</th>
+                                <th>Descrição</th>
+                                <th>Estoque</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produto in produtos %}
+                                <tr class="{% if produto.negativo %}negative{% elif produto.saldo_positivo %}positive{% else %}zero{% endif %}">
+                                    <td>{{ produto.grupo }}</td>
+                                    <td>{{ produto.codigo }}</td>
+                                    <td>{{ produto.descricao[:30] }}{% if produto.descricao|length > 30 %}...{% endif %}</td>
+                                    <td class="text-end fw-bold">
+                                        {% if produto.negativo %}
+                                            <i class="fas fa-arrow-down text-danger"></i>
+                                        {% elif produto.saldo_positivo %}
+                                            <i class="fas fa-arrow-up text-success"></i>
+                                        {% else %}
+                                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                                        {% endif %}
+                                        {{ produto.estoque_loja }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-sm justify-content-center">
+                        {% if page > 1 %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('pda_ajuste_fornec_lojas', page=page-1, fornecedor=fornecedor or '', grupo=grupo or '', loja=loja or '1', exibir_zerados='1' if exibir_zerados else '0') }}" aria-label="Previous">
+                                    <span aria-hidden="true">«</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Previous">
+                                    <span aria-hidden="true">«</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        <li class="page-item active">
+                            <span class="page-link">Página {{ page }} de {{ total_pages }}</span>
+                        </li>
+                        {% if page < total_pages %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('pda_ajuste_fornec_lojas', page=page+1, fornecedor=fornecedor or '', grupo=grupo or '', loja=loja or '1', exibir_zerados='1' if exibir_zerados else '0') }}" aria-label="Next">
+                                    <span aria-hidden="true">»</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Next">
+                                    <span aria-hidden="true">»</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% else %}
+                <div class="alert alert-info mt-2">
+                    <i class="fas fa-info-circle"></i> Nenhum produto encontrado com os filtros aplicados.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelector('form').addEventListener('submit', function() {
+            document.getElementById('loading').style.display = 'block';
+        });
+        
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.scrollIntoView({behavior: 'smooth', block: 'center'});
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+

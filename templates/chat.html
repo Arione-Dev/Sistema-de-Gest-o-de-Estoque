@@ -1,0 +1,1833 @@
+<!-- <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat com IA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Estilização Geral --- */
+        :root {
+            --cor-fundo: #f0f2f5;
+            --cor-primaria: #005c4b;
+            --cor-chat-enviado: #d9fdd3;
+            --cor-chat-recebido: #ffffff;
+            --cor-texto: #333;
+            --sombra-card: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--cor-fundo);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* --- Container Principal do Chat --- */
+        .chat-container {
+            width: 100%;
+            max-width: 700px;
+            height: 90vh;
+            max-height: 800px;
+            background-color: #e5ddd5; /* Fundo estilo WhatsApp */
+            border-radius: 8px;
+            box-shadow: var(--sombra-card);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Cabeçalho --- */
+        .chat-header {
+            background-color: var(--cor-primaria);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        /* --- Área de Mensagens --- */
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto; /* Habilita a rolagem */
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* --- Estilo das Bolhas de Mensagem --- */
+        .message {
+            padding: 10px 15px;
+            border-radius: 12px;
+            max-width: 75%;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .message.sent {
+            background-color: var(--cor-chat-enviado);
+            align-self: flex-end; /* Alinha à direita */
+            border-bottom-right-radius: 0;
+        }
+
+        .message.received {
+            background-color: var(--cor-chat-recebido);
+            align-self: flex-start; /* Alinha à esquerda */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            border-bottom-left-radius: 0;
+        }
+        
+        /* Indicador "Digitando..." */
+        .typing-indicator {
+            display: none; /* Começa escondido */
+            align-self: flex-start;
+            padding: 10px 15px;
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #999;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.8s; }
+        .typing-indicator span:nth-child(3) { animation-delay: -0.4s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        /* --- Formulário de Input --- */
+        .chat-input-form {
+            display: flex;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-top: 1px solid #ddd;
+        }
+
+        #message-input {
+            flex-grow: 1;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 25px;
+            font-size: 16px;
+            background-color: white;
+        }
+
+        #message-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--cor-primaria);
+        }
+
+        #send-button {
+            background-color: var(--cor-primaria);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-left: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        #send-button:hover {
+            background-color: #007a63;
+        }
+
+        #send-button svg {
+            width: 24px;
+            height: 24px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Fale com o Assistente de IA</h2>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message received">
+                Olá! Como posso ajudar você a analisar seus dados hoje?
+            </div>
+        </div>
+        <div class="typing-indicator" id="typing-indicator">
+            <span></span><span></span><span></span>
+        </div>
+        <form class="chat-input-form" id="chat-form">
+            <input type="text" id="message-input" placeholder="Digite sua pergunta aqui..." autocomplete="off">
+            <button type="submit" id="send-button" aria-label="Enviar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // --- Elementos do DOM ---
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const messagesContainer = document.getElementById('chat-messages');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        // --- Event Listener para o envio do formulário ---
+        chatForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Impede o recarregamento da página
+
+            const userMessage = messageInput.value.trim();
+            if (!userMessage) return; // Não envia mensagens vazias
+
+            // 1. Mostra a mensagem do usuário na tela
+            addMessage(userMessage, 'sent');
+            messageInput.value = ''; // Limpa o campo de input
+
+            // 2. Mostra o indicador "digitando..."
+            typingIndicator.style.display = 'flex';
+            scrollToBottom();
+
+            try {
+                // 3. Envia a pergunta para o backend
+                const response = await fetch('http://127.0.0.1:5000/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: userMessage }),
+                });
+
+                // Esconde o indicador "digitando..."
+                typingIndicator.style.display = 'none';
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Ocorreu um erro no servidor.');
+                }
+                
+                const data = await response.json();
+
+                // 4. Formata e mostra a resposta da IA
+                const formattedResponse = formatDataAsText(data);
+                addMessage(formattedResponse, 'received');
+
+            } catch (error) {
+                // Esconde o indicador "digitando..." e mostra a mensagem de erro
+                typingIndicator.style.display = 'none';
+                addMessage(`Erro: ${error.message}`, 'received');
+            }
+        });
+
+        // --- Funções Auxiliares ---
+
+        /**
+         * Adiciona uma nova bolha de mensagem ao chat.
+         * @param {string} text - O texto da mensagem.
+         * @param {'sent' | 'received'} type - O tipo da mensagem ('enviada' ou 'recebida').
+         */
+        function addMessage(text, type) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', type);
+            messageElement.innerText = text;
+            messagesContainer.appendChild(messageElement);
+            scrollToBottom(); // Rola para a mensagem mais recente
+        }
+
+        /**
+         * Rola a área de mensagens para o final.
+         */
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        /**
+         * Formata os dados JSON recebidos do backend em um texto legível.
+         * @param {Array<Object>} data - Um array de objetos vindo do backend.
+         * @returns {string} - O texto formatado.
+         */
+        function formatDataAsText(data) {
+            if (!Array.isArray(data) || data.length === 0) {
+                return "Não encontrei resultados para sua pergunta.";
+            }
+
+            // Pega os nomes das colunas do primeiro objeto
+            const headers = Object.keys(data[0]);
+            let responseText = headers.join(' | ') + '\n';
+            responseText += '-'.repeat(responseText.length * 1.5) + '\n';
+
+            // Adiciona cada linha de dados
+            data.forEach(row => {
+                const values = headers.map(header => row[header]);
+                responseText += values.join(' | ') + '\n';
+            });
+
+            return responseText;
+        }
+
+    </script>
+</body>
+</html> -->
+
+
+<!-- 
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat com IA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: #f0f2f5;
+            --cor-primaria: #005c4b;
+            --cor-chat-enviado: #d9fdd3;
+            --cor-chat-recebido: #ffffff;
+            --cor-texto: #333;
+            --sombra-card: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--cor-fundo);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 8000px;
+            height: 90vh;
+            max-height: 9000px;
+            background-color: #e5ddd5;
+            border-radius: 8px;
+            box-shadow: var(--sombra-card);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: var(--cor-primaria);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            padding: 10px 15px;
+            border-radius: 12px;
+            max-width: 80%;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .message.sent {
+            background-color: var(--cor-chat-enviado);
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+        }
+        .message.received {
+            background-color: var(--cor-chat-recebido);
+            align-self: flex-start;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            border-bottom-left-radius: 0;
+        }
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            padding: 10px 15px;
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #999;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.8s; }
+        .typing-indicator span:nth-child(3) { animation-delay: -0.4s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+        .chat-input-form {
+            display: flex;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-top: 1px solid #ddd;
+        }
+        #message-input {
+            flex-grow: 1;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+        #message-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--cor-primaria);
+        }
+        #send-button {
+            background-color: var(--cor-primaria);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-left: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        #send-button:hover { background-color: #007a63; }
+        #send-button svg { width: 24px; height: 24px; }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-top: 10px;
+            background-color: white;
+        }
+        .data-table th, .data-table td {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+        }
+        .data-table th {
+            background-color: #f4f4f4;
+            font-weight: 500;
+        }
+        .data-table tr:nth-child(even) { background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Fale com o Assistente de IA</h2>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message received">
+                Olá! Eu sou Zé Galego, seu assistente de dados. Como posso ajudar hoje?
+            </div>
+        </div>
+        <div class="typing-indicator" id="typing-indicator">
+            <span></span><span></span><span></span>
+        </div>
+        <form class="chat-input-form" id="chat-form">
+            <input type="text" id="message-input" placeholder="Digite sua pergunta aqui..." autocomplete="off">
+            <button type="submit" id="send-button" aria-label="Enviar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const messagesContainer = document.getElementById('chat-messages');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        chatForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const userMessage = messageInput.value.trim();
+            if (!userMessage) return;
+
+            addMessage(userMessage, 'sent');
+            messageInput.value = '';
+            typingIndicator.style.display = 'flex';
+            scrollToBottom();
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: userMessage }),
+                });
+
+                typingIndicator.style.display = 'none';
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Ocorreu um erro no servidor.');
+                }
+                
+                const data = await response.json();
+
+                if (data.type === 'chat') {
+                    addMessage(data.response, 'received');
+                } else if (data.type === 'data') {
+                    const formattedResponse = formatDataAsTable(data.response);
+                    addMessage(formattedResponse, 'received', true);
+                } else {
+                    addMessage("Recebi uma resposta, mas não sei como exibir.", 'received');
+                }
+
+            } catch (error) {
+                typingIndicator.style.display = 'none';
+                addMessage(`Erro: ${error.message}`, 'received');
+            }
+        });
+
+        function addMessage(content, type, isHTML = false) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', type);
+            if (isHTML) {
+                messageElement.innerHTML = content;
+            } else {
+                messageElement.innerText = content;
+            }
+            messagesContainer.appendChild(messageElement);
+            scrollToBottom();
+        }
+        
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function formatDataAsTable(data) {
+            if (!Array.isArray(data) || data.length === 0) {
+                return "Não encontrei resultados para sua pergunta.";
+            }
+            
+            let tableHTML = '<table class="data-table">';
+            const headers = Object.keys(data[0]);
+            tableHTML += '<thead><tr>';
+            headers.forEach(header => { tableHTML += `<th>${header}</th>`; });
+            tableHTML += '</tr></thead>';
+            
+            tableHTML += '<tbody>';
+            data.forEach(row => {
+                tableHTML += '<tr>';
+                headers.forEach(header => { tableHTML += `<td>${row[header]}</td>`; });
+                tableHTML += '</tr>';
+            });
+            tableHTML += '</tbody></table>';
+
+            return tableHTML;
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+ -->
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat com IA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: #f0f2f5;
+            --cor-primaria: #005c4b;
+            --cor-chat-enviado: #d9fdd3;
+            --cor-chat-recebido: #ffffff;
+            --cor-texto: #333;
+            --sombra-card: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--cor-fundo);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 8000px;
+            height: 90vh;
+            max-height: 9000px;
+            background-color: #e5ddd5;
+            border-radius: 8px;
+            box-shadow: var(--sombra-card);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: var(--cor-primaria);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            padding: 10px 15px;
+            border-radius: 12px;
+            max-width: 80%;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .message.sent {
+            background-color: var(--cor-chat-enviado);
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+        }
+        .message.received {
+            background-color: var(--cor-chat-recebido);
+            align-self: flex-start;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            border-bottom-left-radius: 0;
+        }
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            padding: 10px 15px;
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #999;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.8s; }
+        .typing-indicator span:nth-child(3) { animation-delay: -0.4s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+        .chat-input-form {
+            display: flex;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-top: 1px solid #ddd;
+        }
+        #message-input {
+            flex-grow: 1;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+        #message-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--cor-primaria);
+        }
+        #send-button {
+            background-color: var(--cor-primaria);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-left: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        #send-button:hover { background-color: #007a63; }
+        #send-button svg { width: 24px; height: 24px; }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-top: 10px;
+            background-color: white;
+        }
+        .data-table th, .data-table td {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            text-align: left;
+        }
+        .data-table th {
+            background-color: #f4f4f4;
+            font-weight: 500;
+        }
+        .data-table tr:nth-child(even) { background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Fale com o Assistente de IA</h2>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message received">
+                Olá! Eu sou Zé Galego, seu assistente de dados. Como posso ajudar hoje?
+            </div>
+        </div>
+        <div class="typing-indicator" id="typing-indicator">
+            <span></span><span></span><span></span>
+        </div>
+        <form class="chat-input-form" id="chat-form">
+            <input type="text" id="message-input" placeholder="Digite sua pergunta aqui..." autocomplete="off">
+            <button type="submit" id="send-button" aria-label="Enviar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
+        </form>
+    </div>
+
+    <script>
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const messagesContainer = document.getElementById('chat-messages');
+    const typingIndicator = document.getElementById('typing-indicator');
+
+    // NOVO: A memória do nosso chat!
+    let conversationHistory = [];
+
+    chatForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const userMessage = messageInput.value.trim();
+        if (!userMessage) return;
+
+        addMessage(userMessage, 'sent');
+        // Adiciona a mensagem do usuário ao histórico
+        conversationHistory.push({ role: 'user', content: userMessage });
+
+        messageInput.value = '';
+        typingIndicator.style.display = 'flex';
+        scrollToBottom();
+
+        try {
+            // AJUSTADO: Envia a pergunta E o histórico para o backend
+            const response = await fetch('/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question: userMessage,
+                    history: conversationHistory.slice(-6) // Envia as últimas 6 interações para manter o contexto relevante
+                }),
+            });
+
+            typingIndicator.style.display = 'none';
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Ocorreu um erro no servidor.');
+            }
+            
+            const contentType = response.headers.get('Content-Type');
+            const contentDisposition = response.headers.get('Content-Disposition');
+
+            if (contentDisposition && contentDisposition.includes('attachment')) {
+                // ... (lógica de download não muda) ...
+                const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                const filename = filenameMatch ? filenameMatch[1] : 'download.xlsx';
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                
+                const responseText = `Seu arquivo "${filename}" está sendo baixado.`;
+                addMessage(responseText, 'received');
+                // Adiciona a resposta do assistente ao histórico
+                conversationHistory.push({ role: 'assistant', content: responseText });
+
+            } else if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                let responseText = "";
+
+                if (data.type === 'chat') {
+                    responseText = data.response;
+                    addMessage(responseText, 'received');
+                } else if (data.type === 'data') {
+                    responseText = formatDataAsTable(data.response);
+                    addMessage(responseText, 'received', true);
+                } else {
+                    responseText = "Recebi uma resposta, mas não sei como exibir.";
+                    addMessage(responseText, 'received');
+                }
+                // Adiciona a resposta do assistente ao histórico
+                conversationHistory.push({ role: 'assistant', content: responseText });
+            }
+
+        } catch (error) {
+            typingIndicator.style.display = 'none';
+            const errorText = `Erro: ${error.message}`;
+            addMessage(errorText, 'received');
+            // Adiciona a mensagem de erro ao histórico para contexto futuro, se necessário
+            conversationHistory.push({ role: 'assistant', content: errorText });
+        }
+    });
+
+        function addMessage(content, type, isHTML = false) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', type);
+            if (isHTML) {
+                messageElement.innerHTML = content;
+            } else {
+                messageElement.innerText = content;
+            }
+            messagesContainer.appendChild(messageElement);
+            scrollToBottom();
+        }
+        
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function formatDataAsTable(data) {
+            if (!Array.isArray(data) || data.length === 0) {
+                return "Não encontrei resultados para sua pergunta.";
+            }
+            
+            let tableHTML = '<table class="data-table">';
+            const headers = Object.keys(data[0]);
+            tableHTML += '<thead><tr>';
+            headers.forEach(header => { tableHTML += `<th>${header}</th>`; });
+            tableHTML += '</tr></thead>';
+            
+            tableHTML += '<tbody>';
+            data.forEach(row => {
+                tableHTML += '<tr>';
+                headers.forEach(header => { tableHTML += `<td>${row[header]}</td>`; });
+                tableHTML += '</tr>';
+            });
+            tableHTML += '</tbody></table>';
+
+            return tableHTML;
+        }
+    </script>
+</body>
+</html> -->
+
+
+
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat com IA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: #f0f2f5;
+            --cor-primaria: #005c4b;
+            --cor-chat-enviado: #d9fdd3;
+            --cor-chat-recebido: #ffffff;
+            --cor-texto: #333;
+            --sombra-card: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Roboto', sans-serif; background-color: var(--cor-fundo); margin: 0; padding: 20px;
+            display: flex; justify-content: center; align-items: center; height: 100vh; box-sizing: border-box;
+        }
+        .chat-container {
+            width: 100%; max-width: 8000px; height: 90vh; max-height: 8500px; background-color: #e5ddd5;
+            border-radius: 8px; box-shadow: var(--sombra-card); display: flex; flex-direction: column; overflow: hidden;
+        }
+        .chat-header {
+            background-color: var(--cor-primaria); color: white; padding: 15px 20px; text-align: center; font-weight: 500;
+        }
+        .chat-messages {
+            flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
+        }
+        .message {
+            padding: 10px 15px; border-radius: 12px; max-width: 80%; line-height: 1.4; word-wrap: break-word;
+        }
+        .message.sent {
+            background-color: var(--cor-chat-enviado); align-self: flex-end; border-bottom-right-radius: 0;
+        }
+        .message.received {
+            background-color: var(--cor-chat-recebido); align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            border-bottom-left-radius: 0; max-width: 95%; 
+        }
+        .typing-indicator {
+            display: none; align-self: flex-start; padding: 10px 15px;
+        }
+        .typing-indicator span {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #999; margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.8s; }
+        .typing-indicator span:nth-child(3) { animation-delay: -0.4s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+        .chat-input-form {
+            display: flex; padding: 15px; background-color: #f0f0f0; border-top: 1px solid #ddd;
+        }
+        #message-input {
+            flex-grow: 1; border: none; padding: 12px 15px; border-radius: 25px; font-size: 16px;
+        }
+        #message-input:focus { outline: none; box-shadow: 0 0 0 2px var(--cor-primaria); }
+        #send-button {
+            background-color: var(--cor-primaria); color: white; border: none; border-radius: 50%; width: 50px; height: 50px;
+            margin-left: 10px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s;
+        }
+        #send-button:hover { background-color: #007a63; }
+        #send-button svg { width: 24px; height: 24px; }
+        .data-table {
+            width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; background-color: white;
+            overflow-x: auto; display: block;
+        }
+        .data-table th, .data-table td {
+            padding: 8px 12px; border: 1px solid #e0e0e0; text-align: left; white-space: nowrap;
+        }
+        .data-table th { background-color: #f4f4f4; font-weight: 500; }
+        .data-table tr:nth-child(even) { background-color: #f9f9f9; }
+        .sub-question-title {
+            margin-top: 15px; margin-bottom: 5px; font-weight: 500;
+            border-bottom: 1px solid #ddd; padding-bottom: 5px; color: #333;
+        }
+        .sub-question-title:first-child { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header"><h2>Fale com o Assistente Zé Galego</h2></div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message received">E aí, meu patrão! Sou Zé Galego, seu assistente de dados. O que você manda hoje?</div>
+        </div>
+        <div class="typing-indicator" id="typing-indicator"><span></span><span></span><span></span></div>
+        <form class="chat-input-form" id="chat-form">
+            <input type="text" id="message-input" placeholder="Digite sua pergunta aqui..." autocomplete="off">
+            <button type="submit" id="send-button" aria-label="Enviar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const messagesContainer = document.getElementById('chat-messages');
+        const typingIndicator = document.getElementById('typing-indicator');
+        let conversationHistory = [];
+
+        chatForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const userMessage = messageInput.value.trim();
+            if (!userMessage) return;
+
+            addMessage(userMessage, 'sent');
+            conversationHistory.push({ role: 'user', content: userMessage });
+            messageInput.value = '';
+            typingIndicator.style.display = 'flex';
+            scrollToBottom();
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        question: userMessage,
+                        history: conversationHistory.slice(-6)
+                    }),
+                });
+
+                typingIndicator.style.display = 'none';
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Ocorreu um erro no servidor.');
+                }
+                
+                const contentType = response.headers.get('Content-Type');
+                const contentDisposition = response.headers.get('Content-Disposition');
+
+                if (contentDisposition && contentDisposition.includes('attachment')) {
+                    // ... (lógica de download não muda) ...
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    const filename = filenameMatch ? filenameMatch[1] : 'download.xlsx';
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none'; a.href = url; a.download = filename;
+                    document.body.appendChild(a); a.click();
+                    window.URL.revokeObjectURL(url); a.remove();
+                    const responseText = `Seu arquivo "${filename}" foi baixado.`;
+                    addMessage(responseText, 'received');
+                    conversationHistory.push({ role: 'assistant', content: responseText });
+
+                } else if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    let responseText = "";
+
+                    if (data.type === 'chat') {
+                        responseText = data.response;
+                        addMessage(responseText, 'received');
+                    } else if (data.type === 'data') { // Mantido para compatibilidade
+                        responseText = formatDataAsTable(data.response);
+                        addMessage(responseText, 'received', true);
+                    } else if (data.type === 'multi_data') { // Lógica para múltiplas perguntas
+                        responseText = formatMultiData(data.response);
+                        addMessage(responseText, 'received', true);
+                    } else {
+                        responseText = "Recebi uma resposta, mas não sei como exibir.";
+                        addMessage(responseText, 'received');
+                    }
+                    conversationHistory.push({ role: 'assistant', content: responseText });
+                }
+            } catch (error) {
+                typingIndicator.style.display = 'none';
+                const errorText = `Erro: ${error.message}`;
+                addMessage(errorText, 'received');
+                conversationHistory.push({ role: 'assistant', content: errorText });
+            }
+        });
+
+        function addMessage(content, type, isHTML = false) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', type);
+            if (isHTML) { messageElement.innerHTML = content; } else { messageElement.innerText = content; }
+            messagesContainer.appendChild(messageElement);
+            scrollToBottom();
+        }
+        
+        function scrollToBottom() { messagesContainer.scrollTop = messagesContainer.scrollHeight; }
+
+        function formatDataAsTable(data) {
+            if (!Array.isArray(data) || data.length === 0) { return "<p>Não encontrei resultados para esta consulta.</p>"; }
+            let tableHTML = '<table class="data-table">';
+            const headers = Object.keys(data[0]);
+            tableHTML += '<thead><tr>';
+            headers.forEach(header => { tableHTML += `<th>${header}</th>`; });
+            tableHTML += '</tr></thead><tbody>';
+            data.forEach(row => {
+                tableHTML += '<tr>';
+                headers.forEach(header => { tableHTML += `<td>${row[header] !== null ? row[header] : ''}</td>`; });
+                tableHTML += '</tr>';
+            });
+            tableHTML += '</tbody></table>';
+            return tableHTML;
+        }
+
+        // Função para exibir múltiplos resultados
+        function formatMultiData(data) {
+            let finalHTML = '';
+            for (const question in data) {
+                finalHTML += `<h4 class="sub-question-title">${question}</h4>`;
+                finalHTML += formatDataAsTable(data[question]);
+            }
+            return finalHTML;
+        }
+    </script>
+</body>
+</html> -->
+
+
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat com IA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-fundo: #f0f2f5; --cor-primaria: #005c4b; --cor-chat-enviado: #d9fdd3;
+            --cor-chat-recebido: #ffffff; --cor-texto: #333; --sombra-card: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Roboto', sans-serif; background-color: var(--cor-fundo); margin: 0; padding: 20px;
+            display: flex; justify-content: center; align-items: center; height: 100vh; box-sizing: border-box;
+        }
+        .chat-container {
+            width: 100%; max-width: 8000px; height: 90vh; max-height: 8500px; background-color: #e5ddd5;
+            border-radius: 8px; box-shadow: var(--sombra-card); display: flex; flex-direction: column; overflow: hidden;
+        }
+        .chat-header { background-color: var(--cor-primaria); color: white; padding: 15px 20px; text-align: center; font-weight: 500; }
+        .chat-messages { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .message { padding: 10px 15px; border-radius: 12px; max-width: 80%; line-height: 1.4; word-wrap: break-word; }
+        .message.sent { background-color: var(--cor-chat-enviado); align-self: flex-end; border-bottom-right-radius: 0; }
+        .message.received {
+            background-color: var(--cor-chat-recebido); align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            border-bottom-left-radius: 0; max-width: 95%; 
+        }
+        .typing-indicator { display: none; align-self: flex-start; padding: 10px 15px; }
+        .typing-indicator span {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #999; margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.8s; }
+        .typing-indicator span:nth-child(3) { animation-delay: -0.4s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+        .chat-input-form { display: flex; padding: 15px; background-color: #f0f0f0; border-top: 1px solid #ddd; }
+        #message-input { flex-grow: 1; border: none; padding: 12px 15px; border-radius: 25px; font-size: 16px; }
+        #message-input:focus { outline: none; box-shadow: 0 0 0 2px var(--cor-primaria); }
+        #send-button {
+            background-color: var(--cor-primaria); color: white; border: none; border-radius: 50%; width: 50px; height: 50px;
+            margin-left: 10px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s;
+        }
+        #send-button:hover { background-color: #007a63; }
+        #send-button svg { width: 24px; height: 24px; }
+        .data-table {
+            width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; background-color: white;
+            overflow-x: auto; display: block;
+        }
+        .data-table th, .data-table td { padding: 8px 12px; border: 1px solid #e0e0e0; text-align: left; white-space: nowrap; }
+        .data-table th { background-color: #f4f4f4; font-weight: 500; }
+        .data-table tr:nth-child(even) { background-color: #f9f9f9; }
+        .sub-question-title { margin-top: 15px; margin-bottom: 5px; font-weight: 500; border-bottom: 1px solid #ddd; padding-bottom: 5px; color: #333; }
+        .sub-question-title:first-child { margin-top: 0; }
+        .token-counter-panel { padding: 8px 15px; background-color: #f0f0f0; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header"><h2>Fale com o Assistente Zé Galego</h2></div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message received">E aí, meu patrão! Sou Zé Galego, seu assistente de dados. O que você manda hoje?</div>
+        </div>
+        <div class="typing-indicator" id="typing-indicator"><span></span><span></span><span></span></div>
+        <form class="chat-input-form" id="chat-form">
+            <input type="text" id="message-input" placeholder="Digite sua pergunta aqui..." autocomplete="off">
+            <button type="submit" id="send-button" aria-label="Enviar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
+        </form>
+        <div class="token-counter-panel" id="token-counter">
+            Última Interação: 0 tokens | Total na Sessão: 0 tokens
+        </div>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const messagesContainer = document.getElementById('chat-messages');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const tokenCounter = document.getElementById('token-counter');
+        
+        let sessionTotalTokens = 0;
+        let conversationHistory = [];
+
+        chatForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const userMessage = messageInput.value.trim();
+            if (!userMessage) return;
+
+            addMessage(userMessage, 'sent');
+            conversationHistory.push({ role: 'user', content: userMessage });
+            messageInput.value = '';
+            typingIndicator.style.display = 'flex';
+            scrollToBottom();
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: userMessage, history: conversationHistory.slice(-6) }),
+                });
+
+                typingIndicator.style.display = 'none';
+                if (!response.ok) { throw new Error(`Erro ${response.status}: ${response.statusText}`); }
+                
+                const contentType = response.headers.get('Content-Type');
+                const contentDisposition = response.headers.get('Content-Disposition');
+
+                if (contentDisposition && contentDisposition.includes('attachment')) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    const filename = filenameMatch ? filenameMatch[1] : 'download.xlsx';
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none'; a.href = url; a.download = filename;
+                    document.body.appendChild(a); a.click();
+                    window.URL.revokeObjectURL(url); a.remove();
+                    
+                    const responseText = `Seu arquivo "${filename}" foi baixado.`;
+                    addMessage(responseText, 'received');
+                    conversationHistory.push({ role: 'assistant', content: responseText });
+                } else if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    
+                    if (data.usage && data.usage.total_tokens) {
+                        const lastTurnTokens = data.usage.total_tokens;
+                        sessionTotalTokens += lastTurnTokens;
+                        tokenCounter.innerText = `Última Interação: ${lastTurnTokens} tokens | Total na Sessão: ${sessionTotalTokens} tokens`;
+                    }
+                    
+                    let responseText = "";
+                    if(data.error) {
+                        responseText = data.error;
+                    } else if (data.type === 'chat') {
+                        responseText = data.response;
+                    } else if (data.type === 'data') {
+                        responseText = formatDataAsTable(data.response);
+                    } else if (data.type === 'multi_data') {
+                        responseText = formatMultiData(data.response);
+                    } else {
+                        responseText = "Recebi uma resposta, mas não sei como exibir.";
+                    }
+                    addMessage(responseText, data.type === 'data' || data.type === 'multi_data' ? 'received' : 'received', data.type === 'data' || data.type === 'multi_data');
+                    conversationHistory.push({ role: 'assistant', content: responseText });
+                }
+            } catch (error) {
+                typingIndicator.style.display = 'none';
+                const errorText = `Erro: ${error.message}`;
+                addMessage(errorText, 'received');
+                conversationHistory.push({ role: 'assistant', content: errorText });
+            }
+        });
+
+        function addMessage(content, type, isHTML = false) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', type);
+            if (isHTML) { messageElement.innerHTML = content; } else { messageElement.innerText = content; }
+            messagesContainer.appendChild(messageElement);
+            scrollToBottom();
+        }
+        function scrollToBottom() { messagesContainer.scrollTop = messagesContainer.scrollHeight; }
+        function formatDataAsTable(data) {
+            if (!Array.isArray(data) || data.length === 0) { return "<p>Não encontrei resultados para esta consulta.</p>"; }
+            let tableHTML = '<table class="data-table">';
+            const headers = Object.keys(data[0]);
+            tableHTML += '<thead><tr>';
+            headers.forEach(header => { tableHTML += `<th>${header}</th>`; });
+            tableHTML += '</tr></thead><tbody>';
+            data.forEach(row => {
+                tableHTML += '<tr>';
+                headers.forEach(header => { tableHTML += `<td>${row[header] !== null ? row[header] : ''}</td>`; });
+                tableHTML += '</tr>';
+            });
+            tableHTML += '</tbody></table>';
+            return tableHTML;
+        }
+        function formatMultiData(data) {
+            let finalHTML = '';
+            for (const question in data) {
+                finalHTML += `<h4 class="sub-question-title">${question}</h4>`;
+                finalHTML += formatDataAsTable(data[question]);
+            }
+            return finalHTML;
+        }
+        // NOVO: Função para formatar o conteúdo da célula de forma inteligente
+        function formatCellContent(content, header) {
+            if (content === null || content === undefined) return '';
+
+            // Lista de palavras-chave para identificar colunas de moeda
+            const currencyKeywords = ['preco', 'custo', 'valor', 'total', 'vendas', 'desconto', 'faturamento', 'ticket'];
+            const lowerHeader = header.toLowerCase();
+
+            // Verifica se o cabeçalho é de moeda e se o conteúdo é um número
+            if (currencyKeywords.some(key => lowerHeader.includes(key)) && !isNaN(parseFloat(content))) {
+                // Formata como moeda brasileira (Real)
+                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(content);
+            }
+            
+            // Retorna o conteúdo original se não for moeda
+            return content;
+        }
+
+    </script>
+</body>
+</html> -->
+
+
+<!-- 
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat com IA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        
+        :root {
+            --cor-fundo: #f0f2f5; --cor-primaria: #005c4b; --cor-chat-enviado: #d9fdd3;
+            --cor-chat-recebido: #ffffff; --cor-texto: #333; --sombra-card: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Roboto', sans-serif; background-color: var(--cor-fundo); margin: 0; padding: 20px;
+            display: flex; justify-content: center; align-items: center; height: 100vh; box-sizing: border-box;
+        }
+        .chat-container {
+            width: 100%; max-width: 8000px; height: 90vh; max-height: 8500px; background-color: #e5ddd5;
+            border-radius: 8px; box-shadow: var(--sombra-card); display: flex; flex-direction: column; overflow: hidden;
+        }
+        .chat-header { background-color: var(--cor-primaria); color: white; padding: 15px 20px; text-align: center; font-weight: 500; }
+        .chat-messages { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .message { padding: 10px 15px; border-radius: 12px; max-width: 80%; line-height: 1.4; word-wrap: break-word; }
+        .message.sent { background-color: var(--cor-chat-enviado); align-self: flex-end; border-bottom-right-radius: 0; }
+        .message.received {
+            background-color: var(--cor-chat-recebido); align-self: flex-start; box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+            border-bottom-left-radius: 0; max-width: 95%; 
+        }
+        .typing-indicator { display: none; align-self: flex-start; padding: 10px 15px; }
+        .typing-indicator span {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #999; margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.8s; }
+        .typing-indicator span:nth-child(3) { animation-delay: -0.4s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+        .chat-input-form { display: flex; padding: 15px; background-color: #f0f0f0; border-top: 1px solid #ddd; }
+        #message-input { flex-grow: 1; border: none; padding: 12px 15px; border-radius: 25px; font-size: 16px; }
+        #message-input:focus { outline: none; box-shadow: 0 0 0 2px var(--cor-primaria); }
+        #send-button {
+            background-color: var(--cor-primaria); color: white; border: none; border-radius: 50%; width: 50px; height: 50px;
+            margin-left: 10px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: background-color 0.2s;
+        }
+        #send-button:hover { background-color: #007a63; }
+        #send-button svg { width: 24px; height: 24px; }
+        .data-table {
+            width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; background-color: white;
+            overflow-x: auto; display: block;
+        }
+        .data-table th, .data-table td { padding: 8px 12px; border: 1px solid #e0e0e0; text-align: left; white-space: nowrap; }
+        .data-table th { background-color: #f4f4f4; font-weight: 500; }
+        .data-table tr:nth-child(even) { background-color: #f9f9f9; }
+        .sub-question-title { margin-top: 15px; margin-bottom: 5px; font-weight: 500; border-bottom: 1px solid #ddd; padding-bottom: 5px; color: #333; }
+        .sub-question-title:first-child { margin-top: 0; }
+        .token-counter-panel { padding: 8px 15px; background-color: #f0f0f0; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header"><h2>Fale com o Assistente Zé Galego</h2></div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message received">E aí, meu patrão! Sou Zé Galego, seu assistente de dados. O que você manda hoje?</div>
+        </div>
+        <div class="typing-indicator" id="typing-indicator"><span></span><span></span><span></span></div>
+        <form class="chat-input-form" id="chat-form">
+            <input type="text" id="message-input" placeholder="Digite sua pergunta aqui..." autocomplete="off">
+            <button type="submit" id="send-button" aria-label="Enviar">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+            </button>
+        </form>
+        <div class="token-counter-panel" id="token-counter">
+            Última Interação: 0 tokens | Total na Sessão: 0 tokens
+        </div>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const messagesContainer = document.getElementById('chat-messages');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const tokenCounter = document.getElementById('token-counter');
+        
+        let sessionTotalTokens = 0;
+        let conversationHistory = [];
+
+        chatForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const userMessage = messageInput.value.trim();
+            if (!userMessage) return;
+
+            addMessage(userMessage, 'sent');
+            conversationHistory.push({ role: 'user', content: userMessage });
+            messageInput.value = '';
+            typingIndicator.style.display = 'flex';
+            scrollToBottom();
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: userMessage, history: conversationHistory.slice(-6) }),
+                });
+
+                typingIndicator.style.display = 'none';
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Erro ${response.status}`);
+                }
+                
+                const contentType = response.headers.get('Content-Type');
+                const contentDisposition = response.headers.get('Content-Disposition');
+
+                if (contentDisposition && contentDisposition.includes('attachment')) {
+                    const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                    const filename = filenameMatch ? filenameMatch[1] : 'download.xlsx';
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none'; a.href = url; a.download = filename;
+                    document.body.appendChild(a); a.click();
+                    window.URL.revokeObjectURL(url); a.remove();
+                    
+                    const responseText = `Seu arquivo "${filename}" foi baixado.`;
+                    addMessage(responseText, 'received');
+                    conversationHistory.push({ role: 'assistant', content: responseText });
+                } else if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    
+                    if (data.usage && data.usage.total_tokens) {
+                        const lastTurnTokens = data.usage.total_tokens;
+                        sessionTotalTokens += lastTurnTokens;
+                        tokenCounter.innerText = `Última Interação: ${lastTurnTokens} tokens | Total na Sessão: ${sessionTotalTokens} tokens`;
+                    }
+                    
+                    let responseText = "";
+                    if (data.error) {
+                        responseText = `Erro: ${data.error}`;
+                    } else if (data.type === 'chat') {
+                        responseText = data.response;
+                    } else if (data.type === 'multi_data') {
+                        responseText = formatMultiData(data.response);
+                    } else { // Fallback para o tipo 'data' antigo, se necessário
+                        responseText = formatDataAsTable(data.response);
+                    }
+                    
+                    addMessage(responseText, 'received', data.type === 'data' || data.type === 'multi_data');
+                    conversationHistory.push({ role: 'assistant', content: responseText });
+                }
+            } catch (error) {
+                typingIndicator.style.display = 'none';
+                const errorText = `Erro: ${error.message}`;
+                addMessage(errorText, 'received');
+                conversationHistory.push({ role: 'assistant', content: errorText });
+            }
+        });
+
+        function addMessage(content, type, isHTML = false) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', type);
+            if (isHTML) {
+                messageElement.innerHTML = content;
+            } else {
+                messageElement.innerText = content;
+            }
+            messagesContainer.appendChild(messageElement);
+            scrollToBottom();
+        }
+        
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        function formatCellContent(content, header) {
+            if (content === null || content === undefined) return '';
+            const currencyKeywords = ['preco', 'custo', 'valor', 'total', 'vendas', 'desconto', 'faturamento', 'ticket'];
+            const lowerHeader = header.toLowerCase();
+            if (currencyKeywords.some(key => lowerHeader.includes(key)) && !isNaN(parseFloat(content))) {
+                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(content);
+            }
+            return content;
+        }
+
+        function formatDataAsTable(data) {
+            if (!Array.isArray(data) || data.length === 0) { return "<p>Não encontrei resultados para esta consulta.</p>"; }
+            let tableHTML = '<table class="data-table">';
+            const headers = Object.keys(data[0]);
+            tableHTML += '<thead><tr>';
+            headers.forEach(header => { tableHTML += `<th>${header}</th>`; });
+            tableHTML += '</tr></thead><tbody>';
+            data.forEach(row => {
+                tableHTML += '<tr>';
+                headers.forEach(header => {
+                    tableHTML += `<td>${formatCellContent(row[header], header)}</td>`;
+                });
+                tableHTML += '</tr>';
+            });
+            tableHTML += '</tbody></table>';
+            return tableHTML;
+        }
+
+        function formatMultiData(data) {
+            let finalHTML = '';
+            for (const question in data) {
+                finalHTML += `<h4 class="sub-question-title">${question}</h4>`;
+                finalHTML += formatDataAsTable(data[question]);
+            }
+            return finalHTML;
+        }
+    </script>
+</body>
+</html>
+
+
+
+ -->
+
+
+
+
+
+
+
+
+
+
+
+
+ <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zé Galego - Assistente de Dados</title>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <link href="[https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap)" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .chat-container {
+            max-width: 9000px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #1a4d3a; /* Darker green for header */
+            color: #ffffff;
+            padding: 1rem;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 6000;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background-color: #e6f0e6; /* Light green background for messages */
+        }
+        .message-bubble {
+            max-width: 75%;
+            padding: 0.75rem 1rem;
+            border-radius: 18px;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #dcf8c6; /* Light green for user messages */
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+        .bot-message {
+            background-color: #ffffff; /* White for bot messages */
+            margin-right: auto;
+            border: 1px solid #e0e0e0;
+            border-bottom-left-radius: 4px;
+        }
+        .input-area {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #e0e0e0;
+            background-color: #ffffff;
+        }
+        .input-area input {
+            flex-grow: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-area input:focus {
+            border-color: #1a4d3a;
+        }
+        .input-area button {
+            background-color: #1a4d3a;
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border: none;
+            border-radius: 25px;
+            margin-left: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .input-area button:hover {
+            background-color: #153c2e;
+        }
+        .loading-indicator {
+            text-align: center;
+            padding: 1rem;
+            color: #555;
+        }
+        .table-container {
+            max-height: 300px; /* Limit height for scrollable tables */
+            overflow-y: auto;
+            margin-top: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #e0e0e0;
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+        }
+        .data-table th {
+            background-color: #f8f8f8;
+            font-weight: 600;
+        }
+        .suggestions-box {
+            background-color: #f0f8ff;
+            border: 1px solid #cceeff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        .suggestions-box h4 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1a4d3a;
+        }
+        .suggestions-box ul {
+            list-style-type: disc;
+            margin-left: 1.25rem;
+        }
+        .suggestions-box li {
+            margin-bottom: 0.25rem;
+        }
+        .error-message {
+            background-color: #ffe0e0;
+            border: 1px solid #ffb3b3;
+            color: #cc0000;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-top: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            Fale com o Assistente Zé Galego
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="message-bubble bot-message">
+                E aí, meu patrão! Sou Zé Galego, seu assistente de dados. O que você manda hoje?
+            </div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Digite sua pergunta aqui..." autocomplete="off">
+            <button id="send-button">
+                <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send"><path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        let chatHistory = [];
+
+        function appendMessage(sender, text, type = 'chat', data = null, visualization = null, suggestions = []) {
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble');
+
+            if (sender === 'user') {
+                messageBubble.classList.add('user-message');
+                messageBubble.textContent = text;
+            } else {
+                messageBubble.classList.add('bot-message');
+                if (type === 'chat') {
+                    messageBubble.textContent = text;
+                } else if (type === 'multi_data' && data) {
+                    // Display data for each question
+                    for (const question in data) {
+                        const results = data[question];
+                        const questionHeader = document.createElement('p');
+                        questionHeader.innerHTML = `<strong>Dados para: "${question}"</strong>`;
+                        messageBubble.appendChild(questionHeader);
+
+                        if (results.length > 0) {
+                            const tableContainer = document.createElement('div');
+                            tableContainer.classList.add('table-container');
+                            const table = document.createElement('table');
+                            table.classList.add('data-table');
+                            
+                            // Table Header
+                            const thead = document.createElement('thead');
+                            const headerRow = document.createElement('tr');
+                            Object.keys(results[0]).forEach(key => {
+                                const th = document.createElement('th');
+                                th.textContent = key;
+                                headerRow.appendChild(th);
+                            });
+                            thead.appendChild(headerRow);
+                            table.appendChild(thead);
+
+                            // Table Body
+                            const tbody = document.createElement('tbody');
+                            results.forEach(row => {
+                                const tr = document.createElement('tr');
+                                Object.values(row).forEach(value => {
+                                    const td = document.createElement('td');
+                                    td.textContent = value;
+                                    tr.appendChild(td);
+                                });
+                                tbody.appendChild(tr);
+                            });
+                            table.appendChild(tbody);
+                            tableContainer.appendChild(table);
+                            messageBubble.appendChild(tableContainer);
+                        } else {
+                            const noData = document.createElement('p');
+                            noData.textContent = "Nenhum dado encontrado para esta consulta.";
+                            messageBubble.appendChild(noData);
+                        }
+                    }
+
+                    // Display suggestions if available
+                    if (suggestions && suggestions.length > 0) {
+                        const suggestionsBox = document.createElement('div');
+                        suggestionsBox.classList.add('suggestions-box');
+                        const suggestionsHeader = document.createElement('h4');
+                        suggestionsHeader.textContent = "Próximos passos estratégicos:";
+                        suggestionsBox.appendChild(suggestionsHeader);
+                        const suggestionsList = document.createElement('ul');
+                        suggestions.forEach(sug => {
+                            const li = document.createElement('li');
+                            li.textContent = sug;
+                            suggestionsList.appendChild(li);
+                        });
+                        suggestionsBox.appendChild(suggestionsList);
+                        messageBubble.appendChild(suggestionsBox);
+                    }
+
+                    // Placeholder for visualization (if implemented later)
+                    if (visualization && visualization.type !== 'table') {
+                        const vizInfo = document.createElement('p');
+                        vizInfo.textContent = `Sugestão de visualização: ${visualization.type} (${visualization.labels_column} vs ${visualization.data_column})`;
+                        messageBubble.appendChild(vizInfo);
+                    }
+
+                } else if (type === 'error') {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.classList.add('error-message');
+                    errorDiv.textContent = text;
+                    messageBubble.appendChild(errorDiv);
+                }
+            }
+
+            chatMessages.appendChild(messageBubble);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const question = userInput.value.trim();
+            if (question === '') return;
+
+            appendMessage('user', question);
+            userInput.value = '';
+            
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.classList.add('loading-indicator');
+            loadingIndicator.textContent = 'Zé Galego está pensando...';
+            chatMessages.appendChild(loadingIndicator);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: question, history: chatHistory }),
+                });
+
+                const data = await response.json();
+                chatMessages.removeChild(loadingIndicator); // Remove loading indicator
+
+                if (data.type === 'chat') {
+                    appendMessage('bot', data.response);
+                } else if (data.type === 'multi_data') {
+                    appendMessage('bot', '', 'multi_data', data.response, data.visualization, data.sugestoes);
+                } else if (data.type === 'error') {
+                    appendMessage('bot', data.response, 'error');
+                }
+
+                // Update chat history for next turn (only store user question and bot text response)
+                chatHistory.push({ role: "user", content: question });
+                if (data.type === 'chat' || data.type === 'error') {
+                    chatHistory.push({ role: "assistant", content: data.response });
+                } else if (data.type === 'multi_data') {
+                    // For data responses, summarize or store a placeholder for history
+                    chatHistory.push({ role: "assistant", content: "Dados e análise estratégica foram fornecidos." });
+                }
+
+            } catch (error) {
+                chatMessages.removeChild(loadingIndicator); // Remove loading indicator
+                appendMessage('bot', 'Ocorreu um erro ao se comunicar com o servidor. Tente novamente.', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

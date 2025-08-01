@@ -1,0 +1,364 @@
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Conferência por Volume</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <style>
+        body { font-family: Arial, sans-serif; padding: 10px; background: #f9f9f9; font-size: 16px; }
+        .container { max-width: 100%; margin: auto; }
+        .bloco { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2, h3, h4 { text-align: center; color: #333; margin-top: 0; }
+        h3 { color: #007bff; }
+        h4 { margin-top: 20px; margin-bottom: 10px; border-top: 1px solid #eee; padding-top: 20px; }
+        input[type=text] { width: 100%; box-sizing: border-box; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; margin-top: 10px; }
+        button { display: block; width: 100%; padding: 15px; color: white; border: none; cursor: pointer; margin-top: 15px; font-size: 18px; font-weight: bold; border-radius: 8px; }
+        button.principal { background: #007bff; }
+        button.secundario { background: #6c757d; }
+        button.finalizar { background: #dc3545; }
+        button:disabled { background: #aaa; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 10px 8px; border: 1px solid #ccc; text-align: left; vertical-align: middle; font-size: 14px; }
+        th { background-color: #f2f2f2; }
+        .hidden { display: none; }
+        .divergencia-negativa { color: red; font-weight: bold; }
+        .divergencia-positiva { color: blue; font-weight: bold; }
+        .divergencia-ok { color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="bloco">
+        <h2 id="titulo-conferencia">Conferência de Pedido</h2>
+    </div>
+
+    <div id="bloco-volume" class="bloco">
+        <h3>Passo 1: Bipar a Caixa</h3>
+        <input type="text" id="volume-input" placeholder="Bipar o código da caixa/volume">
+        <button class="principal" onclick="iniciarCaixa()">Iniciar Conferência da Caixa</button>
+    </div>
+
+    <div id="bloco-produtos" class="bloco hidden">
+        <h3 id="titulo-caixa-atual"></h3>
+        <input type="text" id="produto-input" placeholder="Bipar código de barras ou cód. do produto">
+        <h4>Itens Bipados nesta Caixa:</h4>
+        <div style="overflow-x: auto;">
+            <table id="tabelaItensCaixa">
+                <thead><tr><th>Cód.</th><th>Descrição</th><th>Qtd.</th></tr></thead>
+                <tbody><tr><td colspan="3" style="text-align:center;">Nenhum item bipado.</td></tr></tbody>
+            </table>
+        </div>
+        <button class="secundario" onclick="fecharCaixa()">Fechar Caixa e Salvar</button>
+    </div>
+    
+    <button class="finalizar" onclick="finalizarConferenciaGeral()">Finalizar Pedido Completo</button>
+
+    <div id="bloco-divergencias" class="bloco">
+        <h4>Painel de Divergências Geral</h4>
+        <div style="overflow-x: auto;">
+            <table id="tabelaDivergencias">
+                <thead><tr><th>Cód.</th><th>Descrição</th><th>Ped.</th><th>Conf.</th><th>Div.</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let pedidoOriginal = null;
+    let caixasJaSalvas = new Set();
+    let estadoOriginalCaixaAberta = {};
+    let estadoConferencia = {
+        caixaAtual: null,
+        itensPorCaixa: {}, 
+        totaisConferidos: {} 
+    };
+
+    window.onload = async () => {
+        const pedidoStr = localStorage.getItem("pedidoConferencia");
+        if (!pedidoStr) {
+            alert("Pedido não encontrado!");
+            window.location.href = "/pda_confe_pedido";
+            return;
+        }
+        pedidoOriginal = JSON.parse(pedidoStr);
+        document.getElementById("titulo-conferencia").textContent = `Conferindo Pedido Nº ${pedidoOriginal.pedido}`;
+        
+        await recarregarTotaisErenderizarPainel();
+
+        document.getElementById('volume-input').addEventListener('keydown', e => e.key === 'Enter' && iniciarCaixa());
+        document.getElementById('produto-input').addEventListener('keydown', e => e.key === 'Enter' && processarBipProduto());
+    };
+
+    function renderPainelDivergencias() {
+        const tbody = document.querySelector("#tabelaDivergencias tbody");
+        tbody.innerHTML = "";
+        
+        pedidoOriginal.itens.sort((a, b) => a.descricao.localeCompare(b.descricao)).forEach(item => {
+            const produtoId = item.produto.toString();
+            const totalConferido = estadoConferencia.totaisConferidos[produtoId] || 0;
+            const divergencia = totalConferido - item.qtd;
+            const tr = tbody.insertRow();
+            let divergenciaClass = divergencia === 0 ? 'divergencia-ok' : (divergencia < 0 ? 'divergencia-negativa' : 'divergencia-positiva');
+            if (totalConferido === 0 && item.qtd > 0) {
+                 divergenciaClass = 'divergencia-negativa';
+            }
+            tr.innerHTML = `
+                <td>${item.produto}</td><td>${item.descricao}</td><td>${item.qtd}</td>
+                <td>${totalConferido}</td><td class="${divergenciaClass}">${divergencia > 0 ? '+' : ''}${divergencia}</td>
+            `;
+        });
+    }
+
+    function iniciarCaixa() {
+        const volumeInput = document.getElementById('volume-input');
+        const numeroCaixa = volumeInput.value.trim();
+        
+        if (!numeroCaixa) {
+            alert("Por favor, bipe ou digite o número da caixa.");
+            return;
+        }
+        const numeroPedidoOriginal = pedidoOriginal.pedido.toString();
+        if (!numeroCaixa.startsWith(numeroPedidoOriginal)) {
+            alert(`CAIXA INVÁLIDA!\n\nA caixa "${numeroCaixa}" não pertence ao pedido ${numeroPedidoOriginal}.`);
+            volumeInput.value = '';
+            volumeInput.focus();
+            return;
+        }
+
+        // --- LÓGICA DE CONFIRMAÇÃO REINSERIDA ---
+        if (caixasJaSalvas.has(numeroCaixa)) {
+            if (!confirm(`ATENÇÃO: A caixa "${numeroCaixa}" já foi conferida.\n\nDeseja reabri-la para fazer correções?`)) {
+                volumeInput.value = '';
+                return; // Interrompe se o usuário clicar em "Cancelar"
+            }
+        }
+        // --- FIM DA LÓGICA DE CONFIRMAÇÃO ---
+
+        estadoConferencia.caixaAtual = numeroCaixa;
+        if (!estadoConferencia.itensPorCaixa[numeroCaixa]) {
+            estadoConferencia.itensPorCaixa[numeroCaixa] = {}; 
+        }
+        
+        estadoOriginalCaixaAberta = JSON.parse(JSON.stringify(estadoConferencia.itensPorCaixa[numeroCaixa]));
+
+        document.getElementById('titulo-caixa-atual').textContent = `Conferindo Caixa: ${numeroCaixa}`;
+        document.getElementById('bloco-volume').classList.add('hidden');
+        document.getElementById('bloco-produtos').classList.remove('hidden');
+        document.getElementById('produto-input').focus();
+        renderTabelaItensCaixa();
+    }
+
+    
+function processarBipProduto() {
+    const produtoInput = document.getElementById('produto-input');
+    const codigoDigitado = produtoInput.value.trim();
+    if (!codigoDigitado) return;
+
+    // <<< LÓGICA DE BUSCA COMPLETA >>>
+    const itemOriginal = pedidoOriginal.itens.find(item => {
+        // 1. Checa a barra principal e o código interno primeiro para maior rapidez
+        if (item.barras === codigoDigitado || item.produto.toString() === codigoDigitado) {
+            return true;
+        }
+
+        // 2. Se não achou, faz uma busca segura nos múltiplos códigos de barras
+        const multiBarrasString = item.multi_barras || ''; // Garante que é uma string
+        
+        // Separa a string em uma lista, remove espaços e entradas vazias
+        const listaDeBarras = multiBarrasString.split(',')
+                                             .map(barra => barra.trim())
+                                             .filter(barra => barra !== '');
+        
+        // Retorna true se encontrar o código exato na lista de múltiplos barras
+        return listaDeBarras.includes(codigoDigitado);
+    });
+
+    // Se o 'itemOriginal' não for encontrado após buscar em todos os campos, exibe o erro
+    if (!itemOriginal) {
+        alert('PRODUTO NÃO PERTENCE A ESTE PEDIDO OU NÃO ENCONTRADO!');
+        produtoInput.value = ''; // Limpa o campo de input
+        return; // Para a execução da função
+    }
+
+    // Se encontrou o produto, continua a lógica para adicionar na caixa
+    const itensDaCaixa = estadoConferencia.itensPorCaixa[estadoConferencia.caixaAtual];
+    const produtoId = itemOriginal.produto.toString();
+
+    if (itensDaCaixa[produtoId]) {
+        // Se o produto já foi bipado nesta caixa, apenas incrementa a quantidade
+        itensDaCaixa[produtoId].quantidade_conferida++;
+    } else {
+        // Se for o primeiro bip deste produto na caixa, adiciona ele à lista da caixa
+        itensDaCaixa[produtoId] = { ...itemOriginal, quantidade_conferida: 1 };
+    }
+
+    // Limpa o campo de input e atualiza a tabela de itens da caixa
+    produtoInput.value = '';
+    renderTabelaItensCaixa();
+}
+
+    function renderTabelaItensCaixa() {
+        const tbody = document.querySelector("#tabelaItensCaixa tbody");
+        const itensDaCaixa = estadoConferencia.itensPorCaixa[estadoConferencia.caixaAtual];
+        const itensArray = Object.values(itensDaCaixa);
+        tbody.innerHTML = "";
+        if (itensArray.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum item bipado.</td></tr>';
+            return;
+        }
+        itensArray.sort((a,b) => a.descricao.localeCompare(b.descricao)).forEach(item => {
+            const tr = tbody.insertRow();
+            tr.innerHTML = `<td>${item.produto}</td><td>${item.descricao}</td><td>${item.quantidade_conferida}</td>`;
+        });
+    }
+
+    function saoCaixasIguais(caixaA, caixaB) {
+        const chavesA = Object.keys(caixaA);
+        const chavesB = Object.keys(caixaB);
+        if (chavesA.length !== chavesB.length) return false;
+        for (const chave of chavesA) {
+            if (!caixaB[chave] || caixaA[chave].quantidade_conferida !== caixaB[chave].quantidade_conferida) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function fecharCaixa() {
+        const caixaAtualNum = estadoConferencia.caixaAtual;
+        if (!caixaAtualNum) return;
+        
+        const itensDaCaixaAtual = estadoConferencia.itensPorCaixa[caixaAtualNum];
+
+        if (saoCaixasIguais(estadoOriginalCaixaAberta, itensDaCaixaAtual)) {
+            alert("Nenhuma alteração foi feita nesta caixa. Nada foi salvo.");
+            resetarParaScanDeVolume();
+            return;
+        }
+        
+        const itensParaSalvar = Object.values(itensDaCaixaAtual).map(item => ({
+            numero_pedido: pedidoOriginal.pedido,
+            codigo: item.produto,
+            codigo_barras: item.barras,
+            descricao: item.descricao,
+            unidade: item.unidade || "UN",
+            quantidade_pedida: item.qtd,
+            quantidade_conferida: item.quantidade_conferida,
+            divergencia: item.quantidade_conferida - item.qtd,
+            lojas_tag: localStorage.getItem("nome_filial_selecionada") || "Desconhecida"
+        }));
+        
+        const botaoFechar = document.querySelector('#bloco-produtos .secundario');
+        botaoFechar.disabled = true;
+        botaoFechar.textContent = 'Salvando...';
+
+        fetch('/salvar-conferencia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ caixa: caixaAtualNum, itens: itensParaSalvar })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                alert(`Caixa ${caixaAtualNum} salva com sucesso!`);
+                recarregarTotaisErenderizarPainel();
+                resetarParaScanDeVolume();
+            } else {
+                throw new Error(data.erro || "Erro desconhecido");
+            }
+        })
+        .catch(err => alert(`Erro ao salvar caixa: ${err.message}`))
+        .finally(() => {
+            botaoFechar.disabled = false;
+            botaoFechar.textContent = 'Fechar Caixa e Salvar';
+        });
+    }
+    
+    async function recarregarTotaisErenderizarPainel() {
+        estadoConferencia.itensPorCaixa = {};
+        pedidoOriginal.itens.forEach(item => {
+            estadoConferencia.totaisConferidos[item.produto.toString()] = 0;
+        });
+
+        try {
+            const response = await fetch(`/buscar-itens?pedido=${pedidoOriginal.pedido}`);
+            const dadosBackend = await response.json();
+            if (dadosBackend.itens && dadosBackend.itens.length > 0) {
+                dadosBackend.itens.forEach(itemSalvo => {
+                    const produtoId = itemSalvo.codigo.toString();
+                    if(estadoConferencia.totaisConferidos[produtoId] !== undefined) {
+                       estadoConferencia.totaisConferidos[produtoId] += parseInt(itemSalvo.quantidade_conferida, 10) || 0;
+                    }
+                    if (itemSalvo.caixa) {
+                        caixasJaSalvas.add(itemSalvo.caixa);
+                        if (!estadoConferencia.itensPorCaixa[itemSalvo.caixa]) {
+                            estadoConferencia.itensPorCaixa[itemSalvo.caixa] = {};
+                        }
+                        const itemOriginalDoPedido = pedidoOriginal.itens.find(i => i.produto.toString() === produtoId);
+                        if (itemOriginalDoPedido) {
+                            estadoConferencia.itensPorCaixa[itemSalvo.caixa][produtoId] = {
+                                ...itemOriginalDoPedido,
+                                quantidade_conferida: itemSalvo.quantidade_conferida
+                            };
+                        }
+                    }
+                });
+            }
+            renderPainelDivergencias();
+        } catch (err) {
+            console.error("Falha ao recarregar totais:", err);
+            alert("Não foi possível recarregar o progresso do pedido.");
+        }
+    }
+
+    function resetarParaScanDeVolume(){
+        document.getElementById('bloco-produtos').classList.add('hidden');
+        document.getElementById('bloco-volume').classList.remove('hidden');
+        document.getElementById('volume-input').value = '';
+        document.getElementById('volume-input').focus();
+        estadoConferencia.caixaAtual = null;
+        estadoOriginalCaixaAberta = {};
+    }
+
+    function finalizarConferenciaGeral() {
+        let temPendencias = false;
+        for(const item of pedidoOriginal.itens) {
+            const produtoId = item.produto.toString();
+            const totalConferido = estadoConferencia.totaisConferidos[produtoId] || 0;
+            if (totalConferido < item.qtd) {
+                temPendencias = true;
+                break;
+            }
+        }
+        if (temPendencias) {
+            if (!confirm("ATENÇÃO: Ainda existem produtos com quantidades faltantes. Deseja finalizar a conferência mesmo assim?")) {
+                return;
+            }
+        } else {
+             if (!confirm("Todos os itens foram conferidos. Tem certeza que deseja finalizar a conferência deste pedido?")) {
+                return;
+            }
+        }
+        fetch('/finalizar-conferencia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ numero_pedido: pedidoOriginal.pedido })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "ok") {
+                alert("Conferência do pedido finalizada com sucesso!");
+                localStorage.removeItem("pedidoConferencia");
+                window.location.href = "/pda_confe_pedido";
+            } else {
+                throw new Error(data.erro || "Erro ao finalizar");
+            }
+        })
+        .catch(err => alert(`Erro ao finalizar pedido: ${err.message}`));
+    }
+</script>
+</body>
+</html>

@@ -1,31 +1,720 @@
+<!-- <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - DataMind</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            height: 100vh;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+        }
+        #neural-canvas { position: absolute; top: 0; left: 0; z-index: 1; }
+        .login-card {
+            width: 100%; max-width: 400px; padding: 40px; border-radius: 12px;
+            position: relative; z-index: 2;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(56, 189, 248, 0.1);
+            color: #e0e7ff; text-align: center;
+        }
+        .login-card h2 { margin-bottom: 10px; font-size: 24px; }
+        .login-card p { margin-bottom: 30px; font-size: 15px; color: #a5b4fc; }
+        .login-card .input-group { position: relative; margin-bottom: 20px; }
+        
+        .login-card .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        .login-card input, .login-card select, .login-card button {
+            width: 100%; padding: 12px; font-size: 15px;
+            border-radius: 8px; border: 1px solid #334155;
+            outline: none; font-family: inherit; transition: all 0.3s ease;
+        }
+        .login-card input { 
+            background: #1e293b; 
+            color: #e0e7ff; 
+            padding-left: 40px;
+        }
+        .login-card select {
+            background: #1e293b; 
+            color: #e0e7ff;
+            padding-left: 40px;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 1em;
+        }
+
+        .login-card input:focus, .login-card select:focus { border-color: #38bdf8; }
+        .login-card input::placeholder { color: #64748b; }
+        .login-card button { cursor: pointer; font-weight: bold; background: #0ea5e9; color: white; border-color: transparent; margin-top: 10px;}
+        .login-card button:hover { background: #38bdf8; }
+
+        .footer-text {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="neural-canvas"></canvas>
+    <div class="login-card">
+        <h2>DataMind</h2>
+        <p>Você está a um clique do futuro!</p>
+        
+        <form class="login-form" onsubmit="login(event)">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="matriculaInput" placeholder="Matrícula" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="senhaInput" placeholder="Senha" required>
+            </div>
+            <div class="input-group">
+                 <i class="fas fa-desktop"></i>
+                <select id="deviceType">
+                    <option value="desktop">Desktop</option>
+                    <option value="pda">PDA</option>
+                </select>
+            </div>
+            <button type="submit">Entrar</button>
+        </form>
+        
+        <div class="footer-text">© 2025 - Sistema de Análise</div>
+    </div>
+    
+    <script>
+        // ================================================================
+        //  MUDANÇA: LÓGICA DE LOGIN RESTAURADA PARA A VERSÃO ORIGINAL
+        // ================================================================
+        function login(event) {
+            event.preventDefault(); 
+            
+            const matricula = document.getElementById('matriculaInput').value.trim();
+            const senha = document.getElementById('senhaInput').value.trim();
+            const dispositivo = document.getElementById('deviceType').value;
+
+            if (!matricula || !senha) {
+                alert("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            console.log("Tentativa de login com:", { matricula, senha, dispositivo });
+
+            // Esta é a lógica que você indicou que funciona no seu ambiente,
+            // que depende de uma função em um arquivo externo.
+            if (typeof sendLoginRequest === "function") {
+                sendLoginRequest(matricula, senha, dispositivo);
+            } else {
+                console.error("Função 'sendLoginRequest' não encontrada. Verifique o script /static/login.js.");
+                alert("Erro na configuração do login. (Modo de teste)");
+            }
+        }
+        
+        // A animação de fundo não foi alterada
+        const canvas = document.getElementById('neural-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let particles = [];
+        const options = { particleColor: "rgba(180, 180, 255, 0.5)", lineColor: "rgba(100, 100, 255, 0.15)", particleAmount: 50, defaultRadius: 1.5, linkRadius: 200 };
+        class Particle { constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.vx = -1 + Math.random() * 2; this.vy = -1 + Math.random() * 2; this.radius = options.defaultRadius; } update() { this.x += this.vx; this.y += this.vy; if (this.x > canvas.width || this.x < 0) this.vx = -this.vx; if (this.y > canvas.height || this.y < 0) this.vy = -this.vy; } draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = options.particleColor; ctx.fill(); } }
+        function linkParticles() { for (let a = 0; a < particles.length; a++) { for (let b = a; b < particles.length; b++) { let dx = particles[a].x - particles[b].x; let dy = particles[a].y - particles[b].y; let dist = Math.sqrt(dx * dx + dy * dy); if (dist < options.linkRadius) { ctx.beginPath(); ctx.moveTo(particles[a].x, particles[a].y); ctx.lineTo(particles[b].x, particles[b].y); ctx.lineWidth = 1; ctx.strokeStyle = options.lineColor; ctx.stroke(); } } } }
+        function setup() { for (let i = 0; i < options.particleAmount; i++) particles.push(new Particle()); window.requestAnimationFrame(loop); }
+        function loop() { ctx.clearRect(0, 0, canvas.width, canvas.height); for (const p of particles) { p.update(); p.draw(); } linkParticles(); window.requestAnimationFrame(loop); }
+        setup();
+        window.addEventListener("resize", () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; particles = []; setup(); });
+    </script>
+    
+    <script src="/static/login.js"></script>
+
+</body>
+</html> -->
+
+
+<!-- 
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Ajuste de Estoque</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/styles.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - DataMind [Digital Grid]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #010409;
+            height: 100vh;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+        }
+        #grid-canvas { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            z-index: 1;
+            opacity: 0.6;
+        }
+        .login-card {
+            width: 100%; max-width: 400px; padding: 40px; border-radius: 12px;
+            position: relative; z-index: 2;
+            background: linear-gradient(145deg, rgba(16, 26, 46, 0.6), rgba(10, 20, 35, 0.6));
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 199, 255, 0.15);
+            box-shadow: 0 0 30px rgba(0, 199, 255, 0.1);
+            color: #cdd6f4; text-align: center;
+            animation: floatIn 1s ease-out;
+        }
+
+        @keyframes floatIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-card h2 { 
+            margin-bottom: 10px; 
+            font-size: 32px;
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 700;
+            color: #00c7ff;
+            text-shadow: 0 0 5px #00c7ff, 0 0 10px #00c7ff, 0 0 20px rgba(0, 199, 255, 0.5);
+        }
+        .login-card p { margin-bottom: 30px; font-size: 15px; color: #7f8ea3; }
+        .login-card .input-group { position: relative; margin-bottom: 20px; }
+        
+        .login-card .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4a5568;
+            transition: color 0.3s ease;
+        }
+
+        .login-card input, .login-card select, .login-card button {
+            width: 100%; padding: 12px; font-size: 15px;
+            border-radius: 8px; border: 1px solid #2d3748;
+            outline: none; font-family: inherit; transition: all 0.3s ease;
+        }
+        .login-card input, .login-card select { 
+            background: #0d1117; 
+            color: #cdd6f4; 
+            padding-left: 45px;
+        }
+        .login-card select {
+            padding-left: 45px;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 1em;
+        }
+
+        .login-card input:focus, .login-card select:focus { 
+            border-color: #00c7ff; 
+            box-shadow: 0 0 10px rgba(0, 199, 255, 0.3);
+        }
+        .login-card input:focus + i, .login-card select:focus + i {
+            color: #00c7ff;
+        }
+        .login-card input::placeholder { color: #4a5568; }
+        .login-card button { 
+            cursor: pointer; font-weight: bold; 
+            background: #00c7ff; 
+            color: #010409; 
+            border: none;
+            margin-top: 10px;
+            box-shadow: 0 0 20px rgba(0, 199, 255, 0.2);
+        }
+        .login-card button:hover { 
+            background: #52dfff;
+            box-shadow: 0 0 25px rgba(0, 199, 255, 0.4);
+        }
+
+        .footer-text {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #4a5568;
+        }
+    </style>
 </head>
-<body class="login-body">
-    <div class="login-container">
-        <div class="login-box">
-            <h2>Login</h2>
-            <p>Acesse o sistema de ajuste de estoque</p>
-            <div class="login-form">
-                <div class="input-group">
-                    <i class="fas fa-user"></i>
-                    <input type="text" id="matriculaInput" placeholder="Matrícula" autocomplete="off">
-                </div>
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="senhaInput" placeholder="Senha" autocomplete="off">
-                </div>
-                <button onclick="login()">Entrar</button>
+<body>
+    <canvas id="grid-canvas"></canvas>
+    <div class="login-card">
+        <h2>DataMind</h2>
+        <p>Acesse a plataforma para insights analíticos.</p>
+        
+        <form class="login-form" onsubmit="login(event)">
+            <div class="input-group">
+                <i class="fas fa-user-astronaut"></i>
+                <input type="text" id="matriculaInput" placeholder="Matrícula" required>
             </div>
-        </div>
+            <div class="input-group">
+                <i class="fas fa-key"></i>
+                <input type="password" id="senhaInput" placeholder="Senha" required>
+            </div>
+            <div class="input-group">
+                 <i class="fas fa-satellite-dish"></i>
+                <select id="deviceType">
+                    <option value="desktop">Desktop</option>
+                    <option value="pda">PDA</option>
+                </select>
+            </div>
+            <button type="submit">Conectar</button>
+        </form>
+        
+        <div class="footer-text">© 2025 - DataMind Analytics</div>
     </div>
+    
+    <script>
+        function login(event) {
+            event.preventDefault(); 
+            const matricula = document.getElementById('matriculaInput').value.trim();
+            const senha = document.getElementById('senhaInput').value.trim();
+            const dispositivo = document.getElementById('deviceType').value;
+
+            if (!matricula || !senha) {
+                alert("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            console.log("Tentativa de login com:", { matricula, senha, dispositivo });
+
+            if (typeof sendLoginRequest === "function") {
+                sendLoginRequest(matricula, senha, dispositivo);
+            } else {
+                console.error("Função 'sendLoginRequest' não encontrada. Verifique o script /static/login.js.");
+                alert("Erro na configuração do login.");
+            }
+        }
+        
+        // --- Animação de Grelha Digital ---
+        const canvas = document.getElementById('grid-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, grid, pulses;
+
+        function setup() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            grid = { size: 30, color: "rgba(0, 199, 255, 0.05)" };
+            pulses = [];
+            for (let i = 0; i < 50; i++) {
+                setTimeout(createPulse, Math.random() * 20000);
+            }
+        }
+
+        class Pulse {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 0;
+                this.maxRadius = Math.min(width, height) * 0.8;
+                this.speed = Math.random() * 0.2 + 0.2;
+                this.opacity = 1;
+            }
+            update() {
+                this.radius += this.speed;
+                this.opacity = 1 - this.radius / this.maxRadius;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(0, 199, 255, ${this.opacity * 0.3})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        function createPulse() {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            pulses.push(new Pulse(x, y));
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = grid.color;
+            for (let x = 0; x < width; x += grid.size) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < height; y += grid.size) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            drawGrid();
+            pulses.forEach((pulse, index) => {
+                pulse.update();
+                pulse.draw();
+                if (pulse.opacity <= 0) {
+                    pulses.splice(index, 1);
+                    setTimeout(createPulse, Math.random() * 5000);
+                }
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', setup);
+        setup();
+        animate();
+    </script>
+    
     <script src="/static/login.js"></script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92d9d5865f1e53b1',t:'MTc0NDE5OTkyMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+</body>
+</html> -->
+
+
+
+
+
+
+<!-- 
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - DataMind</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            height: 100vh;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+        }
+        #neural-canvas { position: absolute; top: 0; left: 0; z-index: 1; }
+        
+        .login-card {
+            width: 100%; max-width: 400px; padding: 40px; border-radius: 12px;
+            position: relative; z-index: 2;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(56, 189, 248, 0.1);
+            color: #e0e7ff; text-align: center;
+            /* --- MUDANÇA: Adicionada transição para a animação --- */
+            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.5s ease-out;
+        }
+
+        /* --- MUDANÇA: Classe da animação de saída "Zoom Out" --- */
+        .login-card.is-exiting {
+            transform: scale(0.2);
+            opacity: 0;
+        }
+
+        .logo-text-container { margin-bottom: 15px; }
+        .logo-text {
+            font-size: 42px; font-weight: 700; color: #e0f2fe;
+            text-shadow: 0 0 4px #fff, 0 0 10px #0ea5e9, 0 0 20px #0ea5e9, 0 0 30px #0ea5e9;
+            animation: pulse-glow 3s infinite alternate ease-in-out;
+        }
+        @keyframes pulse-glow {
+            from { text-shadow: 0 0 4px #fff, 0 0 8px #0ea5e9; }
+            to { text-shadow: 0 0 5px #fff, 0 0 12px #38bdf8, 0 0 25px #38bdf8; }
+        }
+
+        .login-card p { margin-bottom: 30px; font-size: 15px; color: #a5b4fc; }
+        .login-card .input-group { position: relative; margin-bottom: 20px; }
+        .login-card .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #64748b; }
+        .login-card input, .login-card select, .login-card button {
+            width: 100%; padding: 12px; font-size: 15px;
+            border-radius: 8px; border: 1px solid #334155;
+            outline: none; font-family: inherit; transition: all 0.3s ease;
+        }
+        .login-card input { background: #1e293b; color: #e0e7ff; padding-left: 40px; }
+        .login-card select {
+            background: #1e293b; color: #e0e7ff; padding-left: 40px; appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 15px center; background-size: 1em;
+        }
+        .login-card input:focus, .login-card select:focus { border-color: #38bdf8; }
+        .login-card button { cursor: pointer; font-weight: bold; background: #0ea5e9; color: white; border-color: transparent; margin-top: 10px;}
+        .login-card button:hover { background: #38bdf8; }
+        .footer-text { margin-top: 30px; font-size: 12px; color: #64748b; }
+    </style>
+</head>
+<body>
+    <canvas id="neural-canvas"></canvas>
+    <div class="login-card">
+        <div class="logo-text-container">
+            <h2 class="logo-text">&lt;DataMind&gt;</h2>
+        </div>
+        <p>Você está a um clique do futuro!</p>
+        <form class="login-form">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="matriculaInput" placeholder="Matrícula" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="senhaInput" placeholder="Senha" required>
+            </div>
+            <div class="input-group">
+                 <i class="fas fa-desktop"></i>
+                <select id="deviceType">
+                    <option value="desktop">Desktop</option>
+                    <option value="pda">PDA</option>
+                </select>
+            </div>
+            <button type="submit">Entrar</button>
+        </form>
+        <div class="footer-text">© 2025 - Sistema de Análise</div>
+    </div>
+    
+    <script>
+        const loginCard = document.querySelector('.login-card');
+
+        function login(event) {
+            event.preventDefault(); 
+            const matricula = document.getElementById('matriculaInput').value.trim();
+            const senha = document.getElementById('senhaInput').value.trim();
+            if (!matricula || !senha) {
+                alert("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            // --- MUDANÇA: LÓGICA DE ANIMAÇÃO AO INICIAR LOGIN ---
+            // Adiciona a classe para iniciar a animação
+            loginCard.classList.add('is-exiting');
+
+            // Espera a animação terminar antes de prosseguir
+            setTimeout(() => {
+                console.log("Tentativa de login com:", { matricula, senha, dispositivo: document.getElementById('deviceType').value });
+
+                if (typeof sendLoginRequest === "function") {
+                    sendLoginRequest(matricula, senha, dispositivo);
+                } else {
+                    console.error("Função 'sendLoginRequest' não encontrada. Usando alerta de teste.");
+                    alert("Acesso Permitido! (Modo de teste)");
+                }
+                
+                // Remove a classe para resetar o estado caso o usuário não seja redirecionado
+                 loginCard.classList.remove('is-exiting');
+            }, 700); // Tempo de espera deve ser um pouco maior que a transição do CSS
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.querySelector('.login-form');
+            if(loginForm) {
+                loginForm.addEventListener('submit', login); 
+            }
+        });
+
+        // Animação de Fundo
+        const canvas = document.getElementById('neural-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let particles = [];
+        const options = { particleColor: "rgba(180, 180, 255, 0.5)", lineColor: "rgba(100, 100, 255, 0.15)", particleAmount: 50, defaultRadius: 1.5, linkRadius: 200 };
+        class Particle { constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.vx = -1 + Math.random() * 2; this.vy = -1 + Math.random() * 2; this.radius = options.defaultRadius; } update() { this.x += this.vx; this.y += this.vy; if (this.x > canvas.width || this.x < 0) this.vx = -this.vx; if (this.y > canvas.height || this.y < 0) this.vy = -this.vy; } draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = options.particleColor; ctx.fill(); } }
+        function linkParticles() { for (let a = 0; a < particles.length; a++) { for (let b = a; b < particles.length; b++) { let dx = particles[a].x - particles[b].x; let dy = particles[a].y - particles[b].y; let dist = Math.sqrt(dx * dx + dy * dy); if (dist < options.linkRadius) { ctx.beginPath(); ctx.moveTo(particles[a].x, particles[a].y); ctx.lineTo(particles[b].x, particles[b].y); ctx.lineWidth = 1; ctx.strokeStyle = options.lineColor; ctx.stroke(); } } } }
+        function setup() { for (let i = 0; i < options.particleAmount; i++) particles.push(new Particle()); window.requestAnimationFrame(loop); }
+        function loop() { ctx.clearRect(0, 0, canvas.width, canvas.height); for (const p of particles) { p.update(); p.draw(); } linkParticles(); window.requestAnimationFrame(loop); }
+        setup();
+        window.addEventListener("resize", () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; particles = []; setup(); });
+    </script>
+    
+    <script src="/static/login.js"></script>
+</body>
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - DataMind</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #020617;
+            height: 100vh;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+        }
+        #neural-canvas { position: absolute; top: 0; left: 0; z-index: 1; }
+        
+        .login-card {
+            width: 100%; max-width: 400px; padding: 40px; border-radius: 12px;
+            position: relative; z-index: 2;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(56, 189, 248, 0.1);
+            color: #e0e7ff; text-align: center;
+            /* --- MUDANÇA: Adicionada transição para a animação --- */
+            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.5s ease-out;
+        }
+
+        /* --- MUDANÇA: Classe da animação de saída "Zoom Out" --- */
+        .login-card.is-exiting {
+            transform: scale(0.2);
+            opacity: 0;
+        }
+
+        .logo-text-container { margin-bottom: 15px; }
+        .logo-text {
+            font-size: 42px; font-weight: 700; color: #e0f2fe;
+            text-shadow: 0 0 4px #fff, 0 0 10px #0ea5e9, 0 0 20px #0ea5e9, 0 0 30px #0ea5e9;
+            animation: pulse-glow 3s infinite alternate ease-in-out;
+        }
+        @keyframes pulse-glow {
+            from { text-shadow: 0 0 4px #fff, 0 0 8px #0ea5e9; }
+            to { text-shadow: 0 0 5px #fff, 0 0 12px #38bdf8, 0 0 25px #38bdf8; }
+        }
+
+        .login-card p { margin-bottom: 30px; font-size: 15px; color: #a5b4fc; }
+        .login-card .input-group { position: relative; margin-bottom: 20px; }
+        .login-card .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #64748b; }
+        .login-card input, .login-card select, .login-card button {
+            width: 100%; padding: 12px; font-size: 15px;
+            border-radius: 8px; border: 1px solid #334155;
+            outline: none; font-family: inherit; transition: all 0.3s ease;
+        }
+        .login-card input { background: #1e293b; color: #e0e7ff; padding-left: 40px; }
+        .login-card select {
+            background: #1e293b; color: #e0e7ff; padding-left: 40px; appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 15px center; background-size: 1em;
+        }
+        .login-card input:focus, .login-card select:focus { border-color: #38bdf8; }
+        .login-card button { cursor: pointer; font-weight: bold; background: #0ea5e9; color: white; border-color: transparent; margin-top: 10px;}
+        .login-card button:hover { background: #38bdf8; }
+        .footer-text { margin-top: 30px; font-size: 12px; color: #64748b; }
+    </style>
+</head>
+<body>
+    <canvas id="neural-canvas"></canvas>
+    <div class="login-card">
+        <div class="logo-text-container">
+            <h2 class="logo-text">&lt;DataMind&gt;</h2>
+        </div>
+        <p>Você está a um clique do futuro!</p>
+        <form class="login-form">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="matriculaInput" placeholder="Matrícula" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="senhaInput" placeholder="Senha" required>
+            </div>
+            <div class="input-group">
+                 <i class="fas fa-desktop"></i>
+                <select id="deviceType">
+                    <option value="desktop">Desktop</option>
+                    <option value="pda">PDA</option>
+                </select>
+            </div>
+            <button type="submit">Entrar</button>
+        </form>
+        <div class="footer-text">© 2025 - Sistema de Análise</div>
+    </div>
+    
+    <script>
+        const loginCard = document.querySelector('.login-card');
+
+        function login(event) {
+            event.preventDefault(); 
+            const matricula = document.getElementById('matriculaInput').value.trim();
+            const senha = document.getElementById('senhaInput').value.trim();
+            if (!matricula || !senha) {
+                alert("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            // --- MUDANÇA: LÓGICA DE ANIMAÇÃO AO INICIAR LOGIN ---
+            // Adiciona a classe para iniciar a animação
+            loginCard.classList.add('is-exiting');
+
+            // Espera a animação terminar antes de prosseguir
+            setTimeout(() => {
+                console.log("Tentativa de login com:", { matricula, senha, dispositivo: document.getElementById('deviceType').value });
+
+                if (typeof sendLoginRequest === "function") {
+                    sendLoginRequest(matricula, senha, dispositivo);
+                } else {
+                    console.error("Função 'sendLoginRequest' não encontrada. Usando alerta de teste.");
+                    alert("Acesso Permitido! (Modo de teste)");
+                }
+                
+                // Remove a classe para resetar o estado caso o usuário não seja redirecionado
+                 loginCard.classList.remove('is-exiting');
+            }, 700); // Tempo de espera deve ser um pouco maior que a transição do CSS
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.querySelector('.login-form');
+            if(loginForm) {
+                loginForm.addEventListener('submit', login); 
+            }
+        });
+
+        // Animação de Fundo
+        const canvas = document.getElementById('neural-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let particles = [];
+        const options = { particleColor: "rgba(180, 180, 255, 0.5)", lineColor: "rgba(100, 100, 255, 0.15)", particleAmount: 50, defaultRadius: 1.5, linkRadius: 200 };
+        class Particle { constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.vx = -1 + Math.random() * 2; this.vy = -1 + Math.random() * 2; this.radius = options.defaultRadius; } update() { this.x += this.vx; this.y += this.vy; if (this.x > canvas.width || this.x < 0) this.vx = -this.vx; if (this.y > canvas.height || this.y < 0) this.vy = -this.vy; } draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = options.particleColor; ctx.fill(); } }
+        function linkParticles() { for (let a = 0; a < particles.length; a++) { for (let b = a; b < particles.length; b++) { let dx = particles[a].x - particles[b].x; let dy = particles[a].y - particles[b].y; let dist = Math.sqrt(dx * dx + dy * dy); if (dist < options.linkRadius) { ctx.beginPath(); ctx.moveTo(particles[a].x, particles[a].y); ctx.lineTo(particles[b].x, particles[b].y); ctx.lineWidth = 1; ctx.strokeStyle = options.lineColor; ctx.stroke(); } } } }
+        function setup() { for (let i = 0; i < options.particleAmount; i++) particles.push(new Particle()); window.requestAnimationFrame(loop); }
+        function loop() { ctx.clearRect(0, 0, canvas.width, canvas.height); for (const p of particles) { p.update(); p.draw(); } linkParticles(); window.requestAnimationFrame(loop); }
+        setup();
+        window.addEventListener("resize", () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; particles = []; setup(); });
+    </script>
+    
+    <script src="/static/login.js"></script>
+</body>
 </html>

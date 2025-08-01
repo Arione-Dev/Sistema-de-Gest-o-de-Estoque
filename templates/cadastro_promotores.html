@@ -1,0 +1,913 @@
+<!-- 
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Promotores</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/imask"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hidden-file-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .route-row { animation: slideDown 0.3s ease-out; }
+        input[type="time"]::-webkit-calendar-picker-indicator { background: none; display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <div class="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="p-6 border-b border-gray-200">
+             <label for="promoter-search" class="block text-sm font-medium text-gray-700 mb-1">Buscar Promotor Existente</label>
+            <div class="relative">
+                <input type="text" id="promoter-search" placeholder="Digite o nome do promotor para editar..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" autocomplete="off">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <div id="promoter-suggestions" class="absolute z-30 w-full bg-white border border-gray-300 rounded-b-lg shadow-lg mt-1 hidden"></div>
+            </div>
+        </div>
+
+        <form id="promoter-form" class="p-6 sm:p-8 lg:p-10 space-y-8 pt-0">
+            <header class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Cadastro de Promotor</h1>
+                    <p class="text-sm sm:text-base text-gray-500 mt-1">Preencha os dados para registrar um novo promotor e sua rota.</p>
+                </div>
+                <a href="/cadastro_promotores" id="new-promoter-btn" class="hidden flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-md">
+                    <span>Novo Cadastro</span>
+                </a>
+            </header>
+
+            <div id="feedback-message" class="p-4 rounded-lg text-center font-semibold mb-4 hidden"></div>
+
+            <fieldset>
+                <legend class="text-lg font-semibold text-gray-700 mb-4">Informações do Promotor</legend>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 flex flex-col items-center justify-center space-y-4">
+                        <label class="text-sm font-medium text-gray-600">Foto</label>
+                        <div class="w-40 h-40 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-4 border-white shadow-md">
+                            <img id="photo-preview" src="https://placehold.co/160x160/E2E8F0/4A5568?text=Foto" alt="Foto" class="w-full h-full object-cover">
+                        </div>
+                        <label for="photo-upload" class="cursor-pointer bg-white hover:bg-gray-50 text-gray-600 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm">Selecionar Foto</label>
+                        <input type="file" id="photo-upload" name="promoter_photo" accept="image/*" class="hidden-file-input">
+                    </div>
+                    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label for="promoter-name" class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                            <input type="text" id="promoter-name" name="promoter_name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Ex: João da Silva">
+                        </div>
+                        <div class="relative md:col-span-2">
+                            <label for="brand-search" class="block text-sm font-medium text-gray-700 mb-1">Fornecedores</label>
+                            <input type="text" id="brand-search" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Digite para buscar e adicionar fornecedores" autocomplete="off">
+                            <div id="suggestions-list" class="absolute z-20 w-full bg-white border border-gray-300 rounded-b-lg shadow-lg mt-1 hidden"></div>
+                            <div id="suppliers-pills" class="mt-2 flex flex-wrap gap-2"></div>
+                        </div>
+                        <div>
+                            <label for="promoter-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="promoter-email" name="promoter_email" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Ex: joao.silva@email.com">
+                        </div>
+                        <div>
+                            <label for="promoter-phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                            <input type="tel" id="promoter-phone" name="promoter_phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="(XX) XXXXX-XXXX">
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="border-t border-gray-200 pt-6">
+                <legend class="text-lg font-semibold text-gray-700 mb-4">Informações do Contratante</legend>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div><label for="manager-name" class="block text-sm font-medium text-gray-700 mb-1">Responsável/Gestor</label><input type="text" id="manager-name" name="manager_name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Ex: Maria Oliveira"></div>
+                    <div><label for="manager-email" class="block text-sm font-medium text-gray-700 mb-1">Email do Gestor</label><input type="email" id="manager-email" name="manager_email" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Ex: maria.oliveira@empresa.com"></div>
+                    <div><label for="manager-contact" class="block text-sm font-medium text-gray-700 mb-1">Contato do Gestor</label><input type="tel" id="manager-contact" name="manager_contact" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="(XX) XXXXX-XXXX"></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="border-t border-gray-200 pt-6">
+                <div class="flex justify-between items-center mb-4">
+                    <legend class="text-lg font-semibold text-gray-700">Cadastro de Rota Semanal</legend>
+                    <button type="button" id="add-route-btn" class="flex items-center space-x-2 px-4 py-2 bg-indigo-100 text-indigo-700 font-semibold rounded-lg hover:bg-indigo-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        <span>Adicionar Rota</span>
+                    </button>
+                </div>
+                <div id="routes-list" class="space-y-4"></div>
+            </fieldset>
+
+            <div class="flex justify-between items-center pt-6 border-t border-gray-200">
+                <div>
+                    <button type="button" id="suspend-btn" class="hidden px-6 py-2 font-semibold rounded-lg transition-colors">Suspender Promotor</button>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/visualizacao_rotas" class="px-6 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 flex items-center">Cancelar</a>
+                    <button type="submit" class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-md">Salvar Cadastro</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const promoterSearchInput = document.getElementById("promoter-search");
+    const promoterSuggestions = document.getElementById("promoter-suggestions");
+    const form = document.getElementById('promoter-form');
+    const pageTitle = document.querySelector('h1');
+    const pageSubtitle = document.querySelector('header p');
+    const submitButton = form.querySelector('button[type="submit"]');
+    const newPromoterBtn = document.getElementById('new-promoter-btn');
+    const suspendBtn = document.getElementById('suspend-btn');
+    const photoUploadInput = document.getElementById('photo-upload');
+    const photoPreview = document.getElementById('photo-preview');
+    const brandSearchInput = document.getElementById('brand-search');
+    const suggestionsList = document.getElementById('suggestions-list');
+    const suppliersPillsContainer = document.getElementById('suppliers-pills');
+    const addRouteBtn = document.getElementById('add-route-btn');
+    const routesList = document.getElementById('routes-list');
+    
+    let routeIndex = 0;
+    let selectedSuppliers = [];
+    let promoterId = null; 
+    let currentPromoterStatus = 'ativo';
+
+    // --- Lógica de busca de promotor ---
+    promoterSearchInput.addEventListener('input', async function() { const searchTerm = promoterSearchInput.value; if (searchTerm.length < 2) { promoterSuggestions.innerHTML = ''; promoterSuggestions.classList.add('hidden'); return; } try { const response = await fetch(`/api/promotores/search?term=${searchTerm}`); if (!response.ok) return; const promoters = await response.json(); promoterSuggestions.innerHTML = ''; if (promoters.length > 0) { promoters.forEach(promoter => { const div = document.createElement('div'); div.className = 'p-3 hover:bg-gray-100 cursor-pointer'; div.textContent = promoter.nome; div.addEventListener('click', () => { window.location.href = `/cadastro_promotores?id=${promoter.id}`; }); promoterSuggestions.appendChild(div); }); promoterSuggestions.classList.remove('hidden'); } else { promoterSuggestions.classList.add('hidden'); } } catch (error) { console.error('Erro ao buscar promotores:', error); } });
+    document.addEventListener('click', function(event) { if (!promoterSearchInput.contains(event.target)) { promoterSuggestions.classList.add('hidden'); } });
+    
+    
+
+    // --- Máscaras de telefone ---
+    const promoterPhoneInput = document.getElementById('promoter-phone'); const managerContactInput = document.getElementById('manager-contact'); const phoneMaskOptions = { mask: [{ mask: '(00) 0000-0000' }, { mask: '(00) 00000-0000' }] }; const promoterPhoneMask = IMask(promoterPhoneInput, phoneMaskOptions); const managerContactMask = IMask(managerContactInput, phoneMaskOptions);
+    
+    // --- Feedback visual ---
+    function showFeedback(message, type = 'success') { const feedbackEl = document.getElementById('feedback-message'); feedbackEl.textContent = message; feedbackEl.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700'); if (type === 'success') { feedbackEl.classList.add('bg-green-100', 'text-green-700'); } else { feedbackEl.classList.add('bg-red-100', 'text-red-700'); } feedbackEl.classList.remove('hidden'); setTimeout(() => { feedbackEl.classList.add('hidden'); }, 5000); }
+    
+    // --- Carregar dados para edição ---
+    const urlParams = new URLSearchParams(window.location.search); promoterId = urlParams.get('id');
+    if (promoterId) { pageTitle.textContent = "Editar Promotor"; pageSubtitle.textContent = "Altere os dados do promotor e suas rotas."; submitButton.textContent = "Salvar Alterações"; newPromoterBtn.classList.remove('hidden'); fetchAndPopulateForm(promoterId); }
+    async function fetchAndPopulateForm(id) { try { const response = await fetch(`/api/promotores/${id}`); if (!response.ok) { const errData = await response.json(); throw new Error(errData.error || 'Promotor não encontrado.'); } const data = await response.json(); document.getElementById('promoter-name').value = data.details.nome || ''; document.getElementById('promoter-email').value = data.details.email || ''; promoterPhoneMask.value = data.details.telefone || ''; document.getElementById('manager-name').value = data.details.responsavel_gestor || ''; document.getElementById('manager-email').value = data.details.email_gestor || ''; managerContactMask.value = data.details.contato_gestor || ''; if (data.details.foto_url) { photoPreview.src = data.details.foto_url; const hiddenPhotoUrl = document.createElement('input'); hiddenPhotoUrl.type = 'hidden'; hiddenPhotoUrl.name = 'existing_photo_url'; hiddenPhotoUrl.value = data.details.foto_url; form.appendChild(hiddenPhotoUrl); } selectedSuppliers = data.suppliers.map(s => ({ id: s.id, text: `${s.codigo} - ${s.nome_fantasia}` })); renderSupplierPills(); routesList.innerHTML = ''; data.routes.forEach(route => addRouteRow(route)); } catch (error) { showFeedback(error.message, 'error'); } }
+    
+    // --- Lógica de Fornecedores ---
+    function renderSupplierPills() { suppliersPillsContainer.innerHTML = ''; selectedSuppliers.forEach((supplier, index) => { const pill = document.createElement('div'); pill.className = 'flex items-center bg-indigo-100 text-indigo-800 text-sm font-semibold px-3 py-1 rounded-full'; pill.innerHTML = `<span>${supplier.text}</span><button type="button" data-index="${index}" class="remove-supplier-btn ml-2 text-indigo-500 hover:text-indigo-700 font-bold">&times;</button>`; suppliersPillsContainer.appendChild(pill); }); }
+    suppliersPillsContainer.addEventListener('click', function(event) { if (event.target.classList.contains('remove-supplier-btn')) { const indexToRemove = parseInt(event.target.getAttribute('data-index'), 10); selectedSuppliers.splice(indexToRemove, 1); renderSupplierPills(); } });
+    brandSearchInput.addEventListener('input', async function() { const searchTerm = brandSearchInput.value; if (searchTerm.length < 2) { suggestionsList.innerHTML = ''; suggestionsList.classList.add('hidden'); return; } try { const response = await fetch(`/api/fornecedores?term=${searchTerm}`); if (!response.ok) return; const suppliers = await response.json(); suggestionsList.innerHTML = ''; if (suppliers.length > 0) { suppliers.forEach(supplier => { const item = document.createElement('div'); item.className = 'p-3 hover:bg-gray-100 cursor-pointer'; item.innerHTML = `<span class="font-bold">${supplier.codigo}</span> - <span>${supplier.nome_fantasia}</span>`; item.addEventListener('click', () => { if (!selectedSuppliers.some(s => s.id === supplier.id)) { selectedSuppliers.push({ id: supplier.id, text: `${supplier.codigo} - ${supplier.nome_fantasia}` }); renderSupplierPills(); } brandSearchInput.value = ''; suggestionsList.classList.add('hidden'); brandSearchInput.focus(); }); suggestionsList.appendChild(item); }); suggestionsList.classList.remove('hidden'); } else { suggestionsList.classList.add('hidden'); } } catch (error) { console.error('Erro ao buscar fornecedores:', error); } });
+    document.addEventListener('click', (event) => { if (!brandSearchInput.contains(event.target)) { suggestionsList.classList.add('hidden'); } });
+
+    // --- Lógica da Foto ---
+    photoUploadInput.addEventListener('change', function (event) { const file = event.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (e) => { photoPreview.src = e.target.result; }; reader.readAsDataURL(file); } });
+
+    // --- Lógica de Rotas ---
+    const stores = ["Sac Ponta Negra", "Sac Maria Lacerda", "Sac Lagoa Nova", "Sac Igapo", "Sac Parnamirim", "Sac Norte Shopping", "Sac Zn2", "Sac Alecim", "Sac Macaiba", "Sac Centro"]; const daysOfWeek = [{ value: 'segunda', name: 'Segunda-feira' }, { value: 'terca', name: 'Terça-feira' }, { value: 'quarta', name: 'Quarta-feira' }, { value: 'quinta', name: 'Quinta-feira' }, { value: 'sexta', name: 'Sexta-feira' }, { value: 'sabado', name: 'Sábado' }, { value: 'domingo', name: 'Domingo' }]; const storeOptions = stores.map(store => `<option value="${store}">${store}</option>`).join(''); const dayOptions = daysOfWeek.map(day => `<option value="${day.value}">${day.name}</option>`).join('');
+    function addRouteRow(initialData = null) { const routeRow = document.createElement('div'); routeRow.className = 'route-row grid grid-cols-1 md:grid-cols-5 gap-4 items-center p-4 bg-gray-50 rounded-lg'; routeRow.setAttribute('data-index', routeIndex); routeRow.innerHTML = `<div class="md:col-span-2"><label class="text-xs font-medium text-gray-600">Loja</label><select name="route_store_${routeIndex}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg"><option value="">Selecione a loja</option>${storeOptions}</select></div><div><label class="text-xs font-medium text-gray-600">Dia da Semana</label><select name="route_day_${routeIndex}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg"><option value="">Selecione o dia</option>${dayOptions}</select></div><div class="grid grid-cols-2 gap-2"><div><label class="text-xs font-medium text-gray-600">Entrada</label><input type="time" name="route_start_${routeIndex}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-center"></div><div><label class="text-xs font-medium text-gray-600">Saída</label><input type="time" name="route_end_${routeIndex}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-center"></div></div><div class="flex items-end justify-center h-full"><button type="button" class="remove-route-btn p-2 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-full"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>`; routesList.appendChild(routeRow); if (initialData) { routeRow.querySelector(`select[name^="route_store"]`).value = initialData.loja || ""; routeRow.querySelector(`select[name^="route_day"]`).value = initialData.dia_semana || ""; routeRow.querySelector(`input[name^="route_start"]`).value = initialData.hora_entrada || ''; routeRow.querySelector(`input[name^="route_end"]`).value = initialData.hora_saida || ''; } routeIndex++; }
+    addRouteBtn.addEventListener('click', () => addRouteRow());
+    routesList.addEventListener('click', (event) => { if (event.target.closest('.remove-route-btn')) { event.target.closest('.route-row').remove(); } });
+
+    // --- Lógica de Envio do Formulário ---
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        // --- INÍCIO DA CORREÇÃO ---
+        // Adicionada validação para as rotas antes do envio
+        const routeRows = document.querySelectorAll('.route-row');
+        for (const row of routeRows) {
+            const storeSelect = row.querySelector('select[name^="route_store"]');
+            const daySelect = row.querySelector('select[name^="route_day"]');
+            if (!storeSelect.value || !daySelect.value) {
+                showFeedback('Preencha a Loja e o Dia de todas as rotas antes de salvar.', 'error');
+                return; // Impede o envio do formulário
+            }
+        }
+        // --- FIM DA CORREÇÃO ---
+
+        const formData = new FormData(form);
+        formData.delete('brand-search');
+        formData.append('suppliers', JSON.stringify(selectedSuppliers));
+
+        const routes = [];
+        routeRows.forEach(row => {
+            const index = row.getAttribute('data-index');
+            routes.push({ store: row.querySelector(`[name="route_store_${index}"]`).value, day: row.querySelector(`[name="route_day_${index}"]`).value, start_time: row.querySelector(`[name="route_start_${index}"]`).value, end_time: row.querySelector(`[name="route_end_${index}"]`).value });
+        });
+        formData.append('routes', JSON.stringify(routes));
+
+        formData.set('promoter_phone', promoterPhoneMask.unmaskedValue);
+        formData.set('manager_contact', managerContactMask.unmaskedValue);
+        
+        const url = promoterId ? `/api/promotores/${promoterId}` : '/api/promotores';
+        
+        try {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Salvando...';
+            const response = await fetch(url, { method: 'POST', body: formData });
+            const result = await response.json();
+            
+            if (response.ok) {
+                showFeedback(result.message, 'success');
+                if (!promoterId) { // Se for um novo cadastro, limpa o formulário
+                    form.reset();
+                    photoPreview.src = 'https://placehold.co/160x160/E2E8F0/4A5568?text=Foto';
+                    routesList.innerHTML = '';
+                    routeIndex = 0;
+                    selectedSuppliers = [];
+                    renderSupplierPills();
+                }
+            } else {
+                showFeedback(`Erro: ${result.error || 'Não foi possível salvar.'}`, 'error');
+            }
+        } catch (error) {
+            showFeedback('Ocorreu um erro de rede. Tente novamente.', 'error');
+            console.error('Erro na requisição:', error);
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = promoterId ? 'Salvar Alterações' : 'Salvar Cadastro';
+        }
+    });
+});
+</script>
+</body>
+</html>  -->
+
+<!-- 
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Promotores</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/imask"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hidden-file-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .route-row { animation: slideDown 0.3s ease-out; }
+        input[type="time"]::-webkit-calendar-picker-indicator { background: none; display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <div class="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="p-6 border-b border-gray-200">
+             <label for="promoter-search" class="block text-sm font-medium text-gray-700 mb-1">Buscar Promotor Existente</label>
+            <div class="relative">
+                <input type="text" id="promoter-search" placeholder="Digite o nome do promotor para editar..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" autocomplete="off">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <div id="promoter-suggestions" class="absolute z-30 w-full bg-white border border-gray-300 rounded-b-lg shadow-lg mt-1 hidden"></div>
+            </div>
+        </div>
+
+        <form id="promoter-form" class="p-6 sm:p-8 lg:p-10 space-y-8 pt-0">
+            <header class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Cadastro de Promotor</h1>
+                    <p class="text-sm sm:text-base text-gray-500 mt-1">Preencha os dados para registrar um novo promotor e sua rota.</p>
+                </div>
+                <a href="/cadastro_promotores" id="new-promoter-btn" class="hidden flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-md">
+                    <span>Novo Cadastro</span>
+                </a>
+            </header>
+
+            <div id="feedback-message" class="p-4 rounded-lg text-center font-semibold mb-4 hidden"></div>
+
+            <fieldset>
+                <legend class="text-lg font-semibold text-gray-700 mb-4">Informações do Promotor</legend>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 flex flex-col items-center justify-center space-y-4">
+                        <label class="text-sm font-medium text-gray-600">Foto</label>
+                        <div class="w-40 h-40 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-4 border-white shadow-md">
+                            <img id="photo-preview" src="https://placehold.co/160x160/E2E8F0/4A5568?text=Foto" alt="Foto" class="w-full h-full object-cover">
+                        </div>
+                        <label for="photo-upload" class="cursor-pointer bg-white hover:bg-gray-50 text-gray-600 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm">Selecionar Foto</label>
+                        <input type="file" id="photo-upload" name="promoter_photo" accept="image/*" class="hidden-file-input">
+                    </div>
+                    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label for="promoter-name" class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                            <input type="text" id="promoter-name" name="promoter_name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Ex: João da Silva">
+                        </div>
+                        <div class="relative md:col-span-2">
+                            <label for="brand-search" class="block text-sm font-medium text-gray-700 mb-1">Fornecedores</label>
+                            <input type="text" id="brand-search" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Digite para buscar e adicionar fornecedores" autocomplete="off">
+                            <div id="suggestions-list" class="absolute z-20 w-full bg-white border border-gray-300 rounded-b-lg shadow-lg mt-1 hidden"></div>
+                            <div id="suppliers-pills" class="mt-2 flex flex-wrap gap-2"></div>
+                        </div>
+                        <div>
+                            <label for="promoter-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="promoter-email" name="promoter_email" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Ex: joao.silva@email.com">
+                        </div>
+                        <div>
+                            <label for="promoter-phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                            <input type="tel" id="promoter-phone" name="promoter_phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="(XX) XXXXX-XXXX">
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="border-t border-gray-200 pt-6">
+                <legend class="text-lg font-semibold text-gray-700 mb-4">Informações do Contratante</legend>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div><label for="manager-name" class="block text-sm font-medium text-gray-700 mb-1">Responsável/Gestor</label><input type="text" id="manager-name" name="manager_name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Ex: Maria Oliveira"></div>
+                    <div><label for="manager-email" class="block text-sm font-medium text-gray-700 mb-1">Email do Gestor</label><input type="email" id="manager-email" name="manager_email" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Ex: maria.oliveira@empresa.com"></div>
+                    <div><label for="manager-contact" class="block text-sm font-medium text-gray-700 mb-1">Contato do Gestor</label><input type="tel" id="manager-contact" name="manager_contact" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="(XX) XXXXX-XXXX"></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="border-t border-gray-200 pt-6">
+                <div class="flex justify-between items-center mb-4">
+                    <legend class="text-lg font-semibold text-gray-700">Cadastro de Rota Semanal</legend>
+                    <button type="button" id="add-route-btn" class="flex items-center space-x-2 px-4 py-2 bg-indigo-100 text-indigo-700 font-semibold rounded-lg hover:bg-indigo-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        <span>Adicionar Rota</span>
+                    </button>
+                </div>
+                <div id="routes-list" class="space-y-4"></div>
+            </fieldset>
+
+            <div class="flex justify-between items-center pt-6 border-t border-gray-200">
+                <div>
+                    <button type="button" id="suspend-btn" class="hidden px-6 py-2 font-semibold rounded-lg transition-colors">Suspender Promotor</button>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/visualizacao_rotas" class="px-6 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 flex items-center">Cancelar</a>
+                    <button type="submit" class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-md">Salvar Cadastro</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const promoterSearchInput = document.getElementById("promoter-search");
+    const promoterSuggestions = document.getElementById("promoter-suggestions");
+    const form = document.getElementById('promoter-form');
+    const pageTitle = document.querySelector('h1');
+    const pageSubtitle = document.querySelector('header p');
+    const submitButton = form.querySelector('button[type="submit"]');
+    const newPromoterBtn = document.getElementById('new-promoter-btn');
+    const suspendBtn = document.getElementById('suspend-btn');
+    const photoUploadInput = document.getElementById('photo-upload');
+    const photoPreview = document.getElementById('photo-preview');
+    const brandSearchInput = document.getElementById('brand-search');
+    const suggestionsList = document.getElementById('suggestions-list');
+    const suppliersPillsContainer = document.getElementById('suppliers-pills');
+    const addRouteBtn = document.getElementById('add-route-btn');
+    const routesList = document.getElementById('routes-list');
+    
+    let routeIndex = 0;
+    let selectedSuppliers = [];
+    let promoterId = null; 
+    let currentPromoterStatus = 'ativo';
+
+    promoterSearchInput.addEventListener('input', async function() { const searchTerm = promoterSearchInput.value; if (searchTerm.length < 2) { promoterSuggestions.innerHTML = ''; promoterSuggestions.classList.add('hidden'); return; } try { const response = await fetch(`/api/promotores/search?term=${searchTerm}`); if (!response.ok) return; const promoters = await response.json(); promoterSuggestions.innerHTML = ''; if (promoters.length > 0) { promoters.forEach(promoter => { const link = document.createElement('a'); link.href = `/cadastro_promotores?id=${promoter.id}`; const isSuspended = promoter.status === 'suspenso'; const suspendedClasses = isSuspended ? 'opacity-60' : ''; const suspendedBadge = isSuspended ? '<span class="ml-2 text-xs bg-red-100 text-red-700 font-bold py-0.5 px-2 rounded-full">SUSPENSO</span>' : ''; link.className = `flex justify-between items-center p-3 hover:bg-gray-100 cursor-pointer text-gray-700 ${suspendedClasses}`; link.innerHTML = `<span>${promoter.nome}</span> ${suspendedBadge}`; promoterSuggestions.appendChild(link); }); promoterSuggestions.classList.remove('hidden'); } else { promoterSuggestions.classList.add('hidden'); } } catch (error) { console.error('Erro ao buscar promotores:', error); } });
+    document.addEventListener('click', function(event) { if (!promoterSearchInput.contains(event.target)) { promoterSuggestions.classList.add('hidden'); } });
+    
+    const promoterPhoneInput = document.getElementById('promoter-phone'); const managerContactInput = document.getElementById('manager-contact'); const phoneMaskOptions = { mask: [{ mask: '(00) 0000-0000' }, { mask: '(00) 00000-0000' }] }; const promoterPhoneMask = IMask(promoterPhoneInput, phoneMaskOptions); const managerContactMask = IMask(managerContactInput, phoneMaskOptions);
+    function showFeedback(message, type = 'success') { const feedbackEl = document.getElementById('feedback-message'); feedbackEl.textContent = message; feedbackEl.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700'); if (type === 'success') { feedbackEl.classList.add('bg-green-100', 'text-green-700'); } else { feedbackEl.classList.add('bg-red-100', 'text-red-700'); } feedbackEl.classList.remove('hidden'); setTimeout(() => { feedbackEl.classList.add('hidden'); }, 5000); }
+    function updateSuspendButtonState(status) { suspendBtn.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'hover:bg-red-200', 'bg-green-100', 'text-green-700', 'hover:bg-green-200'); if (status === 'ativo') { suspendBtn.textContent = 'Suspender Promotor'; suspendBtn.classList.add('bg-red-100', 'text-red-700', 'hover:bg-red-200'); } else { suspendBtn.textContent = 'Reativar Promotor'; suspendBtn.classList.add('bg-green-100', 'text-green-700', 'hover:bg-green-200'); } currentPromoterStatus = status; }
+    const urlParams = new URLSearchParams(window.location.search); promoterId = urlParams.get('id');
+    if (promoterId) { pageTitle.textContent = "Editar Promotor"; pageSubtitle.textContent = "Altere os dados do promotor e suas rotas."; submitButton.textContent = "Salvar Alterações"; newPromoterBtn.classList.remove('hidden'); fetchAndPopulateForm(promoterId); }
+    async function fetchAndPopulateForm(id) { try { const response = await fetch(`/api/promotores/${id}`); if (!response.ok) { const errData = await response.json(); throw new Error(errData.error || 'Promotor não encontrado.'); } const data = await response.json(); document.getElementById('promoter-name').value = data.details.nome || ''; document.getElementById('promoter-email').value = data.details.email || ''; promoterPhoneMask.value = data.details.telefone || ''; document.getElementById('manager-name').value = data.details.responsavel_gestor || ''; document.getElementById('manager-email').value = data.details.email_gestor || ''; managerContactMask.value = data.details.contato_gestor || ''; if (data.details.foto_url) photoPreview.src = data.details.foto_url; updateSuspendButtonState(data.details.status || 'ativo'); selectedSuppliers = data.suppliers.map(s => ({ id: s.id, text: `${s.codigo} - ${s.nome_fantasia}` })); renderSupplierPills(); routesList.innerHTML = ''; data.routes.forEach(route => addRouteRow(route)); } catch (error) { showFeedback(error.message, 'error'); setTimeout(() => { window.location.href = '/visualizacao_rotas'; }, 2000); } }
+    suspendBtn.addEventListener('click', async function() { if (!promoterId) return; const isSuspending = currentPromoterStatus === 'ativo'; const newStatus = isSuspending ? 'suspenso' : 'ativo'; const confirmationMessage = isSuspending ? 'Tem certeza que deseja suspender este promotor?' : 'Tem certeza que deseja reativar este promotor?'; if (confirm(confirmationMessage)) { try { suspendBtn.disabled = true; const response = await fetch(`/api/promotores/${promoterId}/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus }) }); const result = await response.json(); if (response.ok) { showFeedback(result.message, 'success'); updateSuspendButtonState(newStatus); } else { showFeedback(`Erro: ${result.error}`, 'error'); } } catch (error) { showFeedback('Ocorreu um erro de rede.', 'error'); } finally { suspendBtn.disabled = false; } } });
+    
+    function renderSupplierPills() { suppliersPillsContainer.innerHTML = ''; selectedSuppliers.forEach((supplier, index) => { const pill = document.createElement('div'); pill.className = 'flex items-center bg-indigo-100 text-indigo-800 text-sm font-semibold px-3 py-1 rounded-full'; pill.innerHTML = `<span>${supplier.text}</span><button type="button" data-index="${index}" class="remove-supplier-btn ml-2 text-indigo-500 hover:text-indigo-700 font-bold">&times;</button>`; suppliersPillsContainer.appendChild(pill); }); }
+    suppliersPillsContainer.addEventListener('click', function(event) { if (event.target.classList.contains('remove-supplier-btn')) { const indexToRemove = parseInt(event.target.getAttribute('data-index'), 10); selectedSuppliers.splice(indexToRemove, 1); renderSupplierPills(); } });
+    
+    brandSearchInput.addEventListener('input', async function() { const searchTerm = brandSearchInput.value; if (searchTerm.length < 2) { suggestionsList.innerHTML = ''; suggestionsList.classList.add('hidden'); return; } try { const response = await fetch(`/api/fornecedores?term=${searchTerm}`); if (!response.ok) return; const suppliers = await response.json(); suggestionsList.innerHTML = ''; if (suppliers.length > 0) { suppliers.forEach(supplier => { const item = document.createElement('div'); item.className = 'p-3 hover:bg-gray-100 cursor-pointer'; item.innerHTML = `<span class="font-bold">${supplier.codigo}</span> - <span>${supplier.nome_fantasia}</span>`; item.addEventListener('click', () => { if (!selectedSuppliers.some(s => s.id === supplier.id)) { selectedSuppliers.push({ id: supplier.id, text: `${supplier.codigo} - ${supplier.nome_fantasia}` }); renderSupplierPills(); } brandSearchInput.value = ''; suggestionsList.classList.add('hidden'); brandSearchInput.focus(); }); suggestionsList.appendChild(item); }); suggestionsList.classList.remove('hidden'); } else { suggestionsList.classList.add('hidden'); } } catch (error) { console.error('Erro ao buscar fornecedores:', error); } });
+    document.addEventListener('click', (event) => { if (!brandSearchInput.contains(event.target)) { suggestionsList.classList.add('hidden'); } });
+
+    photoUploadInput.addEventListener('change', function (event) { const file = event.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (e) => { photoPreview.src = e.target.result; }; reader.readAsDataURL(file); } });
+    const stores = ["Sac Ponta Negra", "Sac Maria Lacerda", "Sac Lagoa Nova", "Sac Igapo", "Sac Parnamirim", "Sac Norte Shopping", "Sac Zn2", "Sac Alecim", "Sac Macaiba", "Sac Centro"]; const daysOfWeek = [{ value: 'segunda', name: 'Segunda-feira' }, { value: 'terca', name: 'Terça-feira' }, { value: 'quarta', name: 'Quarta-feira' }, { value: 'quinta', name: 'Quinta-feira' }, { value: 'sexta', name: 'Sexta-feira' }, { value: 'sabado', name: 'Sábado' }, { value: 'domingo', name: 'Domingo' }]; const storeOptions = stores.map(store => `<option value="${store}">${store}</option>`).join(''); const dayOptions = daysOfWeek.map(day => `<option value="${day.value}">${day.name}</option>`).join('');
+    function addRouteRow(initialData = null) { const routeRow = document.createElement('div'); routeRow.className = 'route-row grid grid-cols-1 md:grid-cols-5 gap-4 items-center p-4 bg-gray-50 rounded-lg'; routeRow.setAttribute('data-index', routeIndex); routeRow.innerHTML = `<div class="md:col-span-2"><label class="text-xs font-medium text-gray-600">Loja</label><select name="route_store_${routeIndex}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg"><option value="">Selecione a loja</option>${storeOptions}</select></div><div><label class="text-xs font-medium text-gray-600">Dia da Semana</label><select name="route_day_${routeIndex}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg"><option value="">Selecione o dia</option>${dayOptions}</select></div><div class="grid grid-cols-2 gap-2"><div><label class="text-xs font-medium text-gray-600">Entrada</label><input type="time" name="route_start_${routeIndex}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-center"></div><div><label class="text-xs font-medium text-gray-600">Saída</label><input type="time" name="route_end_${routeIndex}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-center"></div></div><div class="flex items-end justify-center h-full"><button type="button" class="remove-route-btn p-2 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-full"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>`; routesList.appendChild(routeRow); if (initialData) { routeRow.querySelector(`select[name^="route_store"]`).value = initialData.loja; routeRow.querySelector(`select[name^="route_day"]`).value = initialData.dia_semana; routeRow.querySelector(`input[name^="route_start"]`).value = initialData.hora_entrada || ''; routeRow.querySelector(`input[name^="route_end"]`).value = initialData.hora_saida || ''; } routeIndex++; }
+    addRouteBtn.addEventListener('click', () => addRouteRow());
+    routesList.addEventListener('click', (event) => { if (event.target.closest('.remove-route-btn')) { event.target.closest('.route-row').remove(); } });
+    form.addEventListener('submit', async function(event) { event.preventDefault(); const requiredFields = [{ id: 'promoter-name', name: 'Nome Completo' }, { id: 'promoter-email', name: 'Email' }, { id: 'promoter-phone', name: 'Telefone' }, { id: 'manager-name', name: 'Responsável/Gestor' }, { id: 'manager-email', name: 'Email do Gestor' }, { id: 'manager-contact', name: 'Contato do Gestor' }]; for (const field of requiredFields) { const input = document.getElementById(field.id); if (!input.value.trim()) { showFeedback(`Por favor, preencha o campo "${field.name}".`, 'error'); input.focus(); input.classList.add('border-red-500'); input.addEventListener('input', () => { input.classList.remove('border-red-500'); }, { once: true }); return; } } if (selectedSuppliers.length === 0) { showFeedback('É necessário adicionar pelo menos um fornecedor.', 'error'); brandSearchInput.focus(); return; } const routeRows = document.querySelectorAll('.route-row'); if (routeRows.length === 0) { showFeedback('É necessário adicionar pelo menos uma rota.', 'error'); addRouteBtn.focus(); return; } for (const row of routeRows) { const storeSelect = row.querySelector('select[name^="route_store"]'); const daySelect = row.querySelector('select[name^="route_day"]'); if (!storeSelect.value || !daySelect.value) { showFeedback('Preencha a Loja e o Dia de todas as rotas.', 'error'); return; } } const formData = new FormData(form); formData.delete('brand-search'); formData.append('suppliers', JSON.stringify(selectedSuppliers)); const routes = []; routeRows.forEach(row => { const index = row.getAttribute('data-index'); routes.push({ store: row.querySelector(`[name="route_store_${index}"]`).value, day: row.querySelector(`[name="route_day_${index}"]`).value, start_time: row.querySelector(`[name="route_start_${index}"]`).value, end_time: row.querySelector(`[name="route_end_${index}"]`).value }); }); formData.append('routes', JSON.stringify(routes)); formData.set('promoter_phone', promoterPhoneMask.unmaskedValue); formData.set('manager_contact', managerContactMask.unmaskedValue); const url = promoterId ? `/api/promotores/${promoterId}` : '/api/promotores'; const method = 'POST'; try { submitButton.disabled = true; submitButton.textContent = 'Salvando...'; const response = await fetch(url, { method: method, body: formData }); const result = await response.json(); if (response.ok) { showFeedback(result.message, 'success'); if (promoterId) { /* Fica na página */ } else { form.reset(); photoPreview.src = 'https://placehold.co/160x160/E2E8F0/4A5568?text=Foto'; routesList.innerHTML = ''; routeIndex = 0; selectedSuppliers = []; renderSupplierPills(); } } else { showFeedback(`Erro: ${result.error || 'Não foi possível salvar.'}`, 'error'); } } catch (error) { showFeedback('Ocorreu um erro de rede. Tente novamente.', 'error'); console.error('Erro na requisição:', error); } finally { submitButton.disabled = false; submitButton.textContent = promoterId ? 'Salvar Alterações' : 'Salvar Cadastro'; } });
+});
+</script>
+
+</body>
+</html> -->
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Promotores</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/imask"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hidden-file-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .route-row { animation: slideDown 0.3s ease-out; }
+        input[type="time"]::-webkit-calendar-picker-indicator { background: none; display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <div class="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="p-6 border-b border-gray-200">
+            <label for="promoter-search" class="block text-sm font-medium text-gray-700 mb-1">Buscar Promotor Existente</label>
+            <div class="relative">
+                <input type="text" id="promoter-search" placeholder="Digite o nome do promotor para editar..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" autocomplete="off">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <div id="promoter-suggestions" class="absolute z-30 w-full bg-white border border-gray-300 rounded-b-lg shadow-lg mt-1 hidden"></div>
+            </div>
+        </div>
+
+        <form id="promoter-form" class="p-6 sm:p-8 lg:p-10 space-y-8 pt-0">
+            <header class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Cadastro de Promotor</h1>
+                    <p class="text-sm sm:text-base text-gray-500 mt-1">Preencha os dados para registrar um novo promotor e sua rota.</p>
+                </div>
+                <a href="/cadastro_promotores" id="new-promoter-btn" class="hidden flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-md">
+                    <span>Novo Cadastro</span>
+                </a>
+            </header>
+
+            <div id="feedback-message" class="p-4 rounded-lg text-center font-semibold mb-4 hidden"></div>
+
+            <fieldset>
+                <legend class="text-lg font-semibold text-gray-700 mb-4">Informações do Promotor</legend>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 flex flex-col items-center justify-center space-y-4">
+                        <label class="text-sm font-medium text-gray-600">Foto</label>
+                        <div class="w-40 h-40 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-4 border-white shadow-md">
+                            <img id="photo-preview" src="https://placehold.co/160x160/E2E8F0/4A5568?text=Foto" alt="Foto" class="w-full h-full object-cover">
+                        </div>
+                        <label for="photo-upload" class="cursor-pointer bg-white hover:bg-gray-50 text-gray-600 font-semibold py-2 px-4 border border-gray-300 rounded-lg shadow-sm">Selecionar Foto</label>
+                        <input type="file" id="photo-upload" name="promoter_photo" accept="image/*" class="hidden-file-input">
+                    </div>
+                    <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label for="promoter-name" class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                            <input type="text" id="promoter-name" name="promoter_name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Ex: João da Silva">
+                        </div>
+                        <div class="relative md:col-span-2">
+                            <label for="brand-search" class="block text-sm font-medium text-gray-700 mb-1">Fornecedores</label>
+                            <input type="text" id="brand-search" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Digite para buscar e adicionar fornecedores" autocomplete="off">
+                            <div id="suggestions-list" class="absolute z-20 w-full bg-white border border-gray-300 rounded-b-lg shadow-lg mt-1 hidden"></div>
+                            <div id="suppliers-pills" class="mt-2 flex flex-wrap gap-2"></div>
+                        </div>
+                        <div>
+                            <label for="promoter-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="promoter-email" name="promoter_email" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Ex: joao.silva@email.com">
+                        </div>
+                        <div>
+                            <label for="promoter-phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                            <input type="tel" id="promoter-phone" name="promoter_phone" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="(XX) XXXXX-XXXX">
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="border-t border-gray-200 pt-6">
+                <legend class="text-lg font-semibold text-gray-700 mb-4">Informações do Contratante</legend>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div><label for="manager-name" class="block text-sm font-medium text-gray-700 mb-1">Responsável/Gestor</label><input type="text" id="manager-name" name="manager_name" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Ex: Maria Oliveira"></div>
+                    <div><label for="manager-email" class="block text-sm font-medium text-gray-700 mb-1">Email do Gestor</label><input type="email" id="manager-email" name="manager_email" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Ex: maria.oliveira@empresa.com"></div>
+                    <div><label for="manager-contact" class="block text-sm font-medium text-gray-700 mb-1">Contato do Gestor</label><input type="tel" id="manager-contact" name="manager_contact" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="(XX) XXXXX-XXXX"></div>
+                </div>
+            </fieldset>
+
+            <fieldset class="border-t border-gray-200 pt-6">
+                <div class="flex justify-between items-center mb-4">
+                    <legend class="text-lg font-semibold text-gray-700">Cadastro de Rota Semanal</legend>
+                    <button type="button" id="add-route-btn" class="flex items-center space-x-2 px-4 py-2 bg-indigo-100 text-indigo-700 font-semibold rounded-lg hover:bg-indigo-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        <span>Adicionar Rota</span>
+                    </button>
+                </div>
+                <div id="routes-list" class="space-y-4"></div>
+            </fieldset>
+
+            <div class="flex justify-between items-center pt-6 border-t border-gray-200">
+                <div>
+                    <button type="button" id="suspend-btn" class="hidden px-6 py-2 font-semibold rounded-lg transition-colors">Suspender Promotor</button>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/visualizacao_rotas" class="px-6 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 flex items-center">Cancelar</a>
+                    <button type="submit" class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-md">Salvar Cadastro</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const promoterSearchInput = document.getElementById("promoter-search");
+    const promoterSuggestions = document.getElementById("promoter-suggestions");
+    const form = document.getElementById('promoter-form');
+    const pageTitle = document.querySelector('h1');
+    const pageSubtitle = document.querySelector('header p');
+    const submitButton = form.querySelector('button[type="submit"]');
+    const newPromoterBtn = document.getElementById('new-promoter-btn');
+    const suspendBtn = document.getElementById('suspend-btn');
+    const photoUploadInput = document.getElementById('photo-upload');
+    const photoPreview = document.getElementById('photo-preview');
+    const brandSearchInput = document.getElementById('brand-search');
+    const suggestionsList = document.getElementById('suggestions-list');
+    const suppliersPillsContainer = document.getElementById('suppliers-pills');
+    const addRouteBtn = document.getElementById('add-route-btn');
+    const routesList = document.getElementById('routes-list');
+    
+    let routeIndex = 0;
+    let selectedSuppliers = [];
+    let promoterId = null; 
+    let currentPromoterStatus = 'ativo';
+
+    // // --- Lógica de busca de promotor ---
+    // promoterSearchInput.addEventListener('input', async function() { 
+    //     const searchTerm = promoterSearchInput.value; 
+    //     if (searchTerm.length < 2) { 
+    //         promoterSuggestions.innerHTML = ''; 
+    //         promoterSuggestions.classList.add('hidden'); 
+    //         return; 
+    //     } 
+    //     try { 
+    //         const response = await fetch(`/api/promotores/search?term=${searchTerm}`); 
+    //         if (!response.ok) return; 
+    //         const promoters = await response.json(); 
+    //         promoterSuggestions.innerHTML = ''; 
+    //         if (promoters.length > 0) { 
+    //             promoters.forEach(promoter => { 
+    //                 const div = document.createElement('div'); 
+    //                 div.className = 'p-3 hover:bg-gray-100 cursor-pointer'; 
+    //                 div.textContent = promoter.nome; 
+    //                 div.addEventListener('click', () => { 
+    //                     window.location.href = `/cadastro_promotores?id=${promoter.id}`; 
+    //                 }); 
+    //                 promoterSuggestions.appendChild(div); 
+    //             }); 
+    //             promoterSuggestions.classList.remove('hidden'); 
+    //         } else { 
+    //             promoterSuggestions.classList.add('hidden'); 
+    //         } 
+    //     } catch (error) { 
+    //         console.error('Erro ao buscar promotores:', error); 
+    //     } 
+    // });
+    // document.addEventListener('click', function(event) { 
+    //     if (!promoterSearchInput.contains(event.target)) { 
+    //         promoterSuggestions.classList.add('hidden'); 
+    //     } 
+    // });
+
+    // --- Lógica de busca de promotor (VERSÃO CORRIGIDA) ---
+    promoterSearchInput.addEventListener('input', async function() {
+        const searchTerm = promoterSearchInput.value;
+        if (searchTerm.length < 2) {
+            promoterSuggestions.innerHTML = '';
+            promoterSuggestions.classList.add('hidden');
+            return;
+        }
+        try {
+            const response = await fetch(`/api/promotores/search?term=${searchTerm}`);
+            if (!response.ok) return;
+            
+            const promoters = await response.json();
+            promoterSuggestions.innerHTML = '';
+
+            if (promoters.length > 0) {
+                promoters.forEach(promoter => {
+                    const link = document.createElement('a'); // Usamos 'a' para ser um link clicável
+                    link.href = `/cadastro_promotores?id=${promoter.id}`;
+                    
+                    // Verifica se o promotor está suspenso
+                    const isSuspended = promoter.status === 'suspenso';
+                    
+                    // Cria a "tag" de SUSPENSO se necessário
+                    const suspendedBadge = isSuspended 
+                        ? '<span class="ml-2 text-xs bg-red-100 text-red-700 font-bold py-0.5 px-2 rounded-full">SUSPENSO</span>' 
+                        : '';
+                    
+                    // Adiciona classes para o estilo
+                    link.className = 'flex justify-between items-center p-3 hover:bg-gray-100 cursor-pointer text-gray-700';
+                    if (isSuspended) {
+                        link.classList.add('opacity-60');
+                    }
+
+                    // Monta o HTML da sugestão com o nome e a tag
+                    link.innerHTML = `<span>${promoter.nome}</span> ${suspendedBadge}`;
+                    
+                    promoterSuggestions.appendChild(link);
+                });
+                promoterSuggestions.classList.remove('hidden');
+            } else {
+                promoterSuggestions.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Erro ao buscar promotores:', error);
+        }
+    });
+    
+    // --- Máscaras de telefone ---
+    const promoterPhoneInput = document.getElementById('promoter-phone'); 
+    const managerContactInput = document.getElementById('manager-contact'); 
+    const phoneMaskOptions = { mask: [{ mask: '(00) 0000-0000' }, { mask: '(00) 00000-0000' }] }; 
+    const promoterPhoneMask = IMask(promoterPhoneInput, phoneMaskOptions); 
+    const managerContactMask = IMask(managerContactInput, phoneMaskOptions);
+    
+    // --- Feedback visual ---
+    function showFeedback(message, type = 'success') { 
+        const feedbackEl = document.getElementById('feedback-message'); 
+        feedbackEl.textContent = message; 
+        feedbackEl.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700'); 
+        if (type === 'success') { 
+            feedbackEl.classList.add('bg-green-100', 'text-green-700'); 
+        } else { 
+            feedbackEl.classList.add('bg-red-100', 'text-red-700'); 
+        } 
+        feedbackEl.classList.remove('hidden'); 
+        setTimeout(() => { 
+            feedbackEl.classList.add('hidden'); 
+        }, 5000); 
+    }
+
+    // --- Lógica do Botão Suspender/Reativar (ADICIONADO DE VOLTA) ---
+    function updateSuspendButtonState(status) {
+        suspendBtn.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'hover:bg-red-200', 'bg-green-100', 'text-green-700', 'hover:bg-green-200');
+        if (status === 'ativo') {
+            suspendBtn.textContent = 'Suspender Promotor';
+            suspendBtn.classList.add('bg-red-100', 'text-red-700', 'hover:bg-red-200');
+        } else {
+            suspendBtn.textContent = 'Reativar Promotor';
+            suspendBtn.classList.add('bg-green-100', 'text-green-700', 'hover:bg-green-200');
+        }
+        currentPromoterStatus = status;
+        suspendBtn.classList.remove('hidden');
+    }
+    
+    // --- Carregar dados para edição ---
+    const urlParams = new URLSearchParams(window.location.search); 
+    promoterId = urlParams.get('id');
+    if (promoterId) { 
+        pageTitle.textContent = "Editar Promotor"; 
+        pageSubtitle.textContent = "Altere os dados do promotor e suas rotas."; 
+        submitButton.textContent = "Salvar Alterações"; 
+        newPromoterBtn.classList.remove('hidden'); 
+        fetchAndPopulateForm(promoterId); 
+    }
+    async function fetchAndPopulateForm(id) { 
+        try { 
+            const response = await fetch(`/api/promotores/${id}`); 
+            if (!response.ok) { 
+                const errData = await response.json(); 
+                throw new Error(errData.error || 'Promotor não encontrado.'); 
+            } 
+            const data = await response.json(); 
+            document.getElementById('promoter-name').value = data.details.nome || ''; 
+            document.getElementById('promoter-email').value = data.details.email || ''; 
+            promoterPhoneMask.value = data.details.telefone || ''; 
+            document.getElementById('manager-name').value = data.details.responsavel_gestor || ''; 
+            document.getElementById('manager-email').value = data.details.email_gestor || ''; 
+            managerContactMask.value = data.details.contato_gestor || ''; 
+            if (data.details.foto_url) { 
+                photoPreview.src = data.details.foto_url; 
+                // Cria um campo oculto para manter a URL da foto existente se nenhuma nova for enviada
+                const hiddenPhotoUrl = document.createElement('input'); 
+                hiddenPhotoUrl.type = 'hidden'; 
+                hiddenPhotoUrl.name = 'existing_photo_url'; 
+                hiddenPhotoUrl.value = data.details.foto_url; 
+                form.appendChild(hiddenPhotoUrl); 
+            } 
+            selectedSuppliers = data.suppliers.map(s => ({ id: s.id, text: `${s.codigo} - ${s.nome_fantasia}` })); 
+            renderSupplierPills(); 
+            routesList.innerHTML = ''; 
+            data.routes.forEach(route => addRouteRow(route)); 
+            
+            // Chama a função para mostrar o botão (ADICIONADO DE VOLTA)
+            updateSuspendButtonState(data.details.status || 'ativo');
+
+        } catch (error) { 
+            showFeedback(error.message, 'error'); 
+        } 
+    }
+    
+    // --- Lógica de Fornecedores ---
+    function renderSupplierPills() { 
+        suppliersPillsContainer.innerHTML = ''; 
+        selectedSuppliers.forEach((supplier, index) => { 
+            const pill = document.createElement('div'); 
+            pill.className = 'flex items-center bg-indigo-100 text-indigo-800 text-sm font-semibold px-3 py-1 rounded-full'; 
+            pill.innerHTML = `<span>${supplier.text}</span><button type="button" data-index="${index}" class="remove-supplier-btn ml-2 text-indigo-500 hover:text-indigo-700 font-bold">&times;</button>`; 
+            suppliersPillsContainer.appendChild(pill); 
+        }); 
+    }
+    suppliersPillsContainer.addEventListener('click', function(event) { 
+        if (event.target.classList.contains('remove-supplier-btn')) { 
+            const indexToRemove = parseInt(event.target.getAttribute('data-index'), 10); 
+            selectedSuppliers.splice(indexToRemove, 1); 
+            renderSupplierPills(); 
+        } 
+    });
+    brandSearchInput.addEventListener('input', async function() { 
+        const searchTerm = brandSearchInput.value; 
+        if (searchTerm.length < 2) { 
+            suggestionsList.innerHTML = ''; 
+            suggestionsList.classList.add('hidden'); 
+            return; 
+        } 
+        try { 
+            const response = await fetch(`/api/fornecedores?term=${searchTerm}`); 
+            if (!response.ok) return; 
+            const suppliers = await response.json(); 
+            suggestionsList.innerHTML = ''; 
+            if (suppliers.length > 0) { 
+                suppliers.forEach(supplier => { 
+                    const item = document.createElement('div'); 
+                    item.className = 'p-3 hover:bg-gray-100 cursor-pointer'; 
+                    item.innerHTML = `<span class="font-bold">${supplier.codigo}</span> - <span>${supplier.nome_fantasia}</span>`; 
+                    item.addEventListener('click', () => { 
+                        if (!selectedSuppliers.some(s => s.id === supplier.id)) { 
+                            selectedSuppliers.push({ id: supplier.id, text: `${supplier.codigo} - ${supplier.nome_fantasia}` }); 
+                            renderSupplierPills(); 
+                        } 
+                        brandSearchInput.value = ''; 
+                        suggestionsList.classList.add('hidden'); 
+                        brandSearchInput.focus(); 
+                    }); 
+                    suggestionsList.appendChild(item); 
+                }); 
+                suggestionsList.classList.remove('hidden'); 
+            } else { 
+                suggestionsList.classList.add('hidden'); 
+            } 
+        } catch (error) { 
+            console.error('Erro ao buscar fornecedores:', error); 
+        } 
+    });
+    document.addEventListener('click', (event) => { 
+        if (!brandSearchInput.contains(event.target)) { 
+            suggestionsList.classList.add('hidden'); 
+        } 
+    });
+
+    // --- Lógica da Foto ---
+    photoUploadInput.addEventListener('change', function (event) { 
+        const file = event.target.files[0]; 
+        if (file) { 
+            const reader = new FileReader(); 
+            reader.onload = (e) => { 
+                photoPreview.src = e.target.result; 
+            }; 
+            reader.readAsDataURL(file); 
+        } 
+    });
+
+    // --- Lógica de Rotas ---
+    const stores = ["Sac Ponta Negra", "Sac Maria Lacerda", "Sac Lagoa Nova", "Sac Igapo", "Sac Parnamirim", "Sac Norte Shopping", "Sac Zn2", "Sac Alecim", "Sac Macaiba", "Sac Centro"]; 
+    const daysOfWeek = [{ value: 'segunda', name: 'Segunda-feira' }, { value: 'terca', name: 'Terça-feira' }, { value: 'quarta', name: 'Quarta-feira' }, { value: 'quinta', name: 'Quinta-feira' }, { value: 'sexta', name: 'Sexta-feira' }, { value: 'sabado', name: 'Sábado' }, { value: 'domingo', name: 'Domingo' }]; 
+    const storeOptions = stores.map(store => `<option value="${store}">${store}</option>`).join(''); 
+    const dayOptions = daysOfWeek.map(day => `<option value="${day.value}">${day.name}</option>`).join('');
+    function addRouteRow(initialData = null) { 
+        const routeRow = document.createElement('div'); 
+        routeRow.className = 'route-row grid grid-cols-1 md:grid-cols-5 gap-4 items-center p-4 bg-gray-50 rounded-lg'; 
+        routeRow.setAttribute('data-index', routeIndex); 
+        routeRow.innerHTML = `<div class="md:col-span-2"><label class="text-xs font-medium text-gray-600">Loja</label><select name="route_store_${routeIndex}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg"><option value="">Selecione a loja</option>${storeOptions}</select></div><div><label class="text-xs font-medium text-gray-600">Dia da Semana</label><select name="route_day_${routeIndex}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg"><option value="">Selecione o dia</option>${dayOptions}</select></div><div class="grid grid-cols-2 gap-2"><div><label class="text-xs font-medium text-gray-600">Entrada</label><input type="time" name="route_start_${routeIndex}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-center"></div><div><label class="text-xs font-medium text-gray-600">Saída</label><input type="time" name="route_end_${routeIndex}" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-center"></div></div><div class="flex items-end justify-center h-full"><button type="button" class="remove-route-btn p-2 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-full"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button></div>`; 
+        routesList.appendChild(routeRow); 
+        if (initialData) { 
+            routeRow.querySelector(`select[name^="route_store"]`).value = initialData.loja || ""; 
+            routeRow.querySelector(`select[name^="route_day"]`).value = initialData.dia_semana || ""; 
+            routeRow.querySelector(`input[name^="route_start"]`).value = initialData.hora_entrada || ''; 
+            routeRow.querySelector(`input[name^="route_end"]`).value = initialData.hora_saida || ''; 
+        } 
+        routeIndex++; 
+    }
+    addRouteBtn.addEventListener('click', () => addRouteRow());
+    routesList.addEventListener('click', (event) => { 
+        if (event.target.closest('.remove-route-btn')) { 
+            event.target.closest('.route-row').remove(); 
+        } 
+    });
+
+    // Event listener para o botão de suspender (ADICIONADO DE VOLTA)
+    suspendBtn.addEventListener('click', async function() {
+        if (!promoterId) return;
+        const isSuspending = currentPromoterStatus === 'ativo';
+        const newStatus = isSuspending ? 'suspenso' : 'ativo';
+        const confirmationMessage = isSuspending 
+            ? 'Tem certeza que deseja suspender este promotor?' 
+            : 'Tem certeza que deseja reativar este promotor?';
+
+        if (confirm(confirmationMessage)) {
+            try {
+                suspendBtn.disabled = true;
+                const response = await fetch(`/api/promotores/${promoterId}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showFeedback(result.message, 'success');
+                    updateSuspendButtonState(newStatus);
+                } else {
+                    showFeedback(`Erro: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showFeedback('Ocorreu um erro de rede.', 'error');
+            } finally {
+                suspendBtn.disabled = false;
+            }
+        }
+    });
+
+    // --- Lógica de Envio do Formulário ---
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        // Validação das rotas
+        const routeRows = document.querySelectorAll('.route-row');
+        for (const row of routeRows) {
+            const storeSelect = row.querySelector('select[name^="route_store"]');
+            const daySelect = row.querySelector('select[name^="route_day"]');
+            if (!storeSelect.value || !daySelect.value) {
+                showFeedback('Preencha a Loja e o Dia de todas as rotas antes de salvar.', 'error');
+                return;
+            }
+        }
+
+        const formData = new FormData(form);
+        formData.delete('brand-search');
+        formData.append('suppliers', JSON.stringify(selectedSuppliers));
+
+        const routes = [];
+        routeRows.forEach(row => {
+            const index = row.getAttribute('data-index');
+            routes.push({ 
+                store: row.querySelector(`[name="route_store_${index}"]`).value, 
+                day: row.querySelector(`[name="route_day_${index}"]`).value, 
+                start_time: row.querySelector(`[name="route_start_${index}"]`).value, 
+                end_time: row.querySelector(`[name="route_end_${index}"]`).value 
+            });
+        });
+        formData.append('routes', JSON.stringify(routes));
+
+        formData.set('promoter_phone', promoterPhoneMask.unmaskedValue);
+        formData.set('manager_contact', managerContactMask.unmaskedValue);
+        
+        const url = promoterId ? `/api/promotores/${promoterId}` : '/api/promotores';
+        
+        try {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Salvando...';
+            const response = await fetch(url, { method: 'POST', body: formData });
+            const result = await response.json();
+            
+            if (response.ok) {
+                showFeedback(result.message, 'success');
+                if (!promoterId) {
+                    form.reset();
+                    photoPreview.src = 'https://placehold.co/160x160/E2E8F0/4A5568?text=Foto';
+                    routesList.innerHTML = '';
+                    routeIndex = 0;
+                    selectedSuppliers = [];
+                    renderSupplierPills();
+                }
+            } else {
+                showFeedback(`Erro: ${result.error || 'Não foi possível salvar.'}`, 'error');
+            }
+        } catch (error) {
+            showFeedback('Ocorreu um erro de rede. Tente novamente.', 'error');
+            console.error('Erro na requisição:', error);
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = promoterId ? 'Salvar Alterações' : 'Salvar Cadastro';
+        }
+    });
+});
+</script>
+</body>
+</html>

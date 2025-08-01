@@ -1,0 +1,415 @@
+<!-- <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site em Manutenção</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Reset e Estilos Globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #141E30;  /* fallback for old browsers */
+            background: -webkit-linear-gradient(to right, #243B55, #141E30);  /* Chrome 10-25, Safari 5.1-6 */
+            background: linear-gradient(to right, #243B55, #141E30); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+            color: #ecf0f1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            overflow: hidden; /* Evita barras de rolagem desnecessárias */
+        }
+
+        /* Container principal com animação de entrada */
+        .container {
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 90%;
+            width: 700px;
+            
+            /* Animação de fade-in */
+            animation: fadeIn 1.2s ease-in-out;
+        }
+
+        /* Ícone (SVG) com animação de rotação */
+        .icon-container svg {
+            width: 80px;
+            height: 80px;
+            fill: #3498db; /* Cor azul para o ícone */
+            margin-bottom: 20px;
+            animation: spin 10s linear infinite; /* Animação de rotação */
+        }
+
+        /* Título Principal */
+        h1 {
+            font-size: 2.8em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+
+        /* Parágrafo de descrição */
+        p {
+            font-size: 1.2em;
+            font-weight: 300;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Linha de contato/social */
+        .contact {
+            font-size: 0.9em;
+            color: #bdc3c7;
+        }
+
+        .contact a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .contact a:hover {
+            color: #5dade2;
+        }
+
+        /* Definição das animações */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Ajustes para telas menores (celulares) */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            p {
+                font-size: 1em;
+            }
+            .container {
+                padding: 30px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="icon-container">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                <path d="M487.4 315.7l-42.6-24.6c4.3-23.2 4.3-46.5 0-69.7l42.6-24.6c4.9-2.8 7.1-8.6 5.5-14c-1.5-5.4-6.1-9.3-11.7-9.8L487 172.9c-2.3-.9-4.8-1.5-7.3-1.9l-46.5-5.2c-11.3-15.6-25.2-29.2-40.7-40.2l-5.2-46.5c-.5-5.6-4.5-10.2-9.9-11.7c-5.4-1.5-11.2.7-14 5.5l-24.6 42.6c-23.2-4.3-46.5-4.3-69.7 0L246.2 42.6c-2.8-4.9-8.6-7.1-14-5.5c-5.4 1.5-9.3 6.1-9.8 11.7l-5.2 46.5c-15.6 11.3-29.2 25.2-40.2 40.7l-46.5 5.2c-5.6 .5-10.2 4.5-11.7 9.9c-1.5 5.4 .7 11.2 5.5 14l42.6 24.6c-4.3 23.2-4.3 46.5 0 69.7l-42.6 24.6c-4.9 2.8-7.1 8.6-5.5 14c1.5 5.4 6.1 9.3 11.7 9.8l46.5 5.2c11.3 15.6 25.2 29.2 40.7 40.2l5.2 46.5c.5 5.6 4.5 10.2 9.9 11.7c5.4 1.5 11.2-.7 14-5.5l24.6-42.6c23.2 4.3 46.5 4.3 69.7 0l24.6 42.6c2.8 4.9 8.6 7.1 14 5.5c5.4-1.5 9.3-6.1 9.8-11.7l5.2-46.5c15.6-11.3 29.2-25.2 40.2-40.7l46.5-5.2c5.6-.5 10.2-4.5 11.7-9.9c1.6-5.4-.6-11.2-5.4-14zM256 336c-44.1 0-80-35.9-80-80s35.9-80 80-80s80 35.9 80 80s-35.9 80-80 80z"/>
+            </svg>
+        </div>
+        <h1>Site em Manutenção</h1>
+        <p>
+            Estamos realizando algumas melhorias importantes em nosso sistema para oferecer uma experiência ainda melhor. Estaremos de volta em breve!
+        </p>
+        <div class="contact">
+            <p>Agradecemos a sua paciência. Para urgências, entre em contato em <a href="mailto:seuemail@dominio.com">seuemail@dominio.com</a></p>
+        </div>
+    </div>
+
+</body>
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema em Otimização</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Reset e Estilos Globais */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #0d1117; /* Fundo escuro GitHub-like */
+            color: #c9d1d9;
+            text-align: center;
+            overflow: hidden;
+        }
+        
+        /* Canvas para a animação da rede neural */
+        #neural-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Container principal posicionado sobre o canvas */
+        .container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px;
+        }
+
+        .content-box {
+            padding: 40px;
+            background: rgba(13, 17, 23, 0.85);
+            border-radius: 10px;
+            box-shadow: 0 0 25px rgba(0, 209, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 209, 255, 0.2);
+            max-width: 90%;
+            width: 700px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        /* Ícone SVG */
+        .icon-container svg {
+            width: 60px;
+            height: 60px;
+            stroke: #00d1ff; /* Cor azul elétrico */
+            margin-bottom: 20px;
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+
+        /* Título Principal */
+        h1 {
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #ffffff;
+            letter-spacing: 1px;
+        }
+
+        /* Parágrafo de descrição */
+        p {
+            font-size: 1.1em;
+            font-weight: 300;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Linha de contato */
+        .contact {
+            font-size: 0.9em;
+            color: #8b949e;
+        }
+
+        .contact a {
+            color: #00d1ff;
+            text-decoration: none;
+            transition: text-shadow 0.3s ease;
+        }
+
+        .contact a:hover {
+            text-shadow: 0 0 8px rgba(0, 209, 255, 0.7);
+        }
+
+        /* Definição das animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        
+        /* Ajustes para telas menores */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8em; }
+            p { font-size: 1em; }
+            .content-box { padding: 30px 25px; }
+        }
+
+    </style>
+</head>
+<body>
+    
+    <canvas id="neural-canvas"></canvas>
+
+    <div class="container">
+        <div class="content-box">
+            <div class="icon-container">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18a.75.75 0 0 0 .75-.75v-1.5a.75.75 0 0 0-1.5 0v1.5A.75.75 0 0 0 12 18ZM11.25 6.75a.75.75 0 0 0 0 1.5h1.5a.75.75 0 0 0 0-1.5h-1.5ZM12 3.75a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 3.75ZM6.75 12a.75.75 0 0 0 1.5 0h-1.5a.75.75 0 0 0-1.5 0h1.5ZM15.75 12a.75.75 0 0 0 1.5 0h-1.5a.75.75 0 0 0-1.5 0h1.5ZM18 12a.75.75 0 0 0 .75-.75h-1.5a.75.75 0 0 0 1.5 0ZM19.5 12a.75.75 0 0 1-.75.75v-1.5a.75.75 0 0 1 1.5 0v.75ZM12 12.75a.75.75 0 0 0 0-1.5h.008a.75.75 0 0 0 0 1.5H12Zm-.75 6a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 0 1.5H12a.75.75 0 0 1-.75-.75Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a8.25 8.25 0 1 0 0-16.5 8.25 8.25 0 0 0 0 16.5Z" />
+                </svg>
+            </div>
+            <h1>Otimizando Conexões...</h1>
+            <p>
+                Nossos sistemas estão sendo atualizados para processar informações de forma mais inteligente. Estaremos operando com capacidade total em instantes.
+            </p>
+            <div class="contact">
+                <p>Agradecemos a compreensão. Contato: <a href="mailto:sacolaoanalises@gmail.com">sacolaoanalises@gmail.com</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('neural-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particlesArray;
+
+        // Propriedades das partículas
+        const mouse = {
+            x: null,
+            y: null,
+            radius: (canvas.height/110) * (canvas.width/110)
+        };
+
+        window.addEventListener('mousemove', function(event) {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        });
+
+        // Classe da Partícula
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x;
+                this.y = y;
+                this.directionX = directionX;
+                this.directionY = directionY;
+                this.size = size;
+                this.color = color;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            update() {
+                if (this.x > canvas.width || this.x < 0) {
+                    this.directionX = -this.directionX;
+                }
+                if (this.y > canvas.height || this.y < 0) {
+                    this.directionY = -this.directionY;
+                }
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
+            }
+        }
+
+        // Criar array de partículas
+        function init() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 2) + 1;
+                let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                let directionX = (Math.random() * 0.4) - 0.2;
+                let directionY = (Math.random() * 0.4) - 0.2;
+                let color = 'rgba(0, 209, 255, 0.8)';
+                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+            }
+        }
+
+        // Conectar partículas
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x))
+                                 + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                    if (distance < (canvas.width/7) * (canvas.height/7)) {
+                        opacityValue = 1 - (distance/20000);
+                        ctx.strokeStyle = `rgba(0, 123, 255, ${opacityValue})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+        
+        // Loop de animação
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, innerWidth, innerHeight);
+
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+            connect();
+        }
+
+        // Redimensionar canvas com a janela
+        window.addEventListener('resize', function() {
+            canvas.width = innerWidth;
+            canvas.height = innerHeight;
+            mouse.radius = (canvas.height/110) * (canvas.width/110);
+            init();
+        });
+
+        // Sair com o mouse para não deixar rastro
+        window.addEventListener('mouseout', function() {
+            mouse.x = undefined;
+            mouse.y = undefined;
+        });
+
+        init();
+        animate();
+    </script>
+</body>
+</html>

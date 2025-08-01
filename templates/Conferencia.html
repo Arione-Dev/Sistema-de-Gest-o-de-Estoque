@@ -1,0 +1,663 @@
+<!-- <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Conferência</title>
+    <style>
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #f4f4f4;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background-color: #34495e;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 { font-size: 24px; }
+        .header-buttons button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            color: white;
+            margin-left: 10px;
+        }
+        .back-btn { background-color: #3498db; }
+        .back-btn:hover { background-color: #2980b9; }
+        .logout-btn { background-color: #e74c3c; }
+        .logout-btn:hover { background-color: #c0392b; }
+        .tabs {
+            display: flex;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 10px 20px;
+            justify-content: center;
+            gap: 10px;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+        }
+        .tab-button:hover { background-color: #2980b9; }
+        .tab-button.active { background-color: #2ecc71; }
+        .search-container {
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .search-container form { display: flex; gap: 10px; }
+        .search-container input[type="number"] { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 150px; text-align: center; }
+        .search-container button { padding: 8px 15px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; transition: background-color 0.3s ease; color: white; }
+        .search-button { background-color: #2ecc71; }
+        .search-button:hover { background-color: #27ae60; }
+        .divergence-button { background-color: #f39c12; } /* Cor do novo botão */
+        .divergence-button:hover { background-color: #e67e22; }
+
+        .container { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding: 20px; overflow-x: auto; }
+        table { width: 100%; max-width: 1400px; border-collapse: collapse; background-color: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+        th, td { padding: 10px; text-align: center; border-bottom: 1px solid #ddd; white-space: nowrap; }
+        th { background-color: #34495e; color: #ffffff; font-weight: bold; }
+        td:nth-child(3) { text-align: left; white-space: normal; }
+        .editable { border: 1px solid #ccc; padding: 5px; width: 60px; text-align: center; }
+        .row-green { background-color: #e6ffed; }
+        .row-red { background-color: #ffe6e6; }
+        .caixa-divergente { color: #c0392b; font-weight: bold; }
+        .hidden-row { display: none; } /* Estilo para esconder a linha */
+        
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Relatório de Conferência</h1>
+        <div class="header-buttons">
+            <button class="back-btn" onclick="voltar()">Home</button>
+            <button class="logout-btn" onclick="logout()">Sair</button>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <a href="/conferencia" class="tab-button active">Conferente</a>
+        <a href="/credito_debito" class="tab-button">Crédito e Débito</a>
+    </div>
+
+    <div class="search-container">
+        <form action="/conferencia/buscar" method="post">
+            <input type="number" name="numero_pedido" placeholder="Digite o Nº Pedido" required>
+            <button type="submit">Buscar</button>
+        </form>
+        !-- Botão para filtrar divergências --
+        <button class="divergence-button" onclick="toggleDivergencias(this)">Mostrar Só Divergências</button>
+    </div>
+
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nº Pedido</th>
+                    <th>Código</th>
+                    <th>Descrição</th>
+                    <th>Qtd Ped</th>
+                    <th>Qtd Cont</th>
+                    <th>Divergência</th>
+                    <th>Crédito</th>
+                    <th>Caixa</th>
+                    <th>Status</th>
+                    <th>Conferente</th>
+                    <th>Separador</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if dados and dados|length > 0 %}
+                    {% for item in dados %}
+                        !-- 1. CORREÇÃO: Adicionada a classe "data-row" --
+                        <tr class="data-row" data-id="{{ item['id'] }}">
+                            <td>{{ item['numero_pedido'] | default('-') }}</td>
+                            <td>{{ item['codigo'] | default('-') }}</td>
+                            <td>{{ item['descricao'] | default('-') }}</td>
+                            <td class="qtd-ped">{{ item['quantidade_pedida'] | int }}</td>
+                            <td>
+                                <input type="number" class="editable" id="qtd_cont_{{ item['id'] }}" value="{{ item['quantidade_conferida'] | int }}" onchange="updateRow('{{ item['id'] }}')">
+                            </td>
+                            !-- 2. CORREÇÃO: Adicionada a classe "divergencia-cell" --
+                            <td class="divergencia-cell">
+                                {% set divergencia = item.divergencia | int %}
+                                {% if divergencia > 0 %}+{{ divergencia }}{% else %}{{ divergencia }}{% endif %}
+                            </td>
+                            <td class="credito">R$ {{ "%.2f"|format(item['credito']|float) }}</td>
+                            <td class="{{ 'caixa-divergente' if item.divergencia != 0 }}">
+                                {{ item['caixa'] | default('-') }}
+                            </td>
+                            <td>{{ item['status'] | default('-') }}</td>
+                            <td>{{ item['conferente'] | default('-') }}</td>
+                            <td>{{ item['separador'] | default('-') }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="11">Nenhum dado disponível.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // A sua função original, sem alterações na lógica
+        let mostrandoApenasDivergencias = false;
+
+        function toggleDivergencias(button) {
+            mostrandoApenasDivergencias = !mostrandoApenasDivergencias;
+            
+            document.querySelectorAll('tbody tr.data-row').forEach(row => {
+                const divergenciaCell = row.querySelector('.divergencia-cell');
+                const divergencia = parseInt(divergenciaCell.textContent.replace('+', ''), 10);
+
+                if (mostrandoApenasDivergencias) {
+                    row.classList.toggle('hidden-row', divergencia === 0);
+                } else {
+                    row.classList.remove('hidden-row');
+                }
+            });
+            button.textContent = mostrandoApenasDivergencias ? 'Mostrar Todos' : 'Mostrar Só Divergências';
+        }
+
+        // Funções de suporte que já existiam
+        function updateRow(id) {
+            const row = document.querySelector(`tr[data-id="${id}"]`);
+            const qtdPed = parseInt(row.querySelector('.qtd-ped').textContent);
+            const qtdContInput = row.querySelector(`#qtd_cont_${id}`);
+            const qtdCont = parseInt(qtdContInput.value);
+            
+            const divergenciaCell = row.querySelector('.divergencia-cell');
+            const creditoCell = row.querySelector('.credito');
+            const caixaCell = row.querySelector('td:nth-child(8)');
+
+            const divergencia = qtdCont - qtdPed;
+            
+            if (divergencia > 0) {
+                divergenciaCell.textContent = `+${divergencia}`;
+            } else {
+                divergenciaCell.textContent = divergencia;
+            }
+            
+            const credito = Math.abs(divergencia) * 1.00;
+            creditoCell.textContent = `R$ ${credito.toFixed(2)}`;
+
+            row.classList.remove('row-green', 'row-red');
+            caixaCell.classList.remove('caixa-divergente');
+
+            if (divergencia === 0) {
+                row.classList.add('row-green');
+            } else {
+                row.classList.add('row-red');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('tbody tr[data-id]').forEach(row => {
+                const divergencia = parseInt(row.querySelector('.divergencia-cell').textContent);
+                if(divergencia === 0) {
+                    row.classList.add('row-green');
+                } else {
+                    row.classList.add('row-red');
+                }
+            });
+        });
+        
+        function voltar() {
+            window.location.href = '/';
+        }
+
+        function logout() {
+            window.location.href = '/logout';
+        }
+        
+    </script>
+</body>
+</html> -->
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório de Conferência</title>
+    <style>
+        /* General Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #ECEFF1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background-color: #2F4A6D;
+            color: white;
+            padding: 18px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        .header h1 {
+            font-size: 26px;
+            font-weight: 600;
+        }
+        .header-buttons button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            color: white;
+            margin-left: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header-buttons button:hover {
+            transform: translateY(-1px);
+        }
+        .header-buttons button:active {
+            transform: translateY(0);
+        }
+        .back-btn { background-color: #3A6B9C; }
+        .back-btn:hover { background-color: #2E5880; }
+        .logout-btn { background-color: #E74C3C; }
+        .logout-btn:hover { background-color: #C0392B; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background-color: #FFFFFF;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+            padding: 12px 20px;
+            justify-content: center;
+            gap: 15px;
+            border-bottom: 1px solid #E0E0E0;
+        }
+        .tab-button {
+            padding: 11px 22px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #607D8B;
+            color: white;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-decoration: none;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .tab-button:hover {
+            background-color: #546E7A;
+            transform: translateY(-1px);
+        }
+        .tab-button.active {
+            background-color: #2ECC71;
+            box-shadow: 0 3px 6px rgba(46, 204, 113, 0.25);
+        }
+
+        /* Search Container */
+        .search-container {
+            padding: 25px;
+            background-color: #FFFFFF;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            border-top: 1px solid #E0E0E0;
+        }
+        .search-container form {
+            display: flex;
+            gap: 10px;
+        }
+        .search-container input[type="number"] {
+            padding: 10px;
+            border: 1px solid #B0BEC5;
+            border-radius: 5px;
+            width: 180px;
+            text-align: center;
+            font-size: 15px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .search-container input[type="number"]:focus {
+            border-color: #3A6B9C;
+            box-shadow: 0 0 5px rgba(58, 107, 156, 0.3);
+            outline: none;
+        }
+        .search-container button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .search-container button:hover {
+            transform: translateY(-1px);
+        }
+        .search-container button:active {
+            transform: translateY(0);
+        }
+        .search-button { background-color: #2ECC71; }
+        .search-button:hover { background-color: #27AE60; }
+        .divergence-button { background-color: #F39C12; }
+        .divergence-button:hover { background-color: #E67E22; }
+
+        /* Table Container */
+        .container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 20px 20px 20px;
+            overflow-x: auto; /* Allow horizontal scrolling if table is too wide */
+        }
+        table {
+            width: 100%;
+            max-width: 1500px;
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: #FFFFFF;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            table-layout: fixed; /* Added to help with automatic column width distribution */
+            font-size: 13px; /* Smaller font size for table data */
+        }
+        th, td {
+            padding: 10px 12px; /* Adjusted padding for smaller font */
+            text-align: center;
+            border-bottom: 1px solid #ECEFF1;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        th {
+            background-color: #3A6B9C;
+            color: #ffffff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 14px; /* Header font size remains slightly larger */
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        th:first-child { border-top-left-radius: 8px; }
+        th:last-child { border-top-right-radius: 8px; }
+
+        /* Specific column widths for better layout */
+        th:nth-child(1), td:nth-child(1) { width: 9%; }  /* Nº Pedido */
+        th:nth-child(2), td:nth-child(2) { width: 7%; }  /* Código */
+        th:nth-child(3), td:nth-child(3) { 
+            width: 28%; /* Description column, allowing it to be wider */
+            text-align: left;
+            white-space: normal; /* Allow text to wrap naturally */
+        }
+        th:nth-child(4), td:nth-child(4) { width: 7%; }  /* Qtd Ped */
+        th:nth-child(5), td:nth-child(5) { width: 7%; }  /* Qtd Cont */
+        th:nth-child(6), td:nth-child(6) { width: 9%; } /* Divergência */
+        th:nth-child(7), td:nth-child(7) { width: 9%; }  /* Crédito */
+        th:nth-child(8), td:nth-child(8) { width: 7%; }  /* Caixa */
+        th:nth-child(9), td:nth-child(9) { width: 7%; }  /* Status */
+        th:nth-child(10), td:nth-child(10) { width: 9%; } /* Conferente */
+        th:nth-child(11), td:nth-child(11) { width: 9%; } /* Separador */
+
+
+        /* Table Row Styling */
+        tbody tr:nth-child(even) {
+            background-color: #F9F9F9;
+        }
+        tbody tr:hover {
+            background-color: #EFEFEF;
+            transition: background-color 0.2s ease;
+        }
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Editable Input */
+        .editable {
+            border: 1px solid #CFD8DC;
+            padding: 4px 6px; /* Smaller padding */
+            width: 60px; /* Smaller width */
+            text-align: center;
+            border-radius: 4px;
+            transition: border-color 0.3s ease;
+            font-size: 13px; /* Match table font size */
+        }
+        .editable:focus {
+            border-color: #3A6B9C;
+            outline: none;
+            box-shadow: 0 0 5px rgba(58, 107, 156, 0.2);
+        }
+
+        /* Row Status Colors */
+        .row-green { background-color: #E8F5E9; }
+        .row-red { background-color: #FFEBEE; }
+
+        /* Divergence Specific Styling */
+        .caixa-divergente {
+            color: #C0392B;
+            font-weight: bold;
+        }
+
+        /* Hidden Row for Filtering */
+        .hidden-row {
+            display: none;
+        }
+
+        /* Empty State */
+        .container table tbody tr td[colspan="11"] {
+            padding: 20px;
+            font-style: italic;
+            color: #78909C;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Relatório de Conferência</h1>
+        <div class="header-buttons">
+            <button class="back-btn" onclick="voltar()">Home</button>
+            <button class="logout-btn" onclick="logout()">Sair</button>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <a href="/conferencia" class="tab-button active">Conferente</a>
+        <a href="/credito_debito" class="tab-button">Crédito e Débito</a>
+    </div>
+
+    <div class="search-container">
+        <form action="/conferencia/buscar" method="post">
+            <input type="number" name="numero_pedido" placeholder="Digite o Nº Pedido" required>
+            <button type="submit" class="search-button">Buscar</button>
+        </form>
+        <button class="divergence-button" onclick="toggleDivergencias(this)">Mostrar Só Divergências</button>
+    </div>
+
+    <div class="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nº Pedido</th>
+                    <th>Código</th>
+                    <th>Descrição</th>
+                    <th>Qtd Ped</th>
+                    <th>Qtd Cont</th>
+                    <th>Divergência</th>
+                    <th>Crédito</th>
+                    <th>Caixa</th>
+                    <th>Status</th>
+                    <th>Conferente</th>
+                    <th>Separador</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if dados and dados|length > 0 %}
+                    {% for item in dados %}
+                        <tr class="data-row" data-id="{{ item['id'] }}">
+                            <td>{{ item['numero_pedido'] | default('-') }}</td>
+                            <td>{{ item['codigo'] | default('-') }}</td>
+                            <td>{{ item['descricao'] | default('-') }}</td>
+                            <td class="qtd-ped">{{ item['quantidade_pedida'] | int }}</td>
+                            <td>
+                                <input type="number" class="editable" id="qtd_cont_{{ item['id'] }}" value="{{ item['quantidade_conferida'] | int }}" onchange="updateRow('{{ item['id'] }}')">
+                            </td>
+                            <td class="divergencia-cell">
+                                {% set divergencia = item.divergencia | int %}
+                                {% if divergencia > 0 %}+{{ divergencia }}{% else %}{{ divergencia }}{% endif %}
+                            </td>
+                            <td class="credito">R$ {{ "%.2f"|format(item['credito']|float) }}</td>
+                            <td class="{{ 'caixa-divergente' if item.divergencia != 0 }}">
+                                {{ item['caixa'] | default('-') }}
+                            </td>
+                            <td>{{ item['status'] | default('-') }}</td>
+                            <td>{{ item['conferente'] | default('-') }}</td>
+                            <td>{{ item['separador'] | default('-') }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="11">Nenhum dado disponível para o pedido informado.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let mostrandoApenasDivergencias = false;
+
+        function toggleDivergencias(button) {
+            mostrandoApenasDivergencias = !mostrandoApenasDivergencias;
+            
+            document.querySelectorAll('tbody tr.data-row').forEach(row => {
+                const divergenciaCell = row.querySelector('.divergencia-cell');
+                // Ensure to parse the correct integer value, removing '+' if present
+                const divergencia = parseInt(divergenciaCell.textContent.replace('+', ''), 10);
+
+                if (mostrandoApenasDivergencias) {
+                    // If showing only divergences, hide rows where divergence is 0
+                    row.classList.toggle('hidden-row', divergencia === 0);
+                } else {
+                    // If showing all, remove the hidden-row class from all rows
+                    row.classList.remove('hidden-row');
+                }
+            });
+            button.textContent = mostrandoApenasDivergencias ? 'Mostrar Todos' : 'Mostrar Só Divergências';
+        }
+
+        function updateRow(id) {
+            const row = document.querySelector(`tr[data-id="${id}"]`);
+            const qtdPed = parseInt(row.querySelector('.qtd-ped').textContent);
+            const qtdContInput = row.querySelector(`#qtd_cont_${id}`);
+            const qtdCont = parseInt(qtdContInput.value);
+            
+            const divergenciaCell = row.querySelector('.divergencia-cell');
+            const creditoCell = row.querySelector('.credito');
+            const caixaCell = row.querySelector('td:nth-child(8)');
+
+            const divergencia = qtdCont - qtdPed;
+            
+            if (divergencia > 0) {
+                divergenciaCell.textContent = `+${divergencia}`;
+            } else {
+                divergenciaCell.textContent = divergencia;
+            }
+            
+            const credito = Math.abs(divergencia) * 1.00;
+            creditoCell.textContent = `R$ ${credito.toFixed(2)}`;
+
+            row.classList.remove('row-green', 'row-red');
+            caixaCell.classList.remove('caixa-divergente');
+
+            if (divergencia === 0) {
+                row.classList.add('row-green');
+            } else {
+                row.classList.add('row-red');
+                caixaCell.classList.add('caixa-divergente');
+            }
+
+            // After updating a row, if the filter is active, re-apply it
+            if (mostrandoApenasDivergencias) {
+                // Check if the current row should be hidden based on the new divergence
+                if (divergencia === 0) {
+                    row.classList.add('hidden-row');
+                } else {
+                    row.classList.remove('hidden-row');
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('tbody tr[data-id]').forEach(row => {
+                const divergenciaText = row.querySelector('.divergencia-cell').textContent.replace('+', '').trim();
+                const divergencia = parseInt(divergenciaText, 10);
+                const caixaCell = row.querySelector('td:nth-child(8)');
+
+                if(divergencia === 0) {
+                    row.classList.add('row-green');
+                } else {
+                    row.classList.add('row-red');
+                    caixaCell.classList.add('caixa-divergente');
+                }
+            });
+        });
+        
+        function voltar() {
+            window.location.href = '/';
+        }
+
+        function logout() {
+            window.location.href = '/logout';
+        }
+        
+    </script>
+</body>
+</html>

@@ -1,0 +1,691 @@
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitações de Loja</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        .header {
+            background-color: #34495e;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            color: white;
+            margin: 0;
+            font-size: 20px;
+        }
+        .header .nav-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .header a {
+            text-decoration: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .header a.sair {
+            background-color: #e74c3c;
+        }
+        .header a.sair:hover {
+            background-color: #c0392b;
+        }
+        .header a.home {
+            background-color: #2ecc71;
+        }
+        .header a.home:hover {
+            background-color: #27ae60;
+        }
+        .header .notification {
+            position: relative;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .header .notification .badge {
+            position: absolute;
+            top: -5px;
+            right: -10px;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+        }
+        .notification-panel {
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 10px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .notification-panel.show {
+            display: block;
+        }
+        .notification-item {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        .filters {
+            background-color: white;
+            padding: 15px;
+            margin: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .filters label {
+            font-weight: bold;
+            color: #333;
+        }
+        .filters select, .filters input {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            width: 150px;
+        }
+        .filters input[type="number"] {
+            width: 80px;
+        }
+        .filters input[type="text"].descricao {
+            width: 200px;
+        }
+        .filters button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            background-color: #007bff;
+        }
+        .filters button:hover {
+            background-color: #0056b3;
+        }
+        .content {
+            margin: 20px;
+        }
+        .content p {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            color: #333;
+        }
+        th {
+            background-color: #34495e;
+            color: white;
+            font-weight: bold;
+        }
+        .descricao-box {
+            display: none;
+            margin: 20px;
+            padding: 15px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .descricao-box input[type="text"] {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .descricao-box textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+        .descricao-box .box-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .descricao-box button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+        }
+        .descricao-box button.enviar {
+            background-color: #28a745;
+        }
+        .descricao-box button.enviar:hover {
+            background-color: #218838;
+        }
+        .descricao-box button.cancelar {
+            background-color: #dc3545;
+        }
+        .descricao-box button.cancelar:hover {
+            background-color: #c82333;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            width: 400px;
+        }
+        .popup input[type="text"] {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .popup textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+        .popup .popup-buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+        .popup button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+        }
+        .popup button.enviar {
+            background-color: #28a745;
+        }
+        .popup button.enviar:hover {
+            background-color: #218838;
+        }
+        .popup button.responder {
+            background-color: #17a2b8;
+        }
+        .popup button.responder:hover {
+            background-color: #138496;
+        }
+        .popup button.sair {
+            background-color: #dc3545;
+        }
+        .popup button.sair:hover {
+            background-color: #c82333;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        td button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        td button:hover {
+            background-color: #0056b3;
+        }
+        .popup .respostas {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .popup .respostas p {
+            margin: 5px 0;
+            padding: 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Solicitações de Loja</h1>
+        <div class="nav-buttons">
+            <span class="notification" onclick="toggleNotifications()">🔔<span class="badge" id="notification-badge">0</span></span>
+            <a href="#" class="sair">Sair</a>
+            <a href="#" class="home">Home</a>
+        </div>
+    </div>
+
+    <div class="filters">
+        <label for="filial">Filial:</label>
+        <select id="filial" name="filial" onchange="aplicarFiltro()">
+            <option value="">Selecione a Filial</option>
+            <option value="1" {% if filial == '1' %}selected{% endif %}>1 | PONTA NEGRA</option>
+            <option value="2" {% if filial == '2' %}selected{% endif %}>2 | ALECRIM</option>
+            <option value="7" {% if filial == '7' %}selected{% endif %}>7 | SAC - CENTRO VI</option>
+            <option value="100" {% if filial == '100' %}selected{% endif %}>100 | LAGOA NOVA</option>
+            <option value="121" {% if filial == '121' %}selected{% endif %}>121 | NORTE SHOPPING</option>
+            <option value="122" {% if filial == '122' %}selected{% endif %}>122 | PARNAMIRIM</option>
+            <option value="137" {% if filial == '137' %}selected{% endif %}>137 | MACAIBA</option>
+            <option value="131" {% if filial == '131' %}selected{% endif %}>131 | ZN2</option>
+            <option value="140" {% if filial == '140' %}selected{% endif %}>140 | MARIA LACERDA</option>
+            <option value="141" {% if filial == '141' %}selected{% endif %}>141 | IGAPO</option>
+        </select>
+
+        <label for="tipo_solicitacao">Tipo de Solicitação:</label>
+        <select id="tipo_solicitacao" name="tipo_solicitacao">
+            <option value="">Selecione o Tipo</option>
+            <option value="aguas">Águas</option>
+            <option value="panfletos">Panfletos Promocionais</option>
+            <option value="ajustes">Ajustes de Pedidos</option>
+            <option value="outros">Outros</option>
+        </select>
+
+        <label for="quantidade">Quantidade:</label>
+        <input type="number" id="quantidade" name="quantidade" min="1">
+
+        <label for="descricao">Descrição:</label>
+        <input type="text" id="descricao" name="descricao" class="descricao" placeholder="Clique para detalhar" onclick="toggleDescricaoBox()">
+
+        <button onclick="window.print()">Imprimir</button>
+        <button onclick="exportarExcel()">Abrir em Excel</button>
+    </div>
+
+    <div class="descricao-box" id="descricao-box">
+        <input type="text" id="descricao-titulo" placeholder="Título da Observação" maxlength="50">
+        <textarea id="descricao-textarea" placeholder="Digite sua solicitação..."></textarea>
+        <div class="box-buttons">
+            <button class="enviar" onclick="enviarDescricao()">Enviar</button>
+            <button class="cancelar" onclick="toggleDescricaoBox()">Cancelar</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <p>Solicitações pendentes para o depósito:</p>
+        {% if erro %}
+            <div class="error-message" style="color: red;">{{ erro }}</div>
+        {% endif %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Número da Solicitação</th>
+                    <th>Filial</th>
+                    <th>Tipo de Solicitação</th>
+                    <th>Descrição</th>
+                    <th>Quantidade</th>
+                    <th>Data/Hora</th>
+                    <th>Matrícula</th>
+                    <th>Nome do Usuário</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-solicitacoes">
+                {% if solicitacoes %}
+                    {% for solicitacao in solicitacoes %}
+                        <tr data-id="{{ solicitacao.id | default('N/A') }}">
+                            <td>{{ solicitacao.numero_solicitacao | default('N/A') }}</td>
+                            <td>{{ solicitacao.filial_id | default('N/A') }} | {{ solicitacao.filial_nome | default('N/A') }}</td>
+                            <td>{{ solicitacao.tipo_solicitacao | default('Sem tipo') }}</td>
+                            <td><button onclick="abrirPopup('ver', this.parentNode.parentNode)">Ver Obs</button></td>
+                            <td>{{ solicitacao.quantidade | default('0') }}</td>
+                            <td>{{ solicitacao.data_hora.strftime('%d/%m/%Y %H:%M') if solicitacao.data_hora else 'Sem data' }}</td>
+                            <td>{{ solicitacao.matricula | default('-') }}</td>
+                            <td>{{ solicitacao.nome_usuario | default('-') }}</td>
+                            <td>{{ solicitacao.status | default('Pendente') }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="9" style="text-align: center;">Nenhuma solicitação encontrada.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="notification-panel" id="notification-panel"></div>
+    <div class="overlay" id="overlay" onclick="fecharPopup()"></div>
+    <div class="popup" id="popup">
+        <input type="text" id="popup-titulo" placeholder="Título da Observação" maxlength="50">
+        <textarea id="popup-textarea" placeholder="Digite sua solicitação ou resposta..."></textarea>
+        <div class="respostas" id="respostas-list"></div>
+        <div class="popup-buttons">
+            <button class="enviar" onclick="enviarPopup()">Enviar</button>
+            <button class="responder" onclick="responderPopup()">Responder</button>
+            <button class="sair" onclick="fecharPopup()">Sair</button>
+        </div>
+    </div>
+
+    <script>
+    let currentRow = null;
+    let solicitacoes = {{ solicitacoes|tojson|safe }};
+    let respostas = {{ respostas|tojson|safe }};
+
+    console.log("Solicitações recebidas no frontend:", solicitacoes);
+    console.log("Respostas recebidas no frontend:", respostas);
+
+    function aplicarFiltro() {
+        const filial = document.getElementById('filial').value;
+        window.location.href = `/solicitacoes_loja?filial=${filial}`;
+    }
+
+    function updateNotificationCount() {
+        const tabela = document.getElementById('tabela-solicitacoes');
+        let count = tabela.rows.length;
+
+        for (let row of tabela.rows) {
+            const status = row.cells[8].innerText;
+            const index = row.rowIndex - 1;
+            const solicitacao = solicitacoes[index];
+            if (!solicitacao) continue;
+            const idSolicitacao = solicitacao.id;
+            console.log(`Contando notificações para solicitação ID ${idSolicitacao}`);
+            const respostasAssociadas = respostas.filter(r => r.solicitacao_id === idSolicitacao);
+            console.log(`Respostas associadas ao ID ${idSolicitacao}:`, respostasAssociadas);
+            count += respostasAssociadas.length;
+            if (status !== 'Pendente') {
+                count++;
+            }
+        }
+
+        document.getElementById('notification-badge').innerText = count;
+        console.log(`Total de notificações: ${count}`);
+    }
+
+    function toggleNotifications() {
+        const panel = document.getElementById('notification-panel');
+        const tabela = document.getElementById('tabela-solicitacoes');
+        panel.innerHTML = '';
+
+        if (panel.classList.contains('show')) {
+            panel.classList.remove('show');
+            return;
+        }
+
+        for (let row of tabela.rows) {
+            const numero = row.cells[0].innerText;
+            const status = row.cells[8].innerText;
+            const index = row.rowIndex - 1;
+            const solicitacao = solicitacoes[index];
+            if (!solicitacao) {
+                console.log(`Solicitação no índice ${index} não encontrada.`);
+                continue;
+            }
+            console.log(`Processando solicitação #${numero} (ID: ${solicitacao.id})`);
+            let notificacao = `<div class="notification-item">Solicitação #${numero}<br>Solicitação enviada - ${solicitacao.descricao || 'Sem descrição'}</div>`;
+
+            const idSolicitacao = solicitacao.id;
+            const respostasAssociadas = respostas.filter(r => r.solicitacao_id === idSolicitacao);
+            console.log(`Respostas para solicitação ID ${idSolicitacao}:`, respostasAssociadas);
+            if (respostasAssociadas.length > 0) {
+                respostasAssociadas.forEach(resposta => {
+                    console.log(`Adicionando resposta: ${resposta.mensagem} (${resposta.nome_usuario} - ${resposta.data_hora})`);
+                    notificacao += `<div class="notification-item">Solicitação #${numero}<br>Resposta recebida: ${resposta.mensagem} (${resposta.nome_usuario} - ${resposta.data_hora})</div>`;
+                });
+            } else {
+                notificacao += `<div class="notification-item">Solicitação #${numero}<br><em>Nenhuma resposta recebida.</em></div>`;
+            }
+
+            if (status !== 'Pendente') {
+                notificacao += `<div class="notification-item">Solicitação #${numero}<br>Status alterado para ${status}</div>`;
+            }
+
+            panel.innerHTML += notificacao;
+        }
+
+        if (panel.innerHTML === '') {
+            panel.innerHTML = '<div class="notification-item">Nenhuma notificação disponível.</div>';
+        }
+
+        panel.classList.add('show');
+    }
+
+    function toggleDescricaoBox() {
+        const box = document.getElementById('descricao-box');
+        box.style.display = box.style.display === 'block' ? 'none' : 'block';
+        if (box.style.display === 'block') {
+            document.getElementById('descricao-titulo').value = '';
+            document.getElementById('descricao-textarea').value = '';
+        }
+    }
+
+    async function enviarDescricao() {
+        const titulo = document.getElementById('descricao-titulo').value.trim();
+        const descricao = document.getElementById('descricao-textarea').value.trim();
+        if (!titulo || !descricao) {
+            alert('Por favor, preencha o título e a descrição.');
+            return;
+        }
+
+        const filial = document.getElementById('filial').value;
+        const tipoSolicitacao = document.getElementById('tipo_solicitacao').value;
+        const quantidade = document.getElementById('quantidade').value;
+
+        if (!filial || !tipoSolicitacao || !quantidade) {
+            alert('Por favor, preencha todos os campos.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/criar_solicitacao', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    filial_id: filial,
+                    tipo_solicitacao: tipoSolicitacao,
+                    quantidade: quantidade,
+                    titulo: titulo,
+                    descricao: descricao
+                })
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('Solicitação enviada com sucesso!');
+                document.getElementById('filial').value = '';
+                document.getElementById('tipo_solicitacao').value = '';
+                document.getElementById('quantidade').value = '';
+                document.getElementById('descricao').value = '';
+                toggleDescricaoBox();
+                window.location.reload();
+            } else {
+                alert('Erro ao enviar solicitação: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Erro ao enviar solicitação:', error);
+            alert('Erro ao enviar solicitação: ' + error.message);
+        }
+    }
+
+    function abrirPopup(action, row = null) {
+        const popup = document.getElementById('popup');
+        const overlay = document.getElementById('overlay');
+        const respostasList = document.getElementById('respostas-list');
+        popup.style.display = 'block';
+        overlay.style.display = 'block';
+
+        if (row) {
+            const index = row.rowIndex - 1;
+            const solicitacao = solicitacoes[index];
+            if (solicitacao) {
+                document.getElementById('popup-titulo').value = solicitacao.titulo || '';
+                document.getElementById('popup-textarea').value = '';
+                respostasList.innerHTML = `<p><strong>Descrição Inicial:</strong> ${solicitacao.descricao || 'Sem descrição'}</p>`;
+
+                const idSolicitacao = solicitacao.id;
+                const respostasAssociadas = respostas.filter(r => r.solicitacao_id === idSolicitacao);
+                console.log(`Respostas no popup para solicitação ID ${idSolicitacao}:`, respostasAssociadas);
+                if (respostasAssociadas.length > 0) {
+                    respostasAssociadas.forEach(resposta => {
+                        respostasList.innerHTML += `<p><strong>Resposta (${resposta.nome_usuario} - ${resposta.data_hora}):</strong> ${resposta.mensagem}</p>`;
+                    });
+                } else {
+                    respostasList.innerHTML += `<p><em>Nenhuma resposta encontrada.</em></p>`;
+                }
+            } else {
+                document.getElementById('popup-titulo').value = '';
+                document.getElementById('popup-textarea').value = '';
+                respostasList.innerHTML = '';
+            }
+            currentRow = row;
+        } else {
+            document.getElementById('popup-titulo').value = '';
+            document.getElementById('popup-textarea').value = '';
+            respostasList.innerHTML = '';
+            currentRow = null;
+        }
+    }
+
+    function fecharPopup() {
+        const popup = document.getElementById('popup');
+        const overlay = document.getElementById('overlay');
+        popup.style.display = 'none';
+        overlay.style.display = 'none';
+        document.getElementById('popup-titulo').value = '';
+        document.getElementById('popup-textarea').value = '';
+        document.getElementById('respostas-list').innerHTML = '';
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && document.getElementById('popup').style.display === 'block') {
+            fecharPopup();
+        }
+    });
+
+    async function enviarPopup() {
+        const titulo = document.getElementById('popup-titulo').value.trim();
+        const descricao = document.getElementById('popup-textarea').value.trim();
+        if (!titulo || !descricao) {
+            alert('Por favor, preencha o título e a descrição.');
+            return;
+        }
+
+        if (currentRow) {
+            const index = currentRow.rowIndex - 1;
+            const id = solicitacoes[index].id;
+            try {
+                const response = await fetch(`/atualizar_solicitacao/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titulo, descricao })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Solicitação atualizada com sucesso!');
+                    fecharPopup();
+                    window.location.reload();
+                } else {
+                    alert('Erro ao atualizar solicitação: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar solicitação:', error);
+                alert('Erro ao atualizar solicitação: ' + error.message);
+            }
+        } else {
+            alert('Selecione uma solicitação para atualizar.');
+        }
+    }
+
+    async function responderPopup() {
+        const resposta = document.getElementById('popup-textarea').value.trim();
+        if (!resposta) {
+            alert('Por favor, digite uma resposta.');
+            return;
+        }
+
+        if (currentRow) {
+            const index = currentRow.rowIndex - 1;
+            const id = solicitacoes[index].id;
+            try {
+                const response = await fetch(`/responder_solicitacao/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resposta })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Resposta enviada com sucesso!');
+                    fecharPopup();
+                    window.location.reload();
+                } else {
+                    alert('Erro ao enviar resposta: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Erro ao enviar resposta:', error);
+                alert('Erro ao enviar resposta: ' + error.message);
+            }
+        } else {
+            alert('Selecione uma solicitação para responder.');
+        }
+    }
+
+    function exportarExcel() {
+        const tabela = document.getElementById('tabela-solicitacoes');
+        let csv = 'Número da Solicitação,Filial,Tipo de Solicitação,Descrição,Quantidade,Data/Hora,Matrícula,Nome do Usuário,Status\n';
+        for (let row of tabela.rows) {
+            let rowData = [];
+            for (let cell of row.cells) {
+                rowData.push(cell.innerText.replace(/,/g, ';'));
+            }
+            csv += rowData.join(',') + '\n';
+        }
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'solicitacoes.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    window.onload = function() {
+        updateNotificationCount();
+    };
+</script>
+</body>
+</html>

@@ -1,0 +1,1563 @@
+<!-- <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>PDA - Conferência de Pedidos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 15px;
+      background-color: #f4f4f4;
+      font-size: 16px;
+    }
+
+    .container {
+      max-width: 100%;
+      margin: auto;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 12px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 14px;
+   
+    }
+
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      text-align: left;
+      overflow: hidden; /* Evita que conteúdos longos saiam da coluna */
+      text-overflow: ellipsis; /* Mostra "..." para texto truncado */
+      white-space: nowrap; /* Impede que o texto quebre em várias linhas */
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.6);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 15% auto;
+      padding: 15px;
+      border: 1px solid #888;
+      max-width: 90%; /* Limita o máximo de largura do modal */
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      overflow-y: auto; /* Habilita rolagem vertical se necessário */
+      max-height: 80vh; /* Define o máximo de altura do modal */
+    }
+
+    .fechar {
+      float: right;
+      cursor: pointer;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .fechar:hover {
+      color: red;
+    }
+
+    /* Estilos específicos para colunas da tabela */
+    #tabelaPedidos thead th:nth-child(1) { width: 12%; }
+    #tabelaPedidos thead th:nth-child(2) { width: 14%; }
+    #tabelaPedidos thead th:nth-child(3) { width: 20%; }
+
+    #tabelaItens thead th:nth-child(1) { width: 5%; }
+    #tabelaItens thead th:nth-child(2) { width: 25%; }
+    #tabelaItens thead th:nth-child(3) { width: 6%; }
+    #tabelaItens thead th:nth-child(4) { width: 5%; }
+
+
+    /* Centraliza o botão "Ver Detalhes" verticalmente */
+    #tabelaPedidos tbody tr td:last-child {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%; /* Altura total da célula */
+    }
+
+    #tabelaPedidos tbody tr td:last-child button {
+      margin: auto; /* Centraliza o botão verticalmente */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Conferência de Pedidos</h2>
+
+    !-- Filtro --
+    <label for="filialSelect">Selecione o Destino/Filial:</label>
+    <select id="filialSelect" onchange="atualizarDestino()" style="font-size: 15px;">
+      <option value="">Selecione...</option>
+      <option value="1|PONTA NEGRA">1 | PONTA NEGRA</option>
+      <option value="2|ALECRIM">2 | ALECRIM</option>
+      <option value="7|SAC - CENTRO VI">7 | SAC - CENTRO VI</option>
+      <option value="100|LAGOA NOVA">100 | LAGOA NOVA</option>
+      <option value="121|NORTE SHOPPING">121 | NORTE SHOPPING</option>
+      <option value="122|PARNAMIRIM">122 | PARNAMIRIM</option>
+      <option value="131|ZN2">131 | ZN2</option>
+      <option value="137|MACAIBA">137 | MACAIBA</option>
+      <option value="140|MARIA LACERDA">140 | MARIA LACERDA</option>
+      <option value="141|IGAPO">141 | IGAPÓ</option>
+    </select>
+
+    !-- Campo oculto usado internamente --
+    <input type="hidden" id="destino" />
+
+    <button onclick="buscarPedidos()">Buscar</button>
+
+  !-- Tabela de Pedidos --
+    <table id="tabelaPedidos">
+      <thead>
+        <tr>
+          <th>Nº Pedido</th>
+          <th>Data</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  !-- Modal de Detalhes do Pedido --
+  <div id="modalDetalhes" class="modal">
+    <div class="modal-content">
+      <span class="fechar" onclick="fecharModal()">&times;</span>
+      <h2>Itens do Pedido</h2>
+      <table id="tabelaItens">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Descrição</th>
+            <th>Barras</th>
+            <th>Qtd</th>
+            
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function atualizarDestino() {
+      const select = document.getElementById("filialSelect");
+      const destinoInput = document.getElementById("destino");
+
+      const selected = select.value;
+      if (selected) {
+        const [codigo] = selected.split("|");
+        destinoInput.value = codigo.trim();
+      } else {
+        destinoInput.value = "";
+      }
+    }
+
+    function buscarPedidos() {
+      const destino = document.getElementById('destino').value;
+
+      if (!destino) {
+        alert("Por favor, selecione uma filial.");
+        return;
+      }
+
+      fetch('/filtrar-pedidos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ destino })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.erro) {
+          alert(data.erro);
+          return;
+        }
+        atualizarTabela(data.pedidos);
+      })
+      .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao carregar pedidos.');
+      });
+    }
+
+    function atualizarTabela(pedidos) {
+      const tbody = document.querySelector('#tabelaPedidos tbody');
+      tbody.innerHTML = '';
+
+      if (pedidos.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 3;
+        cell.textContent = 'Nenhum pedido encontrado.';
+        cell.style.textAlign = 'center';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+      }
+
+      pedidos.forEach(p => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${p.pedido}</td>
+          <td>${p.data}</td>
+          <td><button onclick='abrirDetalhes(${JSON.stringify(p)})' style="font-size:14px;">Ver Detalhes</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function abrirDetalhes(pedido) {
+      const tbody = document.querySelector('#tabelaItens tbody');
+      tbody.innerHTML = '';
+
+      (pedido.itens || []).forEach(item => {
+        const codigo = item.produto || 'Código não disponível';
+        const descricao = item.descricao || 'Descrição não disponível';
+        const barras = item.barras || 'Cód. barras não disponível';
+        const qtd = item.qtd || '0';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${codigo}</td>
+          <td>${descricao}</td>
+          <td>${barras}</td>
+          <td>${qtd}</td>
+          
+        `;
+        tbody.appendChild(row);
+      });
+
+      document.getElementById('modalDetalhes').style.display = 'block';
+    }
+
+    function fecharModal() {
+      document.getElementById('modalDetalhes').style.display = 'none';
+    }
+  </script>
+</body>
+</html> -->
+
+
+
+
+
+<!-- 
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>PDA - Conferência de Pedidos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 15px;
+      background-color: #f4f4f4;
+      font-size: 16px;
+    }
+
+    .container {
+      max-width: 100%;
+      margin: auto;
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 12px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.6);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 15% auto;
+      padding: 15px;
+      border: 1px solid #888;
+      max-width: 90%;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      overflow-y: auto;
+      max-height: 80vh;
+    }
+
+    .fechar {
+      float: right;
+      cursor: pointer;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .fechar:hover {
+      color: red;
+    }
+
+    /* Estilos específicos para colunas da tabela */
+    #tabelaPedidos thead th:nth-child(1) { width: 12%; }
+    #tabelaPedidos thead th:nth-child(2) { width: 14%; }
+    #tabelaPedidos thead th:nth-child(3) { width: 20%; }
+
+    #tabelaItens thead th:nth-child(1) { width: 5%; }
+    #tabelaItens thead th:nth-child(2) { width: 25%; }
+    #tabelaItens thead th:nth-child(3) { width: 6%; }
+    #tabelaItens thead th:nth-child(4) { width: 5%; }
+
+    /* Centraliza o botão "Ver Detalhes" verticalmente */
+    #tabelaPedidos tbody tr td:last-child {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+    }
+
+    #tabelaPedidos tbody tr td:last-child button {
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Conferência de Pedidos</h2>
+
+    !-- Filtro --
+    <label for="filialSelect">Selecione o Destino/Filial:</label>
+    <select id="filialSelect" onchange="atualizarDestino()" style="font-size: 15px;">
+      <option value="">Selecione...</option>
+      <option value="1|PONTA NEGRA">1 | PONTA NEGRA</option>
+      <option value="2|ALECRIM">2 | ALECRIM</option>
+      <option value="7|SAC - CENTRO VI">7 | SAC - CENTRO VI</option>
+      <option value="100|LAGOA NOVA">100 | LAGOA NOVA</option>
+      <option value="121|NORTE SHOPPING">121 | NORTE SHOPPING</option>
+      <option value="122|PARNAMIRIM">122 | PARNAMIRIM</option>
+      <option value="131|ZN2">131 | ZN2</option>
+      <option value="137|MACAIBA">137 | MACAIBA</option>
+      <option value="140|MARIA LACERDA">140 | MARIA LACERDA</option>
+      <option value="141|IGAPO">141 | IGAPÓ</option>
+    </select>
+
+    !-- Campo oculto usado internamente --
+    <input type="hidden" id="destino" />
+
+    <button onclick="buscarPedidos()">Buscar</button>
+
+    !-- Campo para bipar etiqueta --
+    <label for="codigoEtiqueta">Código da Etiqueta:</label>
+    <input type="text" id="codigoEtiqueta" placeholder="Escanear código de barras" onkeydown="if(event.key === 'Enter') verificarEtiqueta()"/>
+
+    <button onclick="verificarEtiqueta()">Buscar Etiqueta</button>
+    
+
+    !-- Tabela de Pedidos --
+    <table id="tabelaPedidos">
+      <thead>
+        <tr>
+          <th>Nº Pedido</th>
+          <th>Data</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  !-- Modal de Detalhes do Pedido --
+  <div id="modalDetalhes" class="modal">
+    <div class="modal-content">
+      <span class="fechar" onclick="fecharModal()">×</span>
+      !-- Dentro do modal --
+<button onclick="conferirPedido()">Conferir Pedido</button>
+      <h2>Itens do Pedido</h2>
+      <table id="tabelaItens">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Descrição</th>
+            <th>Barras</th>
+            <th>Qtd</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let todosPedidosCarregados = []; // Guarda os pedidos após buscar da API
+
+function atualizarDestino() {
+  const select = document.getElementById("filialSelect");
+  const destinoInput = document.getElementById("destino");
+
+  const selected = select.value;
+
+  if (selected) {
+    // Extrai apenas o número antes do "|"
+    const [codigo] = selected.split("|");
+    destinoInput.value = codigo.trim();
+
+    // Salva também o nome da filial para mostrar no modal
+    localStorage.setItem("nome_filial_selecionada", selected.split("|")[1]?.trim() || "Desconhecida");
+  } else {
+    destinoInput.value = "";
+    localStorage.removeItem("nome_filial_selecionada");
+  }
+}
+
+    function buscarPedidos() {
+      const destino = document.getElementById('destino').value;
+
+      if (!destino) {
+        alert("Por favor, selecione uma filial.");
+        return;
+      }
+
+      fetch('/filtrar-pedidos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ destino })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.erro) {
+          alert(data.erro);
+          return;
+        }
+
+        // Salva os pedidos em memória para uso futuro
+        todosPedidosCarregados = data.pedidos;
+
+        atualizarTabela(data.pedidos);
+      })
+      .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao carregar pedidos.');
+      });
+    }
+
+    function atualizarTabela(pedidos) {
+      const tbody = document.querySelector('#tabelaPedidos tbody');
+      tbody.innerHTML = '';
+
+      if (pedidos.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 3;
+        cell.textContent = 'Nenhum pedido encontrado.';
+        cell.style.textAlign = 'center';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+      }
+
+      pedidos.forEach(p => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${p.pedido}</td>
+          <td>${p.data}</td>
+          <td><button onclick='abrirDetalhes(${JSON.stringify(p)})' style="font-size:14px;">Ver Detalhes</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+   function verificarEtiqueta() {
+  const codigoEtiqueta = document.getElementById("codigoEtiqueta").value.trim();
+
+  if (!codigoEtiqueta) {
+    alert("Digite ou escaneie um código válido.");
+    return;
+  }
+
+  // Extrai apenas os números antes do hífen (número do pedido)
+  const numeroPedido = codigoEtiqueta.split('-')[0]; // Ex: "522995"
+
+  // Busca o pedido com base no número do pedido
+  const pedidoEncontrado = todosPedidosCarregados.find(pedido => 
+    pedido.pedido == numeroPedido
+  );
+
+  if (pedidoEncontrado) {
+    // Garante que ambos os tipos sejam strings para comparação
+    const destinoSelecionado = document.getElementById('destino').value.toString();
+    const destinoPedido = pedidoEncontrado.destino.toString();
+
+    // Verifica se o pedido pertence à filial selecionada
+    if (destinoSelecionado === destinoPedido) {
+      abrirDetalhes(pedidoEncontrado); // Abre os detalhes do pedido
+      alert("Pedido localizado com sucesso!");
+    } else {
+      alert("⚠️ Este pedido não pertence à filial selecionada.");
+      document.getElementById("codigoEtiqueta").value = ""; // Limpa o campo
+    }
+  } else {
+    alert("⚠️ Pedido não encontrado nessa filial.");
+    document.getElementById("codigoEtiqueta").value = ""; // Limpa o campo
+  }
+}
+
+
+function abrirDetalhes(pedido) {
+  const tbody = document.querySelector('#tabelaItens tbody');
+  tbody.innerHTML = '';
+
+  (pedido.itens || []).forEach(item => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${item.produto}</td>
+      <td>${item.descricao}</td>
+      <td>${item.barras}</td>
+      <td>${item.qtd}</td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  // Salva o pedido completo para usar depois
+  localStorage.setItem("pedidoConferencia", JSON.stringify(pedido));
+
+  document.getElementById('modalDetalhes').style.display = 'block';
+}
+let pedidoAtual = null; // Variável global para armazenar o pedido atual
+
+function conferirPedido() {
+  const destinoSelecionado = document.getElementById("destino").value;
+
+  if (!destinoSelecionado) {
+    alert("Por favor, selecione uma filial antes.");
+    return;
+  }
+
+  const pedidoAtual = JSON.parse(localStorage.getItem("pedidoConferencia"));
+
+  if (!pedidoAtual) {
+    alert("Nenhum pedido carregado.");
+    return;
+  }
+
+  // Garante que estamos comparando NÚMEROS
+  const destinoPedido = String(pedidoAtual.destino).trim();
+  const destinoSelecionadoNum = String(destinoSelecionado).trim();
+
+  console.log("Destino Selecionado:", destinoSelecionadoNum);
+  console.log("Destino do Pedido:", destinoPedido);
+
+  if (destinoSelecionadoNum !== destinoPedido) {
+    alert("⚠️ Este pedido não pertence à filial selecionada.");
+    return;
+  }
+
+  // Suponha que você tenha uma forma de obter a matrícula do usuário
+  const matricula = localStorage.getItem("matricula") || "MAT123"; // Substitua por valor real
+
+  const itensParaGravar = pedidoAtual.itens.map(item => ({
+    matricula,
+    numero_pedido: pedidoAtual.pedido,
+    codigo: item.produto,
+    descricao: item.descricao,
+    codigo_barras: item.barras,
+    unidade: item.und || "UN",
+    quantidade_pedida: item.qtd,
+    quantidade_conferida: 0,
+    divergencia: 0,
+    lojas_tag: localStorage.getItem("nome_filial_selecionada") || "Desconhecida"
+  }));
+
+  fetch('/salvar-conferencia', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ itens: itensParaGravar })
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log("Resposta do servidor:", data);
+    if (data.status === "ok") {
+      localStorage.setItem("pedidoConferencia", JSON.stringify(pedidoAtual));
+      window.location.href = "pda_conferencia_pedido.html";
+    } else {
+      alert("Erro ao salvar o pedido. Verifique o console.");
+    }
+  })
+  .catch(err => {
+    console.error("Erro ao salvar:", err);
+    alert("Erro ao iniciar a conferência.");
+  });
+}
+ function fecharModal() {
+      document.getElementById('modalDetalhes').style.display = 'none';
+    }
+  </script>
+</body>
+</html> -->
+
+
+
+
+
+<!-- 
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>PDA - Selecionar Pedido</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background-color: #f4f4f4; }
+        .container { max-width: 100%; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: bold; }
+        input, select, button { width: 100%; padding: 12px; font-size: 16px; border-radius: 6px; box-sizing: border-box; }
+        select, input { border: 1px solid #ccc; }
+        button { margin-top: 20px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background-color: #fff; padding: 20px; border-radius: 8px; max-width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
+        .fechar { position: absolute; top: 10px; right: 20px; font-size: 30px; font-weight: bold; cursor: pointer; }
+        #loader { text-align: center; padding: 20px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Conferência de Pedidos</h2>
+
+        <label for="filialSelect">Selecione o Destino:</label>
+        <select id="filialSelect" onchange="atualizarDestino()">
+            <option value="">Selecione...</option>
+            
+      <option value="1|PONTA NEGRA">1 | PONTA NEGRA</option>
+      <option value="2|ALECRIM">2 | ALECRIM</option>
+      <option value="7|SAC - CENTRO VI">7 | SAC - CENTRO VI</option>
+      <option value="100|LAGOA NOVA">100 | LAGOA NOVA</option>
+      <option value="121|NORTE SHOPPING">121 | NORTE SHOPPING</option>
+      <option value="122|PARNAMIRIM">122 | PARNAMIRIM</option>
+      <option value="131|ZN2">131 | ZN2</option>
+      <option value="137|MACAIBA">137 | MACAIBA</option>
+      <option value="140|MARIA LACERDA">140 | MARIA LACERDA</option>
+      <option value="141|IGAPO">141 | IGAPÓ</option>
+        
+            </select>
+        <input type="hidden" id="destino" />
+
+        <button onclick="buscarPedidos()">Buscar Pedidos</button>
+        <div id="loader">Carregando...</div>
+
+        <label for="codigoEtiqueta">Escanear Etiqueta:</label>
+        <input type="text" id="codigoEtiqueta" placeholder="Bipe o código de barras do pedido" onkeydown="if(event.key === 'Enter') verificarEtiqueta()">
+
+        <table id="tabelaPedidos">
+            <thead>
+                <tr>
+                    <th>Nº Pedido</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="modalDetalhes" class="modal" onclick="fecharModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="fechar" onclick="fecharModal()">&times;</span>
+            <h2>Itens do Pedido</h2>
+            <table id="tabelaItens">
+                <thead><tr><th>Cód.</th><th>Descrição</th><th>Qtd</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <button onclick="iniciarConferencia()">Iniciar Conferência</button>
+        </div>
+    </div>
+
+<script>
+    let todosPedidosCarregados = [];
+    let pedidoAtualParaConferencia = null;
+
+    function atualizarDestino() {
+        const select = document.getElementById("filialSelect");
+        const destinoInput = document.getElementById("destino");
+        const selected = select.value;
+        if (selected) {
+            const [codigo, nomeFilial] = selected.split("|");
+            destinoInput.value = codigo.trim();
+            localStorage.setItem("nome_filial_selecionada", nomeFilial.trim());
+        } else {
+            destinoInput.value = "";
+            localStorage.removeItem("nome_filial_selecionada");
+        }
+    }
+
+    function buscarPedidos() {
+        const destino = document.getElementById('destino').value;
+        if (!destino) {
+            alert("Por favor, selecione um destino.");
+            return;
+        }
+
+        document.getElementById('loader').style.display = 'block';
+        document.querySelector('#tabelaPedidos tbody').innerHTML = '';
+
+        fetch('/filtrar-pedidos', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ destino })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loader').style.display = 'none';
+            if (data.erro) {
+                alert(data.erro);
+                return;
+            }
+            todosPedidosCarregados = data.pedidos;
+            atualizarTabelaPedidos(data.pedidos);
+        })
+        .catch(error => {
+            document.getElementById('loader').style.display = 'none';
+            console.error('Erro:', error);
+            alert('Erro ao carregar pedidos.');
+        });
+    }
+
+    function atualizarTabelaPedidos(pedidos) {
+        const tbody = document.querySelector('#tabelaPedidos tbody');
+        tbody.innerHTML = '';
+        if (pedidos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum pedido encontrado.</td></tr>';
+            return;
+        }
+        pedidos.forEach(p => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${p.pedido}</td>
+                <td>${p.data}</td>
+                <td><button onclick="abrirDetalhes('${p.pedido}')" style="font-size:14px; padding: 8px 12px; margin:0;">Detalhes</button></td>`;
+        });
+    }
+
+    function verificarEtiqueta() {
+        const codigoEtiqueta = document.getElementById("codigoEtiqueta").value.trim();
+        if (!codigoEtiqueta) return;
+
+        if (todosPedidosCarregados.length === 0) {
+            alert("Clique em 'Buscar Pedidos' antes de escanear uma etiqueta.");
+            return;
+        }
+
+        const numeroPedido = codigoEtiqueta.split('-')[0];
+        const pedidoEncontrado = todosPedidosCarregados.find(p => p.pedido == numeroPedido);
+        
+        if (pedidoEncontrado) {
+            abrirDetalhes(pedidoEncontrado.pedido);
+        } else {
+            alert("Pedido não encontrado na lista carregada.");
+        }
+        document.getElementById("codigoEtiqueta").value = '';
+    }
+
+    function abrirDetalhes(numeroPedido) {
+        pedidoAtualParaConferencia = todosPedidosCarregados.find(p => p.pedido == numeroPedido);
+        if (!pedidoAtualParaConferencia) return;
+
+        const tbody = document.querySelector('#tabelaItens tbody');
+        tbody.innerHTML = '';
+        (pedidoAtualParaConferencia.itens || []).forEach(item => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${item.produto}</td>
+                <td>${item.descricao}</td>
+                <td>${item.qtd}</td>`;
+        });
+        document.getElementById('modalDetalhes').style.display = 'flex';
+    }
+
+    function fecharModal(event) {
+        // Se o clique for no fundo do modal (o próprio elemento modal), fecha.
+        if (!event || event.target.id === 'modalDetalhes') {
+            document.getElementById('modalDetalhes').style.display = 'none';
+        }
+    }
+
+    function iniciarConferencia() {
+        if (!pedidoAtualParaConferencia) {
+            alert("Erro: Nenhum pedido selecionado.");
+            return;
+        }
+        // Apenas salva no localStorage e redireciona. A próxima tela cuida do resto.
+        localStorage.setItem("pedidoConferencia", JSON.stringify(pedidoAtualParaConferencia));
+        window.location.href = "/pda_conferencia_pedido";
+    }
+</script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>PDA - Selecionar Pedido</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background-color: #f4f4f4; }
+        .container { max-width: 100%; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: bold; }
+        input, select, button { width: 100%; padding: 12px; font-size: 16px; border-radius: 6px; box-sizing: border-box; }
+        select, input { border: 1px solid #ccc; }
+        button { margin-top: 20px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #aaa; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background-color: #fff; padding: 20px; border-radius: 8px; max-width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
+        .fechar { position: absolute; top: 10px; right: 20px; font-size: 30px; font-weight: bold; cursor: pointer; }
+        #loader { text-align: center; padding: 20px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Conferência de Pedidos</h2>
+
+        <label for="filialSelect">Selecione o Destino:</label>
+        <select id="filialSelect" onchange="atualizarDestino()">
+            <option value="">Selecione...</option>
+            <option value="1|PONTA NEGRA">1 | PONTA NEGRA</option>
+            <option value="2|ALECRIM">2 | ALECRIM</option>
+            <option value="7|SAC - CENTRO VI">7 | SAC - CENTRO VI</option>
+            <option value="100|LAGOA NOVA">100 | LAGOA NOVA</option>
+            <option value="121|NORTE SHOPPING">121 | NORTE SHOPPING</option>
+            <option value="122|PARNAMIRIM">122 | PARNAMIRIM</option>
+            <option value="131|ZN2">131 | ZN2</option>
+            <option value="137|MACAIBA">137 | MACAIBA</option>
+            <option value="140|MARIA LACERDA">140 | MARIA LACERDA</option>
+            <option value="141|IGAPO">141 | IGAPÓ</option>
+        </select>
+        <input type="hidden" id="destino" />
+
+        <button onclick="buscarPedidos()">Buscar Pedidos</button>
+        <div id="loader">Carregando...</div>
+
+        <label for="codigoEtiqueta">Escanear Etiqueta:</label>
+        <input type="text" id="codigoEtiqueta" placeholder="Bipe o código de barras do pedido" onkeydown="if(event.key === 'Enter') verificarEtiqueta()">
+
+        <table id="tabelaPedidos">
+            <thead>
+                <tr>
+                    <th>Nº Pedido</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="modalDetalhes" class="modal" onclick="fecharModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="fechar" onclick="fecharModal()">&times;</span>
+            <h2>Itens do Pedido</h2>
+            <table id="tabelaItens">
+                <thead><tr><th>Cód.</th><th>Descrição</th><th>Qtd</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <button onclick="iniciarConferencia()">Iniciar Conferência</button>
+        </div>
+    </div>
+
+<script>
+    let todosPedidosCarregados = [];
+    let pedidoAtualParaConferencia = null;
+
+    function atualizarDestino() {
+        const select = document.getElementById("filialSelect");
+        const destinoInput = document.getElementById("destino");
+        const selected = select.value;
+        if (selected) {
+            const [codigo, nomeFilial] = selected.split("|");
+            destinoInput.value = codigo.trim();
+            localStorage.setItem("nome_filial_selecionada", nomeFilial.trim());
+        } else {
+            destinoInput.value = "";
+            localStorage.removeItem("nome_filial_selecionada");
+        }
+    }
+
+    // function buscarPedidos() {
+    //     const destino = document.getElementById('destino').value;
+    //     if (!destino) {
+    //         alert("Por favor, selecione um destino.");
+    //         return;
+    //     }
+
+    //     document.getElementById('loader').style.display = 'block';
+    //     document.querySelector('#tabelaPedidos tbody').innerHTML = '';
+
+    //     fetch('/filtrar-pedidos', {
+    //         method: 'POST',
+    //         headers: {'Content-Type': 'application/json'},
+    //         body: JSON.stringify({ destino })
+    //     })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         document.getElementById('loader').style.display = 'none';
+    //         if (data.erro) {
+    //             alert(data.erro);
+    //             return;
+    //         }
+    //         todosPedidosCarregados = data.pedidos;
+    //         atualizarTabelaPedidos(data.pedidos);
+    //     })
+    //     .catch(error => {
+    //         document.getElementById('loader').style.display = 'none';
+    //         console.error('Erro:', error);
+    //         alert('Erro ao carregar pedidos.');
+    //     });
+    // }
+
+    // Esta é a função de busca do seu frontend
+function buscarPedidos() {
+    const destino = document.getElementById('destino').value;
+    if (!destino) {
+        alert("Por favor, selecione um destino.");
+        return;
+    }
+
+    document.getElementById('loader').style.display = 'block';
+    
+    // ATENÇÃO: O corpo (body) precisa ser enviado como no seu backend
+    const corpoRequisicao = {
+        destino: destino
+        // Se precisar enviar datas, adicione aqui
+    };
+
+    fetch('/filtrar-pedidos', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(corpoRequisicao)
+    })
+    .then(async response => {
+        // Pega a resposta JSON independentemente do status
+        const data = await response.json();
+
+        // Se a resposta não for OK (ex: status 400, 500), usa o erro do JSON
+        if (!response.ok) {
+            // "data.erro" conterá a mensagem que enviamos do Flask
+            // ex: "API Externa: Periodo excede 10 dias."
+            throw new Error(data.erro || 'Ocorreu um erro desconhecido.');
+        }
+        return data; // Se deu tudo certo, retorna os dados
+    })
+    .then(data => {
+        document.getElementById('loader').style.display = 'none';
+        
+        // Se o backend enviar um erro mesmo com status 200 (não deveria, mas é bom previnir)
+        if (data.erro) {
+            alert(data.erro);
+            return;
+        }
+
+        todosPedidosCarregados = data.pedidos;
+        atualizarTabelaPedidos(data.pedidos);
+    })
+    .catch(error => {
+        // --- PONTO CHAVE: EXIBIR O ERRO NA TELA ---
+        document.getElementById('loader').style.display = 'none';
+        console.error('Erro:', error);
+        // "error.message" agora terá a mensagem exata!
+        alert('Erro ao carregar pedidos: ' + error.message);
+    });
+}
+
+    function atualizarTabelaPedidos(pedidos) {
+        const tbody = document.querySelector('#tabelaPedidos tbody');
+        tbody.innerHTML = '';
+        if (pedidos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum pedido encontrado.</td></tr>';
+            return;
+        }
+        pedidos.forEach(p => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${p.pedido}</td>
+                <td>${p.data}</td>
+                <td><button onclick="abrirDetalhes('${p.pedido}')" style="font-size:14px; padding: 8px 12px; margin:0;">Detalhes</button></td>`;
+        });
+    }
+
+    function verificarEtiqueta() {
+        const codigoEtiqueta = document.getElementById("codigoEtiqueta").value.trim();
+        if (!codigoEtiqueta) return;
+
+        if (todosPedidosCarregados.length === 0) {
+            alert("Clique em 'Buscar Pedidos' antes de escanear uma etiqueta.");
+            return;
+        }
+
+        const numeroPedido = codigoEtiqueta.split('-')[0];
+        const pedidoEncontrado = todosPedidosCarregados.find(p => p.pedido == numeroPedido);
+        
+        if (pedidoEncontrado) {
+            abrirDetalhes(pedidoEncontrado.pedido);
+        } else {
+            alert("Pedido não encontrado na lista carregada.");
+        }
+        document.getElementById("codigoEtiqueta").value = '';
+    }
+
+    function abrirDetalhes(numeroPedido) {
+        pedidoAtualParaConferencia = todosPedidosCarregados.find(p => p.pedido == numeroPedido);
+        if (!pedidoAtualParaConferencia) return;
+
+        const tbody = document.querySelector('#tabelaItens tbody');
+        tbody.innerHTML = '';
+        (pedidoAtualParaConferencia.itens || []).forEach(item => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${item.produto}</td>
+                <td>${item.descricao}</td>
+                <td>${item.qtd}</td>`;
+        });
+        document.getElementById('modalDetalhes').style.display = 'flex';
+    }
+
+    function fecharModal(event) {
+        if (!event || event.target.id === 'modalDetalhes') {
+            const modalButton = document.querySelector('.modal-content button');
+            modalButton.textContent = 'Iniciar Conferência';
+            modalButton.disabled = false;
+            document.getElementById('modalDetalhes').style.display = 'none';
+        }
+    }
+
+    function iniciarConferencia() {
+        if (!pedidoAtualParaConferencia) {
+            alert("Erro: Nenhum pedido selecionado.");
+            return;
+        }
+
+        // const itensParaSalvar = pedidoAtualParaConferencia.itens.map(item => ({
+        //     numero_pedido: pedidoAtualParaConferencia.pedido,
+        //     codigo: item.produto,
+        //     codigo_barras: item.barras || '',
+        //     descricao: item.descricao || 'Sem descrição',
+        //     unidade: item.unidade || "UN",
+        //     quantidade_pedida: item.qtd,
+        //     quantidade_conferida: 0,
+        //     divergencia: -item.qtd,
+        //     lojas_tag: localStorage.getItem("nome_filial_selecionada") || "Desconhecida"
+        // }));
+
+        const itensParaSalvar = pedidoAtualParaConferencia.itens.map(item => ({
+    numero_pedido: pedidoAtualParaConferencia.pedido,
+    codigo: item.produto,
+    codigo_barras: item.barras || '',
+    // <<< ADICIONE A LINHA ABAIXO >>>
+    multi_barras: item.multi_barras || '', // Garante que o campo seja enviado
+    descricao: item.descricao || 'Sem descrição',
+    unidade: item.unidade || "UN",
+    quantidade_pedida: item.qtd,
+    quantidade_conferida: 0,
+    divergencia: -item.qtd,
+    lojas_tag: localStorage.getItem("nome_filial_selecionada") || "Desconhecida"
+    }));
+
+        const botao = document.querySelector('.modal-content button');
+        botao.textContent = 'Gravando...';
+        botao.disabled = true;
+
+        fetch('/salvar-conferencia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ itens: itensParaSalvar })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errData => {
+                    throw new Error(errData.erro || 'Não foi possível conectar ao servidor.');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'ok') {
+                localStorage.setItem("pedidoConferencia", JSON.stringify(pedidoAtualParaConferencia));
+                window.location.href = "/pda_conferencia_pedido";
+            } else {
+                throw new Error(data.mensagem || "Ocorreu um erro ao gravar o pedido.");
+            }
+        })
+        .catch(err => {
+            console.error("Erro ao tentar iniciar conferência:", err);
+            alert(`Não foi possível iniciar a conferência: ${err.message}`);
+            botao.textContent = 'Iniciar Conferência';
+            botao.disabled = false;
+        });
+    }
+</script>
+</body>
+</html> 
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>PDA - Selecionar Pedido</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background-color: #f4f4f4; }
+        .container { max-width: 100%; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: bold; }
+        input, select, button { width: 100%; padding: 12px; font-size: 16px; border-radius: 6px; box-sizing: border-box; }
+        select, input { border: 1px solid #ccc; }
+        button { margin-top: 20px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #aaa; cursor: not-allowed; }
+        .button-group { display: flex; gap: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background-color: #fff; padding: 20px; border-radius: 8px; max-width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
+        .fechar { position: absolute; top: 10px; right: 20px; font-size: 30px; font-weight: bold; cursor: pointer; }
+        #loader { text-align: center; padding: 20px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Conferência de Pedidos</h2>
+
+        <label for="filialSelect">Selecione o Destino:</label>
+        <select id="filialSelect" onchange="atualizarDestino()">
+            <option value="">Selecione...</option>
+            <option value="1|PONTA NEGRA">1 | PONTA NEGRA</option>
+            <option value="2|ALECRIM">2 | ALECRIM</option>
+            <option value="7|SAC - CENTRO VI">7 | SAC - CENTRO VI</option>
+            <option value="100|LAGOA NOVA">100 | LAGOA NOVA</option>
+            <option value="121|NORTE SHOPPING">121 | NORTE SHOPPING</option>
+            <option value="122|PARNAMIRIM">122 | PARNAMIRIM</option>
+            <option value="131|ZN2">131 | ZN2</option>
+            <option value="137|MACAIBA">137 | MACAIBA</option>
+            <option value="140|MARIA LACERDA">140 | MARIA LACERDA</option>
+            <option value="141|IGAPO">141 | IGAPÓ</option>
+        </select>
+        <input type="hidden" id="destino" />
+
+        <label for="dataInicial">Data Inicial:</label>
+        <input type="date" id="dataInicial">
+
+        <label for="dataFinal">Data Final:</label>
+        <input type="date" id="dataFinal">
+        
+        <div class="button-group">
+            <button onclick="buscarPedidosPorPeriodo()">Buscar Pedidos</button>
+            <button onclick="limparBusca()" style="background-color: #6c757d;">Limpar</button>
+        </div>
+        <div id="loader">Carregando...</div>
+
+        <label for="codigoEtiqueta">Escanear Etiqueta:</label>
+        <input type="text" id="codigoEtiqueta" placeholder="Bipe o código de barras do pedido" onkeydown="if(event.key === 'Enter') verificarEtiqueta()">
+
+        <table id="tabelaPedidos">
+            <thead>
+                <tr>
+                    <th>Nº Pedido</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="modalDetalhes" class="modal" onclick="fecharModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="fechar" onclick="fecharModal()">&times;</span>
+            <h2>Itens do Pedido</h2>
+            <table id="tabelaItens">
+                <thead><tr><th>Cód.</th><th>Descrição</th><th>Qtd</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <button onclick="iniciarConferencia()">Iniciar Conferência</button>
+        </div>
+    </div>
+
+<script>
+    let todosPedidosCarregados = [];
+    let pedidoAtualParaConferencia = null;
+
+    // --- NOVA FUNÇÃO: INICIALIZA OS CAMPOS DE DATA ---
+    window.onload = function() {
+        const hoje = new Date();
+        const dezDiasAtras = new Date();
+        dezDiasAtras.setDate(hoje.getDate() - 9); // Período padrão de 10 dias
+
+        // Formata as datas para YYYY-MM-DD para os inputs
+        document.getElementById('dataFinal').value = hoje.toISOString().split('T')[0];
+        document.getElementById('dataInicial').value = dezDiasAtras.toISOString().split('T')[0];
+    };
+
+    function atualizarDestino() {
+        const select = document.getElementById("filialSelect");
+        const destinoInput = document.getElementById("destino");
+        const selected = select.value;
+        if (selected) {
+            const [codigo, nomeFilial] = selected.split("|");
+            destinoInput.value = codigo.trim();
+            localStorage.setItem("nome_filial_selecionada", nomeFilial.trim());
+        } else {
+            destinoInput.value = "";
+            localStorage.removeItem("nome_filial_selecionada");
+        }
+    }
+
+    // --- NOVA FUNÇÃO: BUSCA PEDIDOS POR PERÍODO ---
+    async function buscarPedidosPorPeriodo() {
+        const destino = document.getElementById('destino').value;
+        if (!destino) {
+            alert("Por favor, selecione um destino.");
+            return;
+        }
+
+        const dataInicialStr = document.getElementById('dataInicial').value;
+        const dataFinalStr = document.getElementById('dataFinal').value;
+
+        if (!dataInicialStr || !dataFinalStr) {
+            alert("Por favor, selecione a data inicial e final.");
+            return;
+        }
+
+        const dataInicial = new Date(dataInicialStr + "T00:00:00");
+        const dataFinal = new Date(dataFinalStr + "T23:59:59");
+        
+        if (dataInicial > dataFinal) {
+            alert("A data inicial não pode ser maior que a data final.");
+            return;
+        }
+
+        limparTabela();
+        document.getElementById('loader').style.display = 'block';
+        document.querySelector('button').disabled = true;
+
+        let dataInicioIntervalo = new Date(dataInicial);
+
+        try {
+            while (dataInicioIntervalo <= dataFinal) {
+                let dataFimIntervalo = new Date(dataInicioIntervalo);
+                dataFimIntervalo.setDate(dataInicioIntervalo.getDate() + 9); // Intervalo de 10 dias
+
+                // Garante que o fim do intervalo não ultrapasse a data final selecionada
+                if (dataFimIntervalo > dataFinal) {
+                    dataFimIntervalo = dataFinal;
+                }
+
+                const body = {
+                    destino: destino,
+                    data_inicial: dataInicioIntervalo.toISOString().split('T')[0],
+                    data_final: dataFimIntervalo.toISOString().split('T')[0]
+                };
+
+                // Mostra no console o período que está sendo buscado
+                console.log("Buscando período:", body.data_inicial, "a", body.data_final);
+
+                const response = await fetch('/filtrar-pedidos', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(body)
+                });
+
+                const data = await response.json();
+
+                if (data.erro) {
+                    throw new Error(data.erro);
+                }
+
+                // Adiciona os pedidos encontrados ao array principal
+                if (data.pedidos && data.pedidos.length > 0) {
+                   const novosPedidos = data.pedidos.filter(p => !todosPedidosCarregados.some(pc => pc.pedido === p.pedido));
+                   todosPedidosCarregados.push(...novosPedidos);
+                }
+                
+                // Avança para o próximo intervalo de 10 dias
+                dataInicioIntervalo.setDate(dataInicioIntervalo.getDate() + 10);
+            }
+            
+            // Ordena os pedidos por data após todas as buscas
+            todosPedidosCarregados.sort((a, b) => new Date(b.data) - new Date(a.data));
+            atualizarTabelaPedidos(todosPedidosCarregados);
+
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao carregar pedidos: ' + error.message);
+        } finally {
+            document.getElementById('loader').style.display = 'none';
+            document.querySelector('button').disabled = false;
+        }
+    }
+    
+    // --- NOVA FUNÇÃO: LIMPAR BUSCA ---
+    function limparBusca() {
+        limparTabela();
+        document.getElementById('filialSelect').value = '';
+        document.getElementById('destino').value = '';
+        window.onload(); // Reseta as datas para o padrão
+    }
+
+    function limparTabela() {
+        todosPedidosCarregados = [];
+        const tbody = document.querySelector('#tabelaPedidos tbody');
+        tbody.innerHTML = '';
+        document.getElementById("codigoEtiqueta").value = '';
+    }
+
+    function atualizarTabelaPedidos(pedidos) {
+        const tbody = document.querySelector('#tabelaPedidos tbody');
+        tbody.innerHTML = '';
+        if (pedidos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nenhum pedido encontrado para o período e destino selecionados.</td></tr>';
+            return;
+        }
+        pedidos.forEach(p => {
+            const row = tbody.insertRow();
+            // Formata a data para dd/mm/yyyy se necessário
+            const dataFormatada = new Date(p.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'});
+            row.innerHTML = `
+                <td>${p.pedido}</td>
+                <td>${dataFormatada}</td>
+                <td><button onclick="abrirDetalhes('${p.pedido}')" style="font-size:14px; padding: 8px 12px; margin:0;">Detalhes</button></td>`;
+        });
+    }
+
+    function verificarEtiqueta() {
+        const codigoEtiqueta = document.getElementById("codigoEtiqueta").value.trim();
+        if (!codigoEtiqueta) return;
+
+        if (todosPedidosCarregados.length === 0) {
+            alert("Clique em 'Buscar Pedidos' antes de escanear uma etiqueta.");
+            return;
+        }
+
+        const numeroPedido = codigoEtiqueta.split('-')[0];
+        const pedidoEncontrado = todosPedidosCarregados.find(p => p.pedido == numeroPedido);
+        
+        if (pedidoEncontrado) {
+            abrirDetalhes(pedidoEncontrado.pedido);
+        } else {
+            alert("Pedido não encontrado na lista carregada. Verifique o período da busca.");
+        }
+        document.getElementById("codigoEtiqueta").value = '';
+    }
+
+    function abrirDetalhes(numeroPedido) {
+        pedidoAtualParaConferencia = todosPedidosCarregados.find(p => p.pedido == numeroPedido);
+        if (!pedidoAtualParaConferencia) return;
+
+        const tbody = document.querySelector('#tabelaItens tbody');
+        tbody.innerHTML = '';
+        (pedidoAtualParaConferencia.itens || []).forEach(item => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${item.produto}</td>
+                <td>${item.descricao}</td>
+                <td>${item.qtd}</td>`;
+        });
+        document.getElementById('modalDetalhes').style.display = 'flex';
+    }
+
+    function fecharModal(event) {
+        if (!event || event.target.id === 'modalDetalhes') {
+            const modalButton = document.querySelector('.modal-content button');
+            modalButton.textContent = 'Iniciar Conferência';
+            modalButton.disabled = false;
+            document.getElementById('modalDetalhes').style.display = 'none';
+        }
+    }
+
+    function iniciarConferencia() {
+        if (!pedidoAtualParaConferencia) {
+            alert("Erro: Nenhum pedido selecionado.");
+            return;
+        }
+
+        const itensParaSalvar = pedidoAtualParaConferencia.itens.map(item => ({
+            numero_pedido: pedidoAtualParaConferencia.pedido,
+            codigo: item.produto,
+            codigo_barras: item.barras || '',
+            descricao: item.descricao || 'Sem descrição',
+            unidade: item.unidade || "UN",
+            quantidade_pedida: item.qtd,
+            quantidade_conferida: 0,
+            divergencia: -item.qtd,
+            lojas_tag: localStorage.getItem("nome_filial_selecionada") || "Desconhecida"
+        }));
+
+        const botao = document.querySelector('.modal-content button');
+        botao.textContent = 'Gravando...';
+        botao.disabled = true;
+
+        fetch('/salvar-conferencia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ itens: itensParaSalvar })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errData => {
+                    throw new Error(errData.erro || 'Não foi possível conectar ao servidor.');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'ok') {
+                localStorage.setItem("pedidoConferencia", JSON.stringify(pedidoAtualParaConferencia));
+                window.location.href = "/pda_conferencia_pedido";
+            } else {
+                throw new Error(data.mensagem || "Ocorreu um erro ao gravar o pedido.");
+            }
+        })
+        .catch(err => {
+            console.error("Erro ao tentar iniciar conferência:", err);
+            alert(`Não foi possível iniciar a conferência: ${err.message}`);
+            botao.textContent = 'Iniciar Conferência';
+            botao.disabled = false;
+        });
+    }
+</script>
+</body>
+</html> -->

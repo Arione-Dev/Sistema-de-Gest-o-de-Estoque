@@ -1,0 +1,306 @@
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Nova Campanha</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f8fafc;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #0f172a;
+            --cor-texto-secundario: #64748b;
+            --cor-borda: #e2e8f0;
+            --cor-perigo: #ef4444;
+            --cor-sucesso: #22c55e;
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            padding: 25px;
+        }
+        .container { max-width: 800px; margin: auto; }
+        .form-container {
+            background-color: var(--cor-card);
+            border: 1px solid var(--cor-borda);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative; /* Para a notificação */
+        }
+        /* --- ESTILOS DA NOTIFICAÇÃO --- */
+        .notification {
+            width: calc(100% - 4rem);
+            padding: 1rem;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            position: absolute;
+            top: 1rem;
+            left: 2rem;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+        .notification.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+        .notification.is-danger { background-color: var(--cor-perigo); }
+        .notification.is-success { background-color: var(--cor-sucesso); }
+        /* --- FIM DOS ESTILOS --- */
+
+        .header { text-align: center; margin-bottom: 2rem; margin-top: 3rem; /* Espaço para a notificação */ }
+        .header h1 { font-size: 2.2em; font-weight: 800; color: var(--cor-texto-principal); margin: 0; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--cor-borda);
+            border-radius: 8px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        .form-group input.is-invalid, .form-group select.is-invalid {
+            border-color: var(--cor-perigo);
+        }
+        .date-group { display: flex; gap: 1rem; }
+        .store-goals-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .store-goals-header h2 { font-size: 1.5em; margin: 0; }
+        .btn-add-store {
+            background-color: #f1f5f9;
+            color: var(--cor-texto-principal);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid var(--cor-borda);
+        }
+        .store-goal-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 50px;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .btn-remove {
+            background: none;
+            border: none;
+            color: var(--cor-perigo);
+            font-size: 1.5em;
+            cursor: pointer;
+            text-align: center;
+        }
+        .form-actions {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary { background-color: var(--cor-primaria); color: #fff; }
+        .btn-secondary { background-color: #e2e8f0; color: var(--cor-texto-secundario); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="form-container">
+        <div id="notification-area" class="notification"></div>
+        <div class="header">
+            <h1>Criar Nova Campanha</h1>
+        </div>
+        <form id="campaign-form">
+            <div class="form-group">
+                <label for="campaign-name">Nome da Campanha</label>
+                <input type="text" id="campaign-name" placeholder="Ex: Campanha de Dia das Mães" required>
+            </div>
+            <div class="date-group">
+                <div class="form-group" style="width: 100%;">
+                    <label for="start-date">Data de Início</label>
+                    <input type="date" id="start-date" required>
+                </div>
+                <div class="form-group" style="width: 100%;">
+                    <label for="end-date">Data de Fim</label>
+                    <input type="date" id="end-date" required>
+                </div>
+            </div>
+            <div class="store-goals-header">
+                <h2>Metas por Loja</h2>
+                <button type="button" class="btn-add-store" id="add-store-btn">+ Adicionar Loja</button>
+            </div>
+            <div id="store-goals-container">
+                <!-- Linhas de loja serão adicionadas aqui pelo JavaScript -->
+            </div>
+            <div class="form-actions">
+                <a href="/" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Salvar Campanha</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('store-goals-container');
+    const addBtn = document.getElementById('add-store-btn');
+    const form = document.getElementById('campaign-form');
+    const notificationArea = document.getElementById('notification-area');
+    
+    const availableStores = [
+        { id: 121, name: 'SAC NORTE SHOPPING' },
+        { id: 140, name: 'SAC MARIA LACERDA' },
+        { id: 100, name: 'SAC LAGOA NOVA' },
+        { id: 1,   name: 'SAC PONTA NEGRA' },
+        { id: 131, name: 'SAC ZN 2' },
+        { id: 122, name: 'SAC PARNAMIRIM' },
+        { id: 141, name: 'SAC IGAPO' },
+        { id: 2,   name: 'SAC ALECRIM' },
+        { id: 7,   name: 'SAC CENTRO VI' },
+        { id: 137, name: 'SAC MACAIBA' }
+    ];
+
+    const formatCurrency = (inputElement) => {
+        let value = inputElement.value.replace(/\D/g, '');
+        if (value === '') { inputElement.value = ''; return; }
+        const numberValue = parseInt(value, 10) / 100;
+        inputElement.value = numberValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    };
+
+    const createStoreRow = () => {
+        const row = document.createElement('div');
+        row.className = 'store-goal-row';
+        
+        const select = document.createElement('select');
+        select.required = true;
+        // Adiciona a opção placeholder
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = "";
+        placeholderOption.textContent = "Selecione uma Loja";
+        placeholderOption.disabled = true;
+        placeholderOption.selected = true;
+        select.appendChild(placeholderOption);
+
+        availableStores.forEach(store => {
+            const option = document.createElement('option');
+            option.value = store.id;
+            option.textContent = store.name;
+            select.appendChild(option);
+        });
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Meta (R$)';
+        input.setAttribute('inputmode', 'numeric');
+        input.required = true;
+        input.addEventListener('input', () => formatCurrency(input));
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn-remove';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.onclick = () => row.remove();
+
+        row.appendChild(select);
+        row.appendChild(input);
+        row.appendChild(removeBtn);
+        container.appendChild(row);
+    };
+
+    addBtn.addEventListener('click', createStoreRow);
+    createStoreRow(); // Adiciona a primeira linha
+
+    // --- LÓGICA DE VALIDAÇÃO E NOTIFICAÇÃO ---
+    const showNotification = (message, type) => {
+        notificationArea.textContent = message;
+        notificationArea.className = `notification is-${type} is-visible`;
+        setTimeout(() => {
+            notificationArea.classList.remove('is-visible');
+        }, 4000); // A notificação some após 4 segundos
+    };
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault(); // Impede o envio real do formulário
+        
+        // Limpa erros anteriores
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
+        // Validação dos campos principais
+        const campaignName = document.getElementById('campaign-name');
+        const startDate = document.getElementById('start-date');
+        const endDate = document.getElementById('end-date');
+        let isValid = true;
+
+        if (!campaignName.value.trim()) {
+            campaignName.classList.add('is-invalid');
+            isValid = false;
+        }
+        if (!startDate.value) {
+            startDate.classList.add('is-invalid');
+            isValid = false;
+        }
+        if (!endDate.value) {
+            endDate.classList.add('is-invalid');
+            isValid = false;
+        }
+
+        // Validação das linhas de loja
+        const storeRows = container.querySelectorAll('.store-goal-row');
+        if (storeRows.length === 0) {
+            isValid = false;
+            showNotification('Você precisa adicionar pelo menos uma loja.', 'danger');
+            return;
+        }
+
+        storeRows.forEach(row => {
+            const select = row.querySelector('select');
+            const input = row.querySelector('input');
+            if (!select.value) {
+                select.classList.add('is-invalid');
+                isValid = false;
+            }
+            if (!input.value.trim()) {
+                input.classList.add('is-invalid');
+                isValid = false;
+            }
+        });
+
+        if (isValid) {
+            showNotification('Campanha salva com sucesso! Redirecionando...', 'success');
+            // Simula o salvamento e redireciona para a página principal
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+        } else {
+            showNotification('Por favor, preencha todos os campos obrigatórios.', 'danger');
+        }
+    });
+});
+</script>
+</body>
+</html>

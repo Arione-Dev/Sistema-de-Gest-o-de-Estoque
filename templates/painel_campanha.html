@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Campanhas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f8fafc;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #0f172a;
+            --cor-texto-secundario: #64748b;
+            --cor-sucesso: #22c55e;
+            --cor-alerta: #f59e0b;
+            --cor-perigo: #ef4444;
+            --cor-borda: #e2e8f0;
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            margin: 0;
+            padding: 25px;
+        }
+        .container { max-width: 900px; margin: auto; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            border-bottom: 1px solid var(--cor-borda);
+            padding-bottom: 1.5rem;
+        }
+        .header h1 { font-size: 2.2em; font-weight: 800; color: var(--cor-texto-principal); margin: 0; }
+        .btn-nova-campanha {
+            background-color: var(--cor-primaria);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        .btn-nova-campanha:hover { background-color: #c4006b; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transform: translateY(-2px); }
+        .campaign-list { list-style: none; padding: 0; }
+        .campaign-card {
+            background-color: var(--cor-card);
+            border: 1px solid var(--cor-borda);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        .campaign-card:hover { border-color: var(--cor-primaria); box-shadow: 0 4px 15px rgba(0,0,0,0.07); }
+        .campaign-info h2 { margin: 0 0 0.5rem 0; font-size: 1.4em; }
+        .campaign-info p { margin: 0; color: var(--cor-texto-secundario); }
+        .status-badge {
+            font-weight: 700;
+            padding: 0.3rem 0.8rem;
+            border-radius: 99px;
+            font-size: 0.8em;
+            color: #fff;
+        }
+        .status-Ativa { background-color: var(--cor-sucesso); }
+        .status-Futura { background-color: var(--cor-alerta); }
+        .status-Encerrada { background-color: var(--cor-texto-secundario); }
+        .btn-ver-painel {
+            background-color: #f1f5f9;
+            color: var(--cor-texto-principal);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+        .btn-ver-painel:hover { background-color: #e2e8f0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Painel de Campanhas</h1>
+        <a href="/nova-campanha" class="btn-nova-campanha">+ Criar Nova Campanha</a>
+    </div>
+    <ul class="campaign-list">
+        {% for campanha in campanhas %}
+        <li class="campaign-card">
+            <div class="campaign-info">
+                <h2>{{ campanha.nome }}</h2>
+                <p>
+                    <span class="status-badge status-{{ campanha.status }}">{{ campanha.status }}</span>
+                    &nbsp;&nbsp;•&nbsp;&nbsp;
+                    Período: {{ campanha.data_inicio }} a {{ campanha.data_fim }}
+                </p>
+            </div>
+            <a href="/painel-performance?id={{ campanha.id }}" class="btn-ver-painel">Ver Painel ➔</a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+</body>
+</html>

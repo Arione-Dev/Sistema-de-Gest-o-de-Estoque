@@ -1,0 +1,1856 @@
+<!-- <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Analítico - Campanha Vizzela</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f4f6f9;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #1f2937;
+            --cor-texto-secundario: #6b7280;
+            --cor-sucesso: #10b981;
+            --cor-alerta: #f59e0b;
+            --cor-perigo: #ef4444;
+            --cor-borda: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            padding: 25px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: auto;
+        }
+        
+        .header { text-align: center; margin-bottom: 2.5rem; }
+        .header h1 {
+            font-family: 'Teko', sans-serif;
+            font-size: 3.5em;
+            letter-spacing: 1px;
+            color: var(--cor-primaria);
+            margin: 0;
+        }
+        
+        .store-analysis-row {
+            margin-bottom: 2.5rem;
+        }
+        
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--cor-borda);
+            padding-bottom: 0.5rem;
+        }
+
+        .store-header h2 {
+            font-family: 'Teko', sans-serif;
+            font-size: 2.5em;
+            margin: 0;
+        }
+        
+        /* ESTILO DO BOTÃO DE NAVEGAÇÃO */
+        .btn-diagnostico {
+            display: inline-block;
+            background-color: var(--cor-primaria);
+            color: #fff !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-size: 0.9em;
+        }
+        .btn-diagnostico:hover {
+            background-color: #c4006b;
+            transform: translateY(-2px);
+            color: #fff;
+        }
+
+        .modules-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .module-card {
+            background-color: var(--cor-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+            border: 1px solid var(--cor-borda);
+        }
+        
+        .module-title {
+            font-family: 'Teko', sans-serif;
+            font-size: 1.8em;
+            margin: 0 0 1rem 0;
+            color: var(--cor-texto-principal);
+        }
+
+        .kpi-main-status {
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.2em;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+        .status-behind { background-color: var(--cor-perigo); }
+        .status-on-track { background-color: var(--cor-sucesso); }
+        .status-exceeded { background-color: #8b5cf6; }
+
+        .kpi-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1em;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--cor-borda);
+        }
+        .kpi-metric:last-child { border-bottom: none; }
+        .kpi-metric .label { font-weight: 400; color: var(--cor-texto-secundario); }
+        .kpi-metric .value { font-weight: 700; font-size: 1.2em; }
+        
+        .pace-comparison {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        .pace-metric .value {
+            font-family: 'Teko', sans-serif;
+            font-size: 3em;
+            line-height: 1;
+        }
+        .pace-metric .label { font-size: 0.9em; color: var(--cor-texto-secundario); }
+        .pace-metric .value.positive { color: var(--cor-sucesso); }
+        .pace-metric .value.negative { color: var(--cor-perigo); }
+        .pace-summary {
+            background-color: #f9fafb;
+            border: 1px solid var(--cor-borda);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.95em;
+            text-align: center;
+        }
+
+        .projection-display {
+            text-align: center;
+        }
+        .projection-display .percentage {
+            font-family: 'Teko', sans-serif;
+            font-size: 5em;
+            line-height: 1;
+            margin: 1rem 0 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Análise de Performance - Campanha Vizzela</h1>
+    </div>
+
+    <div id="dashboard-container">
+        !-- Conteúdo Gerado pelo JavaScript --
+    </div>
+
+</div>
+
+<script>
+// --- CONFIGURAÇÃO DA CAMPANHA ---
+const inicioCampanha = new Date('2025-07-11T00:00:00');
+const fimCampanha = new Date('2025-09-11T23:59:59');
+const hoje = new Date();
+
+// --- DADOS DAS LOJAS ---
+const storesData = [
+    { id: 121, name: 'SAC NORTE SHOPPING', meta: 10000.00, vendido: 1620.83, projecao: 61.09 },
+    { id: 140, name: 'SACOLAO MARIA LACERDA', meta: 18000.00, vendido: 2803.09, projecao: 58.70 },
+    { id: 1,   name: 'SACOLAO PONTA NEGRA', meta: 35000.00, vendido: 10500, projecao: 112.5 },
+    { id: 100, name: 'SACOLAO LAGOA NOVA', meta: 25000.00, vendido: 3695.63, projecao: 55.72 },
+];
+
+function formatCurrency(value) {
+    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+// --- LÓGICA DE CÁLCULO DINÂMICO ---
+const totalDiasCampanha = Math.ceil((fimCampanha - inicioCampanha) / (1000 * 60 * 60 * 24));
+const diasCorridos = Math.max(1, Math.ceil((hoje - inicioCampanha) / (1000 * 60 * 60 * 24)));
+const diasRestantes = Math.max(0, totalDiasCampanha - diasCorridos);
+
+const dashboardContainer = document.getElementById('dashboard-container');
+
+storesData.forEach(store => {
+    const saldoAVender = store.meta - store.vendido;
+    const mediaDiariaAtual = store.vendido / diasCorridos;
+    const mediaDiariaNecessaria = diasRestantes > 0 ? saldoAVender / diasRestantes : 0;
+    
+    let statusClass = '';
+    let statusText = '';
+    let paceClass = 'negative';
+    let paceSummary = `Precisa aumentar o ritmo em <strong>${formatCurrency(mediaDiariaNecessaria - mediaDiariaAtual)}/dia</strong> para atingir a meta.`;
+
+    if (mediaDiariaAtual >= mediaDiariaNecessaria) {
+        statusClass = store.vendido >= store.meta ? 'status-exceeded' : 'status-on-track';
+        statusText = store.vendido >= store.meta ? 'META SUPERADA!' : 'ACIMA DO RITMO';
+        paceClass = 'positive';
+        paceSummary = `No ritmo atual, a meta será superada. Mantenha o foco!`;
+    } else {
+        statusClass = 'status-behind';
+        statusText = 'ABAIXO DO RITMO';
+    }
+
+    const analysisRow = document.createElement('div');
+    analysisRow.className = 'store-analysis-row';
+    // O link do botão agora aponta para a segunda página, passando o ID da loja como parâmetro
+    analysisRow.innerHTML = `
+        <div class="store-header">
+            <h2>${store.name}</h2>
+            <a href="painel_diagnostico.html?loja=${store.id}" target="_blank" class="btn-diagnostico">Diagnóstico e Estratégia ➔</a>
+        </div>
+        <div class="modules-container">
+            <div class="module-card">
+                <div class="kpi-main-status ${statusClass}">${statusText}</div>
+                <div class="kpi-metric">
+                    <span class="label">Meta da Campanha</span>
+                    <span class="value">${formatCurrency(store.meta)}</span>
+                </div>
+                <div class="kpi-metric">
+                    <span class="label">Total Vendido</span>
+                    <span class="value">${formatCurrency(store.vendido)}</span>
+                </div>
+                <div class="kpi-metric">
+                    <span class="label">Saldo a Vender</span>
+                    <span class="value">${formatCurrency(saldoAVender > 0 ? saldoAVender : 0)}</span>
+                </div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Análise de Ritmo</h3>
+                <div class="pace-comparison">
+                    <div class="pace-metric">
+                        <div class="value ${paceClass}">${formatCurrency(mediaDiariaAtual)}</div>
+                        <div class="label">Média Diária Atual</div>
+                    </div>
+                    <div class="pace-metric">
+                        <div class="value">${formatCurrency(mediaDiariaNecessaria)}</div>
+                        <div class="label">Média Diária Necessária</div>
+                    </div>
+                </div>
+                <div class="pace-summary">${paceSummary}</div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Projeção de Fechamento</h3>
+                <div class="projection-display">
+                    <div class="percentage ${paceClass}">${store.projecao.toFixed(1)}%</div>
+                </div>
+                <canvas id="chart-${store.id}" height="80"></canvas>
+            </div>
+        </div>
+    `;
+
+    dashboardContainer.appendChild(analysisRow);
+
+    new Chart(document.getElementById(`chart-${store.id}`), {
+        type: 'line',
+        data: {
+            labels: ['Início', 'D1', 'D2', 'D3', 'D4', 'D5', 'Hoje'],
+            datasets: [{
+                label: 'Performance',
+                data: [0, 200, 450, 600, 900, 1200, store.vendido],
+                fill: true,
+                backgroundColor: paceClass === 'positive' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                borderColor: paceClass === 'positive' ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)',
+                tension: 0.3,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            scales: { x: { display: false }, y: { display: false } }
+        }
+    });
+});
+</script>
+
+</body>
+</html> -->
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Analítico - Campanha Vizzela</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f4f6f9;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #1f2937;
+            --cor-texto-secundario: #6b7280;
+            --cor-sucesso: #10b981;
+            --cor-sucesso-forte: #15803d;
+            --cor-alerta: #f59e0b;
+            --cor-perigo: #ef4444;
+            --cor-borda: #e5e7eb;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            padding: 25px;
+        }
+        .container { max-width: 1300px; margin: auto; }
+        .header { text-align: center; margin-bottom: 2.5rem; }
+        .header h1 {
+            font-family: 'Teko', sans-serif;
+            font-size: 3.5em;
+            letter-spacing: 1px;
+            color: var(--cor-primaria);
+            margin: 0;
+        }
+        .store-analysis-row { margin-bottom: 2.5rem; }
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--cor-borda);
+            padding-bottom: 0.5rem;
+        }
+        .store-header h2 { font-family: 'Teko', sans-serif; font-size: 2.5em; margin: 0; }
+        .btn-diagnostico {
+            display: inline-block;
+            background-color: var(--cor-primaria);
+            color: #fff !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-size: 0.9em;
+        }
+        .btn-diagnostico:hover { background-color: #c4006b; transform: translateY(-2px); color: #fff; }
+        .modules-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .module-card { background-color: var(--cor-card); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); border: 1px solid var(--cor-borda); }
+        .module-title { font-family: 'Teko', sans-serif; font-size: 1.8em; margin: 0 0 1rem 0; color: var(--cor-texto-principal); }
+        .kpi-main-status { text-align: center; font-weight: 700; font-size: 1.2em; padding: 0.75rem; border-radius: 8px; margin-bottom: 1.5rem; color: #fff; }
+        .status-behind { background-color: var(--cor-perigo); }
+        .status-on-track { background-color: var(--cor-sucesso); }
+        .status-exceeded { background-color: var(--cor-sucesso-forte); }
+        .kpi-metric { display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; padding: 0.75rem 0; border-bottom: 1px solid var(--cor-borda); }
+        .kpi-metric:last-child { border-bottom: none; }
+        .kpi-metric .label { font-weight: 400; color: var(--cor-texto-secundario); }
+        .kpi-metric .value { font-weight: 700; font-size: 1.2em; }
+        .pace-comparison { display: flex; justify-content: space-around; text-align: center; margin-top: 1.5rem; }
+        .pace-metric .value { font-family: 'Teko', sans-serif; font-size: 3em; line-height: 1; }
+        .pace-metric .label { font-size: 0.9em; color: var(--cor-texto-secundario); }
+        .pace-metric .value.positive { color: var(--cor-sucesso); }
+        .pace-metric .value.negative { color: var(--cor-perigo); }
+        .pace-summary { background-color: #f9fafb; border: 1px solid var(--cor-borda); border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 0.95em; text-align: center; }
+        .projection-display { text-align: center; }
+        .projection-display .percentage { font-family: 'Teko', sans-serif; font-size: 5em; line-height: 1; margin: 1rem 0 0.5rem 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Análise de Performance - Campanha Vizzela</h1>
+    </div>
+    <div id="dashboard-container"></div>
+</div>
+<script>
+const inicioCampanha = new Date('2025-07-11T00:00:00');
+const fimCampanha = new Date('2025-09-11T23:59:59');
+const hoje = new Date('2025-07-25T10:00:00'); // Data fixada para consistência
+
+// --- DADOS ATUALIZADOS COM BASE NA PLANILHA ---
+const storesData = [
+    { id: 121, name: 'SAC NORTE SHOPPING',    meta: 10000.00, vendido: 1620.83 },
+    { id: 140, name: 'SACOLAO MARIA LACERDA', meta: 18000.00, vendido: 2803.09 },
+    { id: 100, name: 'SACOLAO LAGOA NOVA',    meta: 25000.00, vendido: 3695.63 },
+    { id: 1,   name: 'SACOLAO PONTA NEGRA',   meta: 35000.00, vendido: 4997.78 },
+    { id: 131, name: 'SACOLAO ZN 2',          meta: 6000.00,  vendido: 820.63  },
+    { id: 122, name: 'SACOLAO PARNAMIRIM',    meta: 10000.00, vendido: 1068.56 },
+    { id: 141, name: 'SACOLAO IGAPO',         meta: 18000.00, vendido: 369.52  }
+];
+
+function formatCurrency(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+const totalDiasCampanha = Math.ceil((fimCampanha - inicioCampanha) / (1000 * 60 * 60 * 24));
+const diasCorridos = Math.max(1, Math.ceil((hoje - inicioCampanha) / (1000 * 60 * 60 * 24)));
+const diasRestantes = Math.max(0, totalDiasCampanha - diasCorridos);
+const dashboardContainer = document.getElementById('dashboard-container');
+
+storesData.forEach(store => {
+    const saldoAVender = store.meta - store.vendido;
+    const mediaDiariaAtual = store.vendido / diasCorridos;
+    const mediaDiariaNecessaria = diasRestantes > 0 ? saldoAVender / diasRestantes : 0;
+    const performanceIndex = mediaDiariaNecessaria > 0 ? mediaDiariaAtual / mediaDiariaNecessaria : 1;
+    const projecaoFinal = store.vendido + (mediaDiariaAtual * diasRestantes);
+    
+    let statusClass = '', statusText = '', paceClass = 'negative', paceSummary = `Precisa aumentar o ritmo em <strong>${formatCurrency(mediaDiariaNecessaria - mediaDiariaAtual)}/dia</strong> para atingir a meta.`;
+    if (performanceIndex >= 1.1) {
+        statusClass = 'status-exceeded'; statusText = 'EXCELENTE'; paceClass = 'positive';
+        paceSummary = `No ritmo atual, a meta será superada com folga. Ótimo trabalho!`;
+    } else if (performanceIndex >= 1.0) {
+        statusClass = 'status-on-track'; statusText = 'ACIMA DO RITMO'; paceClass = 'positive';
+        paceSummary = `O ritmo atual é suficiente para atingir a meta. Mantenha o foco!`;
+    } else {
+        statusClass = 'status-behind'; statusText = 'ABAIXO DO RITMO';
+    }
+
+    const analysisRow = document.createElement('div');
+    analysisRow.className = 'store-analysis-row';
+    analysisRow.innerHTML = `
+        <div class="store-header">
+            <h2>${store.name}</h2>
+            <a href="painel_diagnostico.html?loja=${store.id}" target="_blank" class="btn-diagnostico">Diagnóstico e Estratégia ➔</a>
+        </div>
+        <div class="modules-container">
+            <div class="module-card">
+                <div class="kpi-main-status ${statusClass}">${statusText}</div>
+                <div class="kpi-metric"><span class="label">Meta</span><span class="value">${formatCurrency(store.meta)}</span></div>
+                <div class="kpi-metric"><span class="label">Vendido</span><span class="value">${formatCurrency(store.vendido)}</span></div>
+                <div class="kpi-metric"><span class="label">A Vender</span><span class="value">${formatCurrency(saldoAVender > 0 ? saldoAVender : 0)}</span></div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Análise de Ritmo</h3>
+                <div class="pace-comparison">
+                    <div class="pace-metric"><div class="value ${paceClass}">${formatCurrency(mediaDiariaAtual)}</div><div class="label">Média Atual</div></div>
+                    <div class="pace-metric"><div class="value">${formatCurrency(mediaDiariaNecessaria)}</div><div class="label">Média Necessária</div></div>
+                </div>
+                <div class="pace-summary">${paceSummary}</div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Projeção de Fechamento</h3>
+                <div class="projection-display"><div class="percentage ${paceClass}">${(projecaoFinal / store.meta * 100).toFixed(1)}%</div></div>
+                <canvas id="chart-${store.id}" height="80"></canvas>
+            </div>
+        </div>
+    `;
+    dashboardContainer.appendChild(analysisRow);
+    new Chart(document.getElementById(`chart-${store.id}`), {
+        type: 'line',
+        data: {
+            labels: ['Início', 'D1', 'D2', 'D3', 'D4', 'D5', 'Hoje'],
+            datasets: [{
+                label: 'Performance', data: [0, store.vendido*0.1, store.vendido*0.3, store.vendido*0.5, store.vendido*0.7, store.vendido*0.85, store.vendido],
+                fill: true,
+                backgroundColor: paceClass === 'positive' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                borderColor: paceClass === 'positive' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)',
+                tension: 0.3, pointRadius: 0
+            }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+    });
+});
+</script>
+</body>
+</html> -->
+
+
+
+
+
+
+
+<!-- 
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Analítico - Campanha Vizzela</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f4f6f9;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #1f2937;
+            --cor-texto-secundario: #6b7280;
+            --cor-sucesso: #10b981;
+            --cor-sucesso-forte: #15803d;
+            --cor-alerta: #f59e0b;
+            --cor-perigo: #ef4444;
+            --cor-borda: #e5e7eb;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            padding: 25px;
+        }
+        .container { max-width: 1300px; margin: auto; }
+        .header { text-align: center; margin-bottom: 2.5rem; }
+        .header h1 {
+            font-family: 'Teko', sans-serif;
+            font-size: 3.5em;
+            letter-spacing: 1px;
+            color: var(--cor-primaria);
+            margin: 0;
+        }
+        .store-analysis-row { margin-bottom: 2.5rem; }
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--cor-borda);
+            padding-bottom: 0.5rem;
+        }
+        .store-header h2 { font-family: 'Teko', sans-serif; font-size: 2.5em; margin: 0; }
+        .btn-diagnostico {
+            display: inline-block;
+            background-color: var(--cor-primaria);
+            color: #fff !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-size: 0.9em;
+        }
+        .btn-diagnostico:hover { background-color: #c4006b; transform: translateY(-2px); color: #fff; }
+        .modules-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .module-card { background-color: var(--cor-card); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); border: 1px solid var(--cor-borda); }
+        .module-title { font-family: 'Teko', sans-serif; font-size: 1.8em; margin: 0 0 1rem 0; color: var(--cor-texto-principal); }
+        .kpi-main-status { text-align: center; font-weight: 700; font-size: 1.2em; padding: 0.75rem; border-radius: 8px; margin-bottom: 1.5rem; color: #fff; }
+        .status-behind { background-color: var(--cor-perigo); }
+        .status-on-track { background-color: var(--cor-sucesso); }
+        .status-exceeded { background-color: var(--cor-sucesso-forte); }
+        .kpi-metric { display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; padding: 0.75rem 0; border-bottom: 1px solid var(--cor-borda); }
+        .kpi-metric:last-child { border-bottom: none; }
+        .kpi-metric .label { font-weight: 400; color: var(--cor-texto-secundario); }
+        .kpi-metric .value { font-weight: 700; font-size: 1.2em; }
+        .pace-comparison { display: flex; justify-content: space-around; text-align: center; margin-top: 1.5rem; }
+        .pace-metric .value { font-family: 'Teko', sans-serif; font-size: 3em; line-height: 1; }
+        .pace-metric .label { font-size: 0.9em; color: var(--cor-texto-secundario); }
+        .pace-metric .value.positive { color: var(--cor-sucesso); }
+        .pace-metric .value.negative { color: var(--cor-perigo); }
+        .pace-summary { background-color: #f9fafb; border: 1px solid var(--cor-borda); border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 0.95em; text-align: center; }
+        .projection-display { text-align: center; }
+        .projection-display .percentage { font-family: 'Teko', sans-serif; font-size: 5em; line-height: 1; margin: 1rem 0 0.5rem 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Análise de Performance - Campanha Vizzela</h1>
+    </div>
+    <div id="dashboard-container"></div>
+</div>
+<script>
+const inicioCampanha = new Date('2025-07-11T00:00:00');
+const fimCampanha = new Date('2025-09-11T23:59:59');
+const hoje = new Date('2025-07-25T10:00:00');
+
+const storesData = [
+    { id: 121, name: 'SAC NORTE SHOPPING',    meta: 10000.00, vendido: 1620.83 },
+    { id: 140, name: 'SACOLAO MARIA LACERDA', meta: 18000.00, vendido: 2803.09 },
+    { id: 100, name: 'SACOLAO LAGOA NOVA',    meta: 25000.00, vendido: 3695.63 },
+    { id: 1,   name: 'SACOLAO PONTA NEGRA',   meta: 35000.00, vendido: 4997.78 },
+    { id: 131, name: 'SACOLAO ZN 2',          meta: 6000.00,  vendido: 820.63  },
+    { id: 122, name: 'SACOLAO PARNAMIRIM',    meta: 10000.00, vendido: 1068.56 },
+    { id: 141, name: 'SACOLAO IGAPO',         meta: 18000.00, vendido: 369.52  }
+];
+
+function formatCurrency(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+const totalDiasCampanha = Math.ceil((fimCampanha - inicioCampanha) / (1000 * 60 * 60 * 24));
+const diasCorridos = Math.max(1, Math.ceil((hoje - inicioCampanha) / (1000 * 60 * 60 * 24)));
+const diasRestantes = Math.max(0, totalDiasCampanha - diasCorridos);
+const dashboardContainer = document.getElementById('dashboard-container');
+
+// --- NOVA FUNÇÃO DE CORES ---
+function getPerformanceColors(index) {
+    if (index >= 1.1) return { line: '#15803d', bg: 'rgba(21, 128, 61, 0.1)' };   // Verde Forte
+    if (index >= 1.0) return { line: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' };  // Verde
+    if (index >= 0.8) return { line: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)' };  // Amarelo/Alerta
+    return { line: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' };                     // Vermelho/Perigo
+}
+
+storesData.forEach(store => {
+    const saldoAVender = store.meta - store.vendido;
+    const mediaDiariaAtual = store.vendido / diasCorridos;
+    const mediaDiariaNecessaria = diasRestantes > 0 ? saldoAVender / diasRestantes : 0;
+    const performanceIndex = mediaDiariaNecessaria > 0 ? mediaDiariaAtual / mediaDiariaNecessaria : 1;
+    const projecaoFinal = store.vendido + (mediaDiariaAtual * diasRestantes);
+    
+    let statusClass = '', statusText = '', paceClass = 'negative', paceSummary = `Precisa aumentar o ritmo em <strong>${formatCurrency(mediaDiariaNecessaria - mediaDiariaAtual)}/dia</strong> para atingir a meta.`;
+    if (performanceIndex >= 1.1) {
+        statusClass = 'status-exceeded'; statusText = 'EXCELENTE'; paceClass = 'positive';
+        paceSummary = `No ritmo atual, a meta será superada com folga. Ótimo trabalho!`;
+    } else if (performanceIndex >= 1.0) {
+        statusClass = 'status-on-track'; statusText = 'ACIMA DO RITMO'; paceClass = 'positive';
+        paceSummary = `O ritmo atual é suficiente para atingir a meta. Mantenha o foco!`;
+    } else {
+        statusClass = 'status-behind'; statusText = 'ABAIXO DO RITMO';
+    }
+
+    const analysisRow = document.createElement('div');
+    analysisRow.className = 'store-analysis-row';
+    analysisRow.innerHTML = `
+        <div class="store-header">
+            <h2>${store.name}</h2>
+            <a href="painel_diagnostico.html?loja=${store.id}" target="_blank" class="btn-diagnostico">Diagnóstico e Estratégia ➔</a>
+        </div>
+        <div class="modules-container">
+            <div class="module-card">
+                <div class="kpi-main-status ${statusClass}">${statusText}</div>
+                <div class="kpi-metric"><span class="label">Meta</span><span class="value">${formatCurrency(store.meta)}</span></div>
+                <div class="kpi-metric"><span class="label">Vendido</span><span class="value">${formatCurrency(store.vendido)}</span></div>
+                <div class="kpi-metric"><span class="label">A Vender</span><span class="value">${formatCurrency(saldoAVender > 0 ? saldoAVender : 0)}</span></div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Análise de Ritmo</h3>
+                <div class="pace-comparison">
+                    <div class="pace-metric"><div class="value ${paceClass}">${formatCurrency(mediaDiariaAtual)}</div><div class="label">Média Atual</div></div>
+                    <div class="pace-metric"><div class="value">${formatCurrency(mediaDiariaNecessaria)}</div><div class="label">Média Necessária</div></div>
+                </div>
+                <div class="pace-summary">${paceSummary}</div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Projeção de Fechamento</h3>
+                <div class="projection-display"><div class="percentage ${paceClass}">${(projecaoFinal / store.meta * 100).toFixed(1)}%</div></div>
+                <canvas id="chart-${store.id}" height="80"></canvas>
+            </div>
+        </div>
+    `;
+    dashboardContainer.appendChild(analysisRow);
+
+    // --- GRÁFICO ATUALIZADO COM CORES DINÂMICAS ---
+    const chartColors = getPerformanceColors(performanceIndex);
+
+    new Chart(document.getElementById(`chart-${store.id}`), {
+        type: 'line',
+        data: {
+            labels: ['Início', 'D1', 'D2', 'D3', 'D4', 'D5', 'Hoje'],
+            datasets: [{
+                label: 'Performance', 
+                data: [0, store.vendido*0.1, store.vendido*0.3, store.vendido*0.5, store.vendido*0.7, store.vendido*0.85, store.vendido],
+                fill: true,
+                backgroundColor: chartColors.bg,   // Cor de fundo dinâmica
+                borderColor: chartColors.line, // Cor da linha dinâmica
+                borderWidth: 3, // Linha mais grossa
+                tension: 0.3, 
+                pointRadius: 0
+            }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+    });
+});
+</script>
+</body>
+</html> -->
+
+
+
+
+
+
+
+<!-- 
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Analítico - Campanha Vizzela</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f4f6f9;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #1f2937;
+            --cor-texto-secundario: #6b7280;
+            --cor-sucesso: #10b981;
+            --cor-sucesso-forte: #15803d;
+            --cor-alerta: #f59e0b;
+            --cor-perigo: #ef4444;
+            --cor-borda: #e5e7eb;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            padding: 25px;
+        }
+        .container { max-width: 1300px; margin: auto; }
+        .header { text-align: center; margin-bottom: 2.5rem; }
+        .header h1 {
+            font-family: 'Teko', sans-serif;
+            font-size: 3.5em;
+            letter-spacing: 1px;
+            color: var(--cor-primaria);
+            margin: 0;
+        }
+        .store-analysis-row { margin-bottom: 2.5rem; }
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--cor-borda);
+            padding-bottom: 0.5rem;
+        }
+        .store-header h2 { font-family: 'Teko', sans-serif; font-size: 2.5em; margin: 0; }
+        .btn-diagnostico {
+            display: inline-block;
+            background-color: var(--cor-primaria);
+            color: #fff !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-size: 0.9em;
+        }
+        .btn-diagnostico:hover { background-color: #c4006b; transform: translateY(-2px); color: #fff; }
+        .modules-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .module-card { background-color: var(--cor-card); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); border: 1px solid var(--cor-borda); }
+        .module-title { font-family: 'Teko', sans-serif; font-size: 1.8em; margin: 0 0 1rem 0; color: var(--cor-texto-principal); }
+        .kpi-main-status { text-align: center; font-weight: 700; font-size: 1.2em; padding: 0.75rem; border-radius: 8px; margin-bottom: 1.5rem; color: #fff; }
+        .status-behind { background-color: var(--cor-perigo); }
+        .status-on-track { background-color: var(--cor-sucesso); }
+        .status-exceeded { background-color: var(--cor-sucesso-forte); }
+        .kpi-metric { display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; padding: 0.75rem 0; border-bottom: 1px solid var(--cor-borda); }
+        .kpi-metric:last-child { border-bottom: none; }
+        .kpi-metric .label { font-weight: 400; color: var(--cor-texto-secundario); }
+        .kpi-metric .value { font-weight: 700; font-size: 1.2em; }
+        
+        /* --- NOVOS ESTILOS PARA O PERCENTUAL --- */
+        .value-with-percent {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Espaço entre o valor e o badge */
+        }
+        .percent-badge {
+            color: #fff;
+            font-size: 0.8em;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 99px; /* Totalmente arredondado */
+        }
+        /* --- FIM DOS NOVOS ESTILOS --- */
+
+        .pace-comparison { display: flex; justify-content: space-around; text-align: center; margin-top: 1.5rem; }
+        .pace-metric .value { font-family: 'Teko', sans-serif; font-size: 3em; line-height: 1; }
+        .pace-metric .label { font-size: 0.9em; color: var(--cor-texto-secundario); }
+        .pace-metric .value.positive { color: var(--cor-sucesso); }
+        .pace-metric .value.negative { color: var(--cor-perigo); }
+        .pace-summary { background-color: #f9fafb; border: 1px solid var(--cor-borda); border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 0.95em; text-align: center; }
+        .projection-display { text-align: center; }
+        .projection-display .percentage { font-family: 'Teko', sans-serif; font-size: 5em; line-height: 1; margin: 1rem 0 0.5rem 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Análise de Performance - Campanha Vizzela</h1>
+    </div>
+    <div id="dashboard-container"></div>
+</div>
+<script>
+const inicioCampanha = new Date('2025-07-11T00:00:00');
+const fimCampanha = new Date('2025-09-11T23:59:59');
+const hoje = new Date('2025-07-25T10:00:00');
+
+const storesData = [
+    { id: 121, name: 'SAC NORTE SHOPPING',    meta: 10000.00, vendido: 1620.83 },
+    { id: 140, name: 'SACOLAO MARIA LACERDA', meta: 18000.00, vendido: 2803.09 },
+    { id: 100, name: 'SACOLAO LAGOA NOVA',    meta: 25000.00, vendido: 3695.63 },
+    { id: 1,   name: 'SACOLAO PONTA NEGRA',   meta: 35000.00, vendido: 4997.78 },
+    { id: 131, name: 'SACOLAO ZN 2',          meta: 6000.00,  vendido: 820.63  },
+    { id: 122, name: 'SACOLAO PARNAMIRIM',    meta: 10000.00, vendido: 1068.56 },
+    { id: 141, name: 'SACOLAO IGAPO',         meta: 18000.00, vendido: 369.52  }
+];
+
+function formatCurrency(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+const totalDiasCampanha = Math.ceil((fimCampanha - inicioCampanha) / (1000 * 60 * 60 * 24));
+const diasCorridos = Math.max(1, Math.ceil((hoje - inicioCampanha) / (1000 * 60 * 60 * 24)));
+const diasRestantes = Math.max(0, totalDiasCampanha - diasCorridos);
+const dashboardContainer = document.getElementById('dashboard-container');
+
+function getPerformanceColors(index) {
+    if (index >= 1.1) return { line: '#15803d', bg: 'rgba(21, 128, 61, 0.1)' };
+    if (index >= 1.0) return { line: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' };
+    if (index >= 0.8) return { line: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)' };
+    return { line: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' };
+}
+
+// --- NOVA FUNÇÃO PARA A COR DO BADGE DE PERCENTUAL ---
+function getPercentBadgeColor(percent) {
+    if (percent >= 95) return 'var(--cor-sucesso-forte)';
+    if (percent >= 75) return 'var(--cor-sucesso)';
+    if (percent >= 40) return 'var(--cor-alerta)';
+    return 'var(--cor-perigo)';
+}
+
+storesData.forEach(store => {
+    const saldoAVender = store.meta - store.vendido;
+    const mediaDiariaAtual = store.vendido / diasCorridos;
+    const mediaDiariaNecessaria = diasRestantes > 0 ? saldoAVender / diasRestantes : 0;
+    const performanceIndex = mediaDiariaNecessaria > 0 ? mediaDiariaAtual / mediaDiariaNecessaria : 1;
+    const projecaoFinal = store.vendido + (mediaDiariaAtual * diasRestantes);
+    
+    // --- CÁLCULOS DO NOVO PERCENTUAL ---
+    const percentualAtingido = (store.vendido / store.meta) * 100;
+    const corDoPercentual = getPercentBadgeColor(percentualAtingido);
+
+    let statusClass = '', statusText = '', paceClass = 'negative', paceSummary = `Precisa aumentar o ritmo em <strong>${formatCurrency(mediaDiariaNecessaria - mediaDiariaAtual)}/dia</strong> para atingir a meta.`;
+    if (performanceIndex >= 1.1) {
+        statusClass = 'status-exceeded'; statusText = 'EXCELENTE'; paceClass = 'positive';
+        paceSummary = `No ritmo atual, a meta será superada com folga. Ótimo trabalho!`;
+    } else if (performanceIndex >= 1.0) {
+        statusClass = 'status-on-track'; statusText = 'ACIMA DO RITMO'; paceClass = 'positive';
+        paceSummary = `O ritmo atual é suficiente para atingir a meta. Mantenha o foco!`;
+    } else {
+        statusClass = 'status-behind'; statusText = 'ABAIXO DO RITMO';
+    }
+
+    const analysisRow = document.createElement('div');
+    analysisRow.className = 'store-analysis-row';
+    // --- HTML ATUALIZADO COM O BADGE DE PERCENTUAL ---
+    analysisRow.innerHTML = `
+        <div class="store-header">
+            <h2>${store.name}</h2>
+        <a href="painel_diagnostico.html?loja=${store.id}" target="_blank" class="btn-diagnostico">Diagnóstico e Estratégia ➔</a>
+        </div>
+        <div class="modules-container">
+            <div class="module-card">
+                <div class="kpi-main-status ${statusClass}">${statusText}</div>
+                <div class="kpi-metric">
+                    <span class="label">Meta</span>
+                    <span class="value">${formatCurrency(store.meta)}</span>
+                </div>
+                <div class="kpi-metric">
+                    <span class="label">Vendido</span>
+                    <div class="value-with-percent">
+                        <span class="value">${formatCurrency(store.vendido)}</span>
+                        <span class="percent-badge" style="background-color: ${corDoPercentual};">${percentualAtingido.toFixed(1)}%</span>
+                    </div>
+                </div>
+                <div class="kpi-metric">
+                    <span class="label">A Vender</span>
+                    <span class="value">${formatCurrency(saldoAVender > 0 ? saldoAVender : 0)}</span>
+                </div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Análise de Ritmo</h3>
+                <div class="pace-comparison">
+                    <div class="pace-metric"><div class="value ${paceClass}">${formatCurrency(mediaDiariaAtual)}</div><div class="label">Média Atual</div></div>
+                    <div class="pace-metric"><div class="value">${formatCurrency(mediaDiariaNecessaria)}</div><div class="label">Média Necessária</div></div>
+                </div>
+                <div class="pace-summary">${paceSummary}</div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Projeção de Fechamento</h3>
+                <div class="projection-display"><div class="percentage ${paceClass}">${(projecaoFinal / store.meta * 100).toFixed(1)}%</div></div>
+                <canvas id="chart-${store.id}" height="80"></canvas>
+            </div>
+        </div>
+    `;
+    dashboardContainer.appendChild(analysisRow);
+
+    const chartColors = getPerformanceColors(performanceIndex);
+    new Chart(document.getElementById(`chart-${store.id}`), {
+        type: 'line',
+        data: {
+            labels: ['Início', 'D1', 'D2', 'D3', 'D4', 'D5', 'Hoje'],
+            datasets: [{
+                label: 'Performance', 
+                data: [0, store.vendido*0.1, store.vendido*0.3, store.vendido*0.5, store.vendido*0.7, store.vendido*0.85, store.vendido],
+                fill: true,
+                backgroundColor: chartColors.bg,
+                borderColor: chartColors.line,
+                borderWidth: 3,
+                tension: 0.3, 
+                pointRadius: 0
+            }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+    });
+});
+</script>
+</body>
+</html> -->
+
+
+
+
+
+
+
+<!-- 
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Analítico - Campanha Vizzela</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f4f6f9;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #1f2937;
+            --cor-texto-secundario: #6b7280;
+            --cor-sucesso: #10b981;
+            --cor-sucesso-forte: #15803d;
+            --cor-alerta: #f59e0b;
+            --cor-perigo: #ef4444;
+            --cor-borda: #e5e7eb;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            padding: 25px;
+        }
+        .container { max-width: 1300px; margin: auto; }
+        .header { text-align: center; margin-bottom: 2.5rem; }
+        .header h1 {
+            font-family: 'Teko', sans-serif;
+            font-size: 3.5em;
+            letter-spacing: 1px;
+            color: var(--cor-primaria);
+            margin: 0;
+        }
+        .store-analysis-row { margin-bottom: 2.5rem; }
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--cor-borda);
+            padding-bottom: 0.5rem;
+        }
+        .store-header h2 { font-family: 'Teko', sans-serif; font-size: 2.5em; margin: 0; }
+        .btn-diagnostico {
+            display: inline-block;
+            background-color: var(--cor-primaria);
+            color: #fff !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-size: 0.9em;
+        }
+        .btn-diagnostico:hover { background-color: #c4006b; transform: translateY(-2px); color: #fff; }
+        .modules-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .module-card { background-color: var(--cor-card); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); border: 1px solid var(--cor-borda); }
+        .module-title { font-family: 'Teko', sans-serif; font-size: 1.8em; margin: 0 0 1rem 0; color: var(--cor-texto-principal); }
+        .kpi-main-status { text-align: center; font-weight: 700; font-size: 1.2em; padding: 0.75rem; border-radius: 8px; margin-bottom: 1.5rem; color: #fff; }
+        .status-behind { background-color: var(--cor-perigo); }
+        .status-on-track { background-color: var(--cor-sucesso); }
+        .status-exceeded { background-color: var(--cor-sucesso-forte); }
+        
+        /* --- ESTILOS ATUALIZADOS --- */
+        .kpi-metric {
+            display: grid; /* MUDADO PARA GRID */
+            grid-template-columns: auto 1fr auto; /* Label | Barra | Valor */
+            gap: 15px;
+            align-items: center;
+            font-size: 1.1em;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--cor-borda);
+        }
+        .kpi-metric:last-child { border-bottom: none; }
+        .kpi-metric .label { font-weight: 400; color: var(--cor-texto-secundario); }
+        .kpi-metric .value { font-weight: 700; font-size: 1.2em; text-align: right; }
+        
+        .inline-progress-bar-container {
+            width: 100%;
+            height: 10px; /* Barra mais fina */
+            background-color: #e9ecef;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .inline-progress-bar {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 1.5s ease-out, background-color 1.5s ease-out;
+        }
+        /* --- FIM DOS ESTILOS ATUALIZADOS --- */
+
+        .pace-comparison { display: flex; justify-content: space-around; text-align: center; margin-top: 1.5rem; }
+        .pace-metric .value { font-family: 'Teko', sans-serif; font-size: 3em; line-height: 1; }
+        .pace-metric .label { font-size: 0.9em; color: var(--cor-texto-secundario); }
+        .pace-metric .value.positive { color: var(--cor-sucesso); }
+        .pace-metric .value.negative { color: var(--cor-perigo); }
+        .pace-summary { background-color: #f9fafb; border: 1px solid var(--cor-borda); border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 0.95em; text-align: center; }
+        .projection-display { text-align: center; }
+        .projection-display .percentage { font-family: 'Teko', sans-serif; font-size: 5em; line-height: 1; margin: 1rem 0 0.5rem 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Análise de Performance - Campanha Vizzela</h1>
+    </div>
+    <div id="dashboard-container"></div>
+</div>
+<script>
+const inicioCampanha = new Date('2025-07-11T00:00:00');
+const fimCampanha = new Date('2025-09-11T23:59:59');
+const hoje = new Date('2025-07-25T10:00:00');
+
+const storesData = [
+    { id: 121, name: 'SAC NORTE SHOPPING',    meta: 10000.00, vendido: 1620.83 },
+    { id: 140, name: 'SACOLAO MARIA LACERDA', meta: 18000.00, vendido: 2803.09 },
+    { id: 100, name: 'SACOLAO LAGOA NOVA',    meta: 25000.00, vendido: 3695.63 },
+    { id: 1,   name: 'SACOLAO PONTA NEGRA',   meta: 35000.00, vendido: 4997.78 },
+    { id: 131, name: 'SACOLAO ZN 2',          meta: 6000.00,  vendido: 820.63  },
+    { id: 122, name: 'SACOLAO PARNAMIRIM',    meta: 10000.00, vendido: 1068.56 },
+    { id: 141, name: 'SACOLAO IGAPO',         meta: 18000.00, vendido: 369.52  }
+];
+
+function formatCurrency(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+const totalDiasCampanha = Math.ceil((fimCampanha - inicioCampanha) / (1000 * 60 * 60 * 24));
+const diasCorridos = Math.max(1, Math.ceil((hoje - inicioCampanha) / (1000 * 60 * 60 * 24)));
+const diasRestantes = Math.max(0, totalDiasCampanha - diasCorridos);
+const dashboardContainer = document.getElementById('dashboard-container');
+
+function getPerformanceColors(index) {
+    if (index >= 1.1) return { line: '#15803d', bg: 'rgba(21, 128, 61, 0.1)' };
+    if (index >= 1.0) return { line: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' };
+    if (index >= 0.8) return { line: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)' };
+    return { line: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' };
+}
+
+function getProgressBarColor(percent) {
+    if (percent >= 95) return 'var(--cor-sucesso-forte)';
+    if (percent >= 75) return 'var(--cor-sucesso)';
+    if (percent >= 40) return 'var(--cor-alerta)';
+    return 'var(--cor-perigo)';
+}
+
+storesData.forEach(store => {
+    const saldoAVender = store.meta - store.vendido;
+    const mediaDiariaAtual = store.vendido / diasCorridos;
+    const mediaDiariaNecessaria = diasRestantes > 0 ? saldoAVender / diasRestantes : 0;
+    const performanceIndex = mediaDiariaNecessaria > 0 ? mediaDiariaAtual / mediaDiariaNecessaria : 1;
+    const projecaoFinal = store.vendido + (mediaDiariaAtual * diasRestantes);
+    
+    const percentualAtingido = (store.vendido / store.meta) * 100;
+    const corDaBarra = getProgressBarColor(percentualAtingido);
+
+    let statusClass = '', statusText = '', paceClass = 'negative', paceSummary = `Precisa aumentar o ritmo em <strong>${formatCurrency(mediaDiariaNecessaria - mediaDiariaAtual)}/dia</strong> para atingir a meta.`;
+    if (performanceIndex >= 1.1) {
+        statusClass = 'status-exceeded'; statusText = 'EXCELENTE'; paceClass = 'positive';
+        paceSummary = `No ritmo atual, a meta será superada com folga. Ótimo trabalho!`;
+    } else if (performanceIndex >= 1.0) {
+        statusClass = 'status-on-track'; statusText = 'ACIMA DO RITMO'; paceClass = 'positive';
+        paceSummary = `O ritmo atual é suficiente para atingir a meta. Mantenha o foco!`;
+    } else {
+        statusClass = 'status-behind'; statusText = 'ABAIXO DO RITMO';
+    }
+
+    const analysisRow = document.createElement('div');
+    analysisRow.className = 'store-analysis-row';
+    // --- HTML ATUALIZADO COM A BARRA DE PROGRESSO INTEGRADA ---
+    analysisRow.innerHTML = `
+        <div class="store-header">
+            <h2>${store.name}</h2>
+            <a href="painel_diagnostico.html?loja=${store.id}" target="_blank" class="btn-diagnostico">Diagnóstico e Estratégia ➔</a>
+        </div>
+        <div class="modules-container">
+            <div class="module-card">
+                <div class="kpi-main-status ${statusClass}">${statusText}</div>
+                <div class="kpi-metric">
+                    <span class="label">Meta (${percentualAtingido.toFixed(1)}%)</span>
+                    <div class="inline-progress-bar-container">
+                        <div class="inline-progress-bar" style="width: ${percentualAtingido}%; background-color: ${corDaBarra};"></div>
+                    </div>
+                    <span class="value">${formatCurrency(store.meta)}</span>
+                </div>
+                <div class="kpi-metric" style="grid-template-columns: auto 1fr;">
+                    <span class="label">Vendido</span>
+                    <span class="value">${formatCurrency(store.vendido)}</span>
+                </div>
+                <div class="kpi-metric" style="grid-template-columns: auto 1fr;">
+                    <span class="label">A Vender</span>
+                    <span class="value">${formatCurrency(saldoAVender > 0 ? saldoAVender : 0)}</span>
+                </div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Análise de Ritmo</h3>
+                <div class="pace-comparison">
+                    <div class="pace-metric"><div class="value ${paceClass}">${formatCurrency(mediaDiariaAtual)}</div><div class="label">Média Atual</div></div>
+                    <div class="pace-metric"><div class="value">${formatCurrency(mediaDiariaNecessaria)}</div><div class="label">Média Necessária</div></div>
+                </div>
+                <div class="pace-summary">${paceSummary}</div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Projeção de Fechamento</h3>
+                <div class="projection-display"><div class="percentage ${paceClass}">${(projecaoFinal / store.meta * 100).toFixed(1)}%</div></div>
+                <canvas id="chart-${store.id}" height="80"></canvas>
+            </div>
+        </div>
+    `;
+    dashboardContainer.appendChild(analysisRow);
+
+    const chartColors = getPerformanceColors(performanceIndex);
+    new Chart(document.getElementById(`chart-${store.id}`), {
+        type: 'line',
+        data: {
+            labels: ['Início', 'D1', 'D2', 'D3', 'D4', 'D5', 'Hoje'],
+            datasets: [{
+                label: 'Performance', 
+                data: [0, store.vendido*0.1, store.vendido*0.3, store.vendido*0.5, store.vendido*0.7, store.vendido*0.85, store.vendido],
+                fill: true,
+                backgroundColor: chartColors.bg,
+                borderColor: chartColors.line,
+                borderWidth: 3,
+                tension: 0.3, 
+                pointRadius: 0
+            }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+    });
+});
+</script>
+</body>
+</html> -->
+
+
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Analítico - Campanha Vizzela</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f4f6f9;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #1f2937;
+            --cor-texto-secundario: #6b7280;
+            --cor-sucesso: #10b981;
+            --cor-sucesso-forte: #15803d;
+            --cor-alerta: #f59e0b;
+            --cor-laranja: #f97316; /* Nova cor laranja */
+            --cor-perigo: #ef4444;
+            --cor-borda: #e5e7eb;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            padding: 25px;
+        }
+        .container { max-width: 1300px; margin: auto; }
+        .header { text-align: center; margin-bottom: 2.5rem; }
+        .header h1 {
+            font-family: 'Teko', sans-serif;
+            font-size: 3.5em;
+            letter-spacing: 1px;
+            color: var(--cor-primaria);
+            margin: 0;
+        }
+        .store-analysis-row { margin-bottom: 2.5rem; }
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--cor-borda);
+            padding-bottom: 0.5rem;
+        }
+        .store-header h2 { font-family: 'Teko', sans-serif; font-size: 2.5em; margin: 0; }
+        .btn-diagnostico {
+            display: inline-block;
+            background-color: var(--cor-primaria);
+            color: #fff !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-size: 0.9em;
+        }
+        .btn-diagnostico:hover { background-color: #c4006b; transform: translateY(-2px); color: #fff; }
+        .modules-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .module-card { background-color: var(--cor-card); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); border: 1px solid var(--cor-borda); }
+        .module-title { font-family: 'Teko', sans-serif; font-size: 1.8em; margin: 0 0 1rem 0; color: var(--cor-texto-principal); }
+        .kpi-main-status { text-align: center; font-weight: 700; font-size: 1.2em; padding: 0.75rem; border-radius: 8px; margin-bottom: 1.5rem; color: #fff; }
+        .status-behind { background-color: var(--cor-perigo); }
+        .status-on-track { background-color: var(--cor-sucesso); }
+        .status-exceeded { background-color: var(--cor-sucesso-forte); }
+        
+        .kpi-metric {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 15px;
+            align-items: center;
+            font-size: 1.1em;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--cor-borda);
+        }
+        .kpi-metric:last-child { border-bottom: none; }
+        .kpi-metric .label { font-weight: 400; color: var(--cor-texto-secundario); }
+        .kpi-metric .value { font-weight: 700; font-size: 1.2em; text-align: right; }
+        
+        .inline-progress-bar-container {
+            width: 100%;
+            height: 10px;
+            background-color: #e9ecef;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .inline-progress-bar {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 1.5s ease-out, background-color 1.5s ease-out;
+        }
+
+        .pace-comparison { display: flex; justify-content: space-around; text-align: center; margin-top: 1.5rem; }
+        .pace-metric .value { font-family: 'Teko', sans-serif; font-size: 3em; line-height: 1; }
+        .pace-metric .label { font-size: 0.9em; color: var(--cor-texto-secundario); }
+        .pace-metric .value.positive { color: var(--cor-sucesso); }
+        .pace-metric .value.negative { color: var(--cor-perigo); }
+        .pace-summary { background-color: #f9fafb; border: 1px solid var(--cor-borda); border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 0.95em; text-align: center; }
+        .projection-display { text-align: center; }
+        .projection-display .percentage { font-family: 'Teko', sans-serif; font-size: 5em; line-height: 1; margin: 1rem 0 0.5rem 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Análise de Performance - Campanha Vizzela</h1>
+    </div>
+    <div id="dashboard-container"></div>
+</div>
+<script>
+const inicioCampanha = new Date('2025-07-11T00:00:00');
+const fimCampanha = new Date('2025-09-11T23:59:59');
+const hoje = new Date('2025-07-25T10:00:00');
+
+const storesData = [
+    { id: 121, name: 'SAC NORTE SHOPPING',    meta: 10000.00, vendido: 1620.83 },
+    { id: 140, name: 'SACOLAO MARIA LACERDA', meta: 18000.00, vendido: 2803.09 },
+    { id: 100, name: 'SACOLAO LAGOA NOVA',    meta: 25000.00, vendido: 3695.63 },
+    { id: 1,   name: 'SACOLAO PONTA NEGRA',   meta: 35000.00, vendido: 4997.78 },
+    { id: 131, name: 'SACOLAO ZN 2',          meta: 6000.00,  vendido: 820.63  },
+    { id: 122, name: 'SACOLAO PARNAMIRIM',    meta: 10000.00, vendido: 1068.56 },
+    { id: 141, name: 'SACOLAO IGAPO',         meta: 18000.00, vendido: 369.52  }
+];
+
+function formatCurrency(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+const totalDiasCampanha = Math.ceil((fimCampanha - inicioCampanha) / (1000 * 60 * 60 * 24));
+const diasCorridos = Math.max(1, Math.ceil((hoje - inicioCampanha) / (1000 * 60 * 60 * 24)));
+const diasRestantes = Math.max(0, totalDiasCampanha - diasCorridos);
+const dashboardContainer = document.getElementById('dashboard-container');
+
+function getPerformanceColors(index) {
+    if (index >= 1.1) return { line: 'var(--cor-sucesso-forte)', bg: 'rgba(21, 128, 61, 0.1)' };
+    if (index >= 1.0) return { line: 'var(--cor-sucesso)', bg: 'rgba(16, 185, 129, 0.1)' };
+    if (index >= 0.8) return { line: 'var(--cor-alerta)', bg: 'rgba(245, 158, 11, 0.1)' };
+    return { line: 'var(--cor-perigo)', bg: 'rgba(239, 68, 68, 0.1)' };
+}
+
+// --- LÓGICA DE CORES ATUALIZADA ---
+function getProgressBarColor(percent) {
+    if (percent >= 100) return 'var(--cor-sucesso)';
+    if (percent >= 75) return 'var(--cor-alerta)';
+    if (percent >= 40) return 'var(--cor-laranja)';
+    return 'var(--cor-perigo)';
+}
+
+storesData.forEach(store => {
+    const saldoAVender = store.meta - store.vendido;
+    const mediaDiariaAtual = store.vendido / diasCorridos;
+    const mediaDiariaNecessaria = diasRestantes > 0 ? saldoAVender / diasRestantes : 0;
+    const performanceIndex = mediaDiariaNecessaria > 0 ? mediaDiariaAtual / mediaDiariaNecessaria : 1;
+    const projecaoFinal = store.vendido + (mediaDiariaAtual * diasRestantes);
+    
+    const percentualAtingido = (store.vendido / store.meta) * 100;
+    const corDaBarra = getProgressBarColor(percentualAtingido);
+
+    let statusClass = '', statusText = '', paceClass = 'negative', paceSummary = `Precisa aumentar o ritmo em <strong>${formatCurrency(mediaDiariaNecessaria - mediaDiariaAtual)}/dia</strong> para atingir a meta.`;
+    if (performanceIndex >= 1.1) {
+        statusClass = 'status-exceeded'; statusText = 'EXCELENTE'; paceClass = 'positive';
+        paceSummary = `No ritmo atual, a meta será superada com folga. Ótimo trabalho!`;
+    } else if (performanceIndex >= 1.0) {
+        statusClass = 'status-on-track'; statusText = 'ACIMA DO RITMO'; paceClass = 'positive';
+        paceSummary = `O ritmo atual é suficiente para atingir a meta. Mantenha o foco!`;
+    } else {
+        statusClass = 'status-behind'; statusText = 'ABAIXO DO RITMO';
+    }
+
+    const analysisRow = document.createElement('div');
+    analysisRow.className = 'store-analysis-row';
+    // --- HTML ATUALIZADO COM O PERCENTUAL COLORIDO ---
+    analysisRow.innerHTML = `
+        <div class="store-header">
+            <h2>${store.name}</h2>
+              <a href="painel_diagnostico.html?loja=${store.id}" target="_blank" class="btn-diagnostico">Diagnóstico e Estratégia ➔</a>
+        </div>
+        <div class="modules-container">
+            <div class="module-card">
+                <div class="kpi-main-status ${statusClass}">${statusText}</div>
+                <div class="kpi-metric">
+                    <span class="label">Meta (<span style="color: ${corDaBarra}; font-weight: 700;">${percentualAtingido.toFixed(1)}%</span>)</span>
+                    <div class="inline-progress-bar-container">
+                        <div class="inline-progress-bar" style="width: ${percentualAtingido}%; background-color: ${corDaBarra};"></div>
+                    </div>
+                    <span class="value">${formatCurrency(store.meta)}</span>
+                </div>
+                <div class="kpi-metric" style="grid-template-columns: auto 1fr;">
+                    <span class="label">Vendido</span>
+                    <span class="value">${formatCurrency(store.vendido)}</span>
+                </div>
+                <div class="kpi-metric" style="grid-template-columns: auto 1fr;">
+                    <span class="label">A Vender</span>
+                    <span class="value">${formatCurrency(saldoAVender > 0 ? saldoAVender : 0)}</span>
+                </div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Análise de Ritmo</h3>
+                <div class="pace-comparison">
+                    <div class="pace-metric"><div class="value ${paceClass}">${formatCurrency(mediaDiariaAtual)}</div><div class="label">Média Atual</div></div>
+                    <div class="pace-metric"><div class="value">${formatCurrency(mediaDiariaNecessaria)}</div><div class="label">Média Necessária</div></div>
+                </div>
+                <div class="pace-summary">${paceSummary}</div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Projeção de Fechamento</h3>
+                <div class="projection-display"><div class="percentage ${paceClass}">${(projecaoFinal / store.meta * 100).toFixed(1)}%</div></div>
+                <canvas id="chart-${store.id}" height="80"></canvas>
+            </div>
+        </div>
+    `;
+    dashboardContainer.appendChild(analysisRow);
+
+    const chartColors = getPerformanceColors(performanceIndex);
+    new Chart(document.getElementById(`chart-${store.id}`), {
+        type: 'line',
+        data: {
+            labels: ['Início', 'D1', 'D2', 'D3', 'D4', 'D5', 'Hoje'],
+            datasets: [{
+                label: 'Performance', 
+                data: [0, store.vendido*0.1, store.vendido*0.3, store.vendido*0.5, store.vendido*0.7, store.vendido*0.85, store.vendido],
+                fill: true,
+                backgroundColor: chartColors.bg,
+                borderColor: chartColors.line,
+                borderWidth: 3,
+                tension: 0.3, 
+                pointRadius: 0
+            }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+    });
+});
+</script>
+</body>
+</html> -->
+
+
+
+
+
+
+
+
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Analítico - Campanha Vizzela</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f4f6f9;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #1f2937;
+            --cor-texto-secundario: #6b7280;
+            --cor-sucesso: #10b981;
+            --cor-sucesso-forte: #15803d;
+            --cor-alerta: #f59e0b;
+            --cor-perigo: #ef4444;
+            --cor-borda: #e5e7eb;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            padding: 25px;
+        }
+        .container { max-width: 1300px; margin: auto; }
+        .header { text-align: center; margin-bottom: 2.5rem; }
+        .header h1 {
+            font-family: 'Teko', sans-serif;
+            font-size: 3.5em;
+            letter-spacing: 1px;
+            color: var(--cor-primaria);
+            margin: 0;
+        }
+        .store-analysis-row { margin-bottom: 2.5rem; }
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--cor-borda);
+            padding-bottom: 0.5rem;
+        }
+        .store-header h2 { font-family: 'Teko', sans-serif; font-size: 2.5em; margin: 0; }
+        .btn-diagnostico {
+            display: inline-block;
+            background-color: var(--cor-primaria);
+            color: #fff !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-size: 0.9em;
+        }
+        .btn-diagnostico:hover { background-color: #c4006b; transform: translateY(-2px); color: #fff; }
+        .modules-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .module-card { background-color: var(--cor-card); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); border: 1px solid var(--cor-borda); }
+        .module-title { font-family: 'Teko', sans-serif; font-size: 1.8em; margin: 0 0 1rem 0; color: var(--cor-texto-principal); }
+        .kpi-main-status { text-align: center; font-weight: 700; font-size: 1.2em; padding: 0.75rem; border-radius: 8px; margin-bottom: 1.5rem; color: #fff; }
+        .status-behind { background-color: var(--cor-perigo); }
+        .status-on-track { background-color: var(--cor-sucesso); }
+        .status-exceeded { background-color: var(--cor-sucesso-forte); }
+        
+        .kpi-metric {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 15px;
+            align-items: center;
+            font-size: 1.1em;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--cor-borda);
+        }
+        .kpi-metric:last-child { border-bottom: none; }
+        .kpi-metric .label { font-weight: 400; color: var(--cor-texto-secundario); }
+        .kpi-metric .value { font-weight: 700; font-size: 1.2em; text-align: right; }
+        
+        .inline-progress-bar-container {
+            width: 100%;
+            height: 10px;
+            background-color: #e9ecef;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .inline-progress-bar {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 1.5s ease-out, background-color 1.5s ease-out;
+        }
+
+        .pace-comparison { display: flex; justify-content: space-around; text-align: center; margin-top: 1.5rem; }
+        .pace-metric .value { font-family: 'Teko', sans-serif; font-size: 3em; line-height: 1; }
+        .pace-metric .label { font-size: 0.9em; color: var(--cor-texto-secundario); }
+        .pace-metric .value.positive { color: var(--cor-sucesso); }
+        .pace-metric .value.negative { color: var(--cor-perigo); }
+        .pace-summary { background-color: #f9fafb; border: 1px solid var(--cor-borda); border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 0.95em; text-align: center; }
+        .projection-display { text-align: center; }
+        .projection-display .percentage { font-family: 'Teko', sans-serif; font-size: 5em; line-height: 1; margin: 1rem 0 0.5rem 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Análise de Performance - Campanha Vizzela</h1>
+    </div>
+    <div id="dashboard-container"></div>
+</div>
+<script>
+const inicioCampanha = new Date('2025-07-11T00:00:00');
+const fimCampanha = new Date('2025-09-11T23:59:59');
+const hoje = new Date('2025-07-25T10:00:00');
+
+const storesData = [
+    { id: 121, name: 'SAC NORTE SHOPPING',    meta: 10000.00, vendido: 1620.83 },
+    { id: 140, name: 'SACOLAO MARIA LACERDA', meta: 18000.00, vendido: 2803.09 },
+    { id: 100, name: 'SACOLAO LAGOA NOVA',    meta: 25000.00, vendido: 3695.63 },
+    { id: 1,   name: 'SACOLAO PONTA NEGRA',   meta: 35000.00, vendido: 4997.78 },
+    { id: 131, name: 'SACOLAO ZN 2',          meta: 6000.00,  vendido: 820.63  },
+    { id: 122, name: 'SACOLAO PARNAMIRIM',    meta: 10000.00, vendido: 1068.56 },
+    { id: 141, name: 'SACOLAO IGAPO',         meta: 18000.00, vendido: 369.52  }
+];
+
+function formatCurrency(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+const totalDiasCampanha = Math.ceil((fimCampanha - inicioCampanha) / (1000 * 60 * 60 * 24));
+const diasCorridos = Math.max(1, Math.ceil((hoje - inicioCampanha) / (1000 * 60 * 60 * 24)));
+const diasRestantes = Math.max(0, totalDiasCampanha - diasCorridos);
+const dashboardContainer = document.getElementById('dashboard-container');
+
+// --- FUNÇÃO DE CORES CORRIGIDA E APLICADA EM TODO LUGAR ---
+function getPerformanceColors(index) {
+    if (index >= 1.1) return { line: 'var(--cor-sucesso-forte)', bg: 'rgba(21, 128, 61, 0.1)', text: 'var(--cor-sucesso-forte)' };
+    if (index >= 1.0) return { line: 'var(--cor-sucesso)', bg: 'rgba(16, 185, 129, 0.1)', text: 'var(--cor-sucesso)' };
+    if (index >= 0.8) return { line: 'var(--cor-alerta)', bg: 'rgba(245, 158, 11, 0.1)', text: 'var(--cor-alerta)' };
+    return { line: 'var(--cor-perigo)', bg: 'rgba(239, 68, 68, 0.1)', text: 'var(--cor-perigo)' };
+}
+
+function getProgressBarColor(percent) {
+    if (percent >= 100) return 'var(--cor-sucesso)';
+    if (percent >= 75) return 'var(--cor-alerta)';
+    if (percent >= 40) return 'var(--cor-laranja)';
+    return 'var(--cor-perigo)';
+}
+
+storesData.forEach(store => {
+    const saldoAVender = store.meta - store.vendido;
+    const mediaDiariaAtual = store.vendido / diasCorridos;
+    const mediaDiariaNecessaria = diasRestantes > 0 ? saldoAVender / diasRestantes : 0;
+    const performanceIndex = mediaDiariaNecessaria > 0 ? mediaDiariaAtual / mediaDiariaNecessaria : 1;
+    const projecaoFinal = store.vendido + (mediaDiariaAtual * diasRestantes);
+    
+    const percentualAtingido = (store.vendido / store.meta) * 100;
+    const corDaBarra = getProgressBarColor(percentualAtingido);
+    const chartColors = getPerformanceColors(performanceIndex); // Pega as cores para o gráfico e texto
+
+    let statusClass = '', statusText = '', paceClass = 'negative', paceSummary = `Precisa aumentar o ritmo em <strong>${formatCurrency(mediaDiariaNecessaria - mediaDiariaAtual)}/dia</strong> para atingir a meta.`;
+    if (performanceIndex >= 1.1) {
+        statusClass = 'status-exceeded'; statusText = 'EXCELENTE'; paceClass = 'positive';
+        paceSummary = `No ritmo atual, a meta será superada com folga. Ótimo trabalho!`;
+    } else if (performanceIndex >= 1.0) {
+        statusClass = 'status-on-track'; statusText = 'ACIMA DO RITMO'; paceClass = 'positive';
+        paceSummary = `O ritmo atual é suficiente para atingir a meta. Mantenha o foco!`;
+    } else {
+        statusClass = 'status-behind'; statusText = 'ABAIXO DO RITMO';
+    }
+
+    const analysisRow = document.createElement('div');
+    analysisRow.className = 'store-analysis-row';
+    analysisRow.innerHTML = `
+        <div class="store-header">
+            <h2>${store.name}</h2>
+            <a href="painel_diagnostico.html?loja=${store.id}" target="_blank" class="btn-diagnostico">Diagnóstico e Estratégia ➔</a>
+        </div>
+        <div class="modules-container">
+            <div class="module-card">
+                <div class="kpi-main-status ${statusClass}">${statusText}</div>
+                <div class="kpi-metric">
+                    <span class="label">Meta (<span style="color: ${corDaBarra}; font-weight: 700;">${percentualAtingido.toFixed(1)}%</span>)</span>
+                    <div class="inline-progress-bar-container">
+                        <div class="inline-progress-bar" style="width: ${percentualAtingido}%; background-color: ${corDaBarra};"></div>
+                    </div>
+                    <span class="value">${formatCurrency(store.meta)}</span>
+                </div>
+                <div class="kpi-metric" style="grid-template-columns: auto 1fr;">
+                    <span class="label">Vendido</span>
+                    <span class="value">${formatCurrency(store.vendido)}</span>
+                </div>
+                <div class="kpi-metric" style="grid-template-columns: auto 1fr;">
+                    <span class="label">A Vender</span>
+                    <span class="value">${formatCurrency(saldoAVender > 0 ? saldoAVender : 0)}</span>
+                </div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Análise de Ritmo</h3>
+                <div class="pace-comparison">
+                    <div class="pace-metric"><div class="value ${paceClass}">${formatCurrency(mediaDiariaAtual)}</div><div class="label">Média Atual</div></div>
+                    <div class="pace-metric"><div class="value">${formatCurrency(mediaDiariaNecessaria)}</div><div class="label">Média Necessária</div></div>
+                </div>
+                <div class="pace-summary">${paceSummary}</div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Projeção de Fechamento</h3>
+                <div class="projection-display"><div class="percentage" style="color: ${chartColors.text}">${(projecaoFinal / store.meta * 100).toFixed(1)}%</div></div>
+                <canvas id="chart-${store.id}" height="80"></canvas>
+            </div>
+        </div>
+    `;
+    dashboardContainer.appendChild(analysisRow);
+
+    new Chart(document.getElementById(`chart-${store.id}`), {
+        type: 'line',
+        data: {
+            labels: ['Início', 'D1', 'D2', 'D3', 'D4', 'D5', 'Hoje'],
+            datasets: [{
+                label: 'Performance', 
+                data: [0, store.vendido*0.1, store.vendido*0.3, store.vendido*0.5, store.vendido*0.7, store.vendido*0.85, store.vendido],
+                fill: true,
+                backgroundColor: chartColors.bg,
+                borderColor: chartColors.line,
+                borderWidth: 3,
+                tension: 0.3, 
+                pointRadius: 0
+            }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+    });
+});
+</script>
+</body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Analítico - Campanha Vizzela</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f4f6f9;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #1f2937;
+            --cor-texto-secundario: #6b7280;
+            --cor-sucesso: #10b981;
+            --cor-sucesso-forte: #15803d;
+            --cor-alerta: #f59e0b;
+            --cor-laranja: #f97316;
+            --cor-perigo: #ef4444;
+            --cor-borda: #e5e7eb;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            padding: 25px;
+        }
+        .container { max-width: 1300px; margin: auto; }
+        .header { text-align: center; margin-bottom: 2.5rem; }
+        .header h1 {
+            font-family: 'Teko', sans-serif;
+            font-size: 3.5em;
+            letter-spacing: 1px;
+            color: var(--cor-primaria);
+            margin: 0;
+        }
+        .store-analysis-row { margin-bottom: 2.5rem; }
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--cor-borda);
+            padding-bottom: 0.5rem;
+        }
+        .store-header h2 { font-family: 'Teko', sans-serif; font-size: 2.5em; margin: 0; }
+        .btn-diagnostico {
+            display: inline-block;
+            background-color: var(--cor-primaria);
+            color: #fff !important;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-size: 0.9em;
+        }
+        .btn-diagnostico:hover { background-color: #c4006b; transform: translateY(-2px); color: #fff; }
+        .modules-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .module-card { background-color: var(--cor-card); border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); border: 1px solid var(--cor-borda); }
+        .module-title { font-family: 'Teko', sans-serif; font-size: 1.8em; margin: 0 0 1rem 0; color: var(--cor-texto-principal); }
+        .kpi-main-status { text-align: center; font-weight: 700; font-size: 1.2em; padding: 0.75rem; border-radius: 8px; margin-bottom: 1.5rem; color: #fff; }
+        .status-behind { background-color: var(--cor-perigo); }
+        .status-on-track { background-color: var(--cor-sucesso); }
+        .status-exceeded { background-color: var(--cor-sucesso-forte); }
+        
+        .kpi-metric {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 15px;
+            align-items: center;
+            font-size: 1.1em;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--cor-borda);
+        }
+        .kpi-metric:last-child { border-bottom: none; }
+        .kpi-metric .label { font-weight: 400; color: var(--cor-texto-secundario); }
+        .kpi-metric .value { font-weight: 700; font-size: 1.2em; text-align: right; }
+        
+        .inline-progress-bar-container {
+            width: 100%;
+            height: 10px;
+            background-color: #e9ecef;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .inline-progress-bar {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 1.5s ease-out, background-color 1.5s ease-out;
+        }
+
+        .pace-comparison { display: flex; justify-content: space-around; text-align: center; margin-top: 1.5rem; }
+        .pace-metric .value { font-family: 'Teko', sans-serif; font-size: 3em; line-height: 1; }
+        .pace-metric .label { font-size: 0.9em; color: var(--cor-texto-secundario); }
+        .pace-metric .value.positive { color: var(--cor-sucesso); }
+        .pace-metric .value.negative { color: var(--cor-perigo); }
+        .pace-summary { background-color: #f9fafb; border: 1px solid var(--cor-borda); border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 0.95em; text-align: center; }
+        .projection-display { text-align: center; }
+        .projection-display .percentage { font-family: 'Teko', sans-serif; font-size: 5em; line-height: 1; margin: 1rem 0 0.5rem 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Análise de Performance - Campanha Vizzela</h1>
+    </div>
+    <div id="dashboard-container"></div>
+</div>
+<script>
+const inicioCampanha = new Date('2025-07-11T00:00:00');
+const fimCampanha = new Date('2025-09-11T23:59:59');
+const hoje = new Date('2025-07-25T10:00:00');
+
+const storesData = [
+    { id: 121, name: 'SAC NORTE SHOPPING',meta: 10000.00, vendido: 1620.83 },
+    { id: 140, name: 'SAC MARIA LACERDA', meta: 18000.00, vendido: 2803.09 },
+    { id: 100, name: 'SAC LAGOA NOVA',    meta: 25000.00, vendido: 3695.63 },
+    { id: 1,   name: 'SAC PONTA NEGRA',   meta: 35000.00, vendido: 4997.78 },
+    { id: 131, name: 'SAC ZN 2',          meta: 6000.00,  vendido: 820.63  },
+    { id: 122, name: 'SAC PARNAMIRIM',    meta: 10000.00, vendido: 1068.56 },
+    { id: 141, name: 'SAC IGAPO',         meta: 18000.00, vendido: 369.52  }
+];
+
+function formatCurrency(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+const totalDiasCampanha = Math.ceil((fimCampanha - inicioCampanha) / (1000 * 60 * 60 * 24));
+const diasCorridos = Math.max(1, Math.ceil((hoje - inicioCampanha) / (1000 * 60 * 60 * 24)));
+const diasRestantes = Math.max(0, totalDiasCampanha - diasCorridos);
+const dashboardContainer = document.getElementById('dashboard-container');
+
+// --- FUNÇÃO DE CORES CORRIGIDA ---
+function getPerformanceColors(index) {
+    if (index >= 1.1) return { line: '#15803d', bg: 'rgba(21, 128, 61, 0.1)', text: '#15803d' };
+    if (index >= 1.0) return { line: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', text: '#10b981' };
+    if (index >= 0.8) return { line: '#f59e0b', bg: 'rgba(245, 158, 11, 0.1)', text: '#f59e0b' };
+    return { line: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)', text: '#ef4444' };
+}
+
+function getProgressBarColor(percent) {
+    if (percent >= 100) return 'var(--cor-sucesso)';
+    if (percent >= 75) return 'var(--cor-alerta)';
+    if (percent >= 40) return 'var(--cor-laranja)';
+    return 'var(--cor-perigo)';
+}
+
+storesData.forEach(store => {
+    const saldoAVender = store.meta - store.vendido;
+    const mediaDiariaAtual = store.vendido / diasCorridos;
+    const mediaDiariaNecessaria = diasRestantes > 0 ? saldoAVender / diasRestantes : 0;
+    const performanceIndex = mediaDiariaNecessaria > 0 ? mediaDiariaAtual / mediaDiariaNecessaria : 1;
+    const projecaoFinal = store.vendido + (mediaDiariaAtual * diasRestantes);
+    
+    const percentualAtingido = (store.vendido / store.meta) * 100;
+    const corDaBarra = getProgressBarColor(percentualAtingido);
+    const chartColors = getPerformanceColors(performanceIndex);
+
+    let statusClass = '', statusText = '', paceClass = 'negative', paceSummary = `Precisa aumentar o ritmo em <strong>${formatCurrency(mediaDiariaNecessaria - mediaDiariaAtual)}/dia</strong> para atingir a meta.`;
+    if (performanceIndex >= 1.1) {
+        statusClass = 'status-exceeded'; statusText = 'EXCELENTE'; paceClass = 'positive';
+        paceSummary = `No ritmo atual, a meta será superada com folga. Ótimo trabalho!`;
+    } else if (performanceIndex >= 1.0) {
+        statusClass = 'status-on-track'; statusText = 'ACIMA DO RITMO'; paceClass = 'positive';
+        paceSummary = `O ritmo atual é suficiente para atingir a meta. Mantenha o foco!`;
+    } else {
+        statusClass = 'status-behind'; statusText = 'ABAIXO DO RITMO';
+    }
+
+    const analysisRow = document.createElement('div');
+    analysisRow.className = 'store-analysis-row';
+    analysisRow.innerHTML = `
+        <div class="store-header">
+            <h2>${store.name}</h2>
+            <a href="painel_diagnostico?loja=${store.id}" target="_blank" class="btn-diagnostico">Diagnóstico e Estratégia ➔</a>
+        </div>
+        <div class="modules-container">
+            <div class="module-card">
+                <div class="kpi-main-status ${statusClass}">${statusText}</div>
+                <div class="kpi-metric">
+                    <span class="label">Meta (<span style="color: ${corDaBarra}; font-weight: 700;">${percentualAtingido.toFixed(1)}%</span>)</span>
+                    <div class="inline-progress-bar-container">
+                        <div class="inline-progress-bar" style="width: ${percentualAtingido}%; background-color: ${corDaBarra};"></div>
+                    </div>
+                    <span class="value">${formatCurrency(store.meta)}</span>
+                </div>
+                <div class="kpi-metric" style="grid-template-columns: auto 1fr;">
+                    <span class="label">Vendido</span>
+                    <span class="value">${formatCurrency(store.vendido)}</span>
+                </div>
+                <div class="kpi-metric" style="grid-template-columns: auto 1fr;">
+                    <span class="label">A Vender</span>
+                    <span class="value">${formatCurrency(saldoAVender > 0 ? saldoAVender : 0)}</span>
+                </div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Análise de Ritmo</h3>
+                <div class="pace-comparison">
+                    <div class="pace-metric"><div class="value ${paceClass}">${formatCurrency(mediaDiariaAtual)}</div><div class="label">Média Atual</div></div>
+                    <div class="pace-metric"><div class="value">${formatCurrency(mediaDiariaNecessaria)}</div><div class="label">Média Necessária</div></div>
+                </div>
+                <div class="pace-summary">${paceSummary}</div>
+            </div>
+            <div class="module-card">
+                <h3 class="module-title">Projeção de Fechamento</h3>
+                <div class="projection-display"><div class="percentage" style="color: ${chartColors.text}">${(projecaoFinal / store.meta * 100).toFixed(1)}%</div></div>
+                <canvas id="chart-${store.id}" height="80"></canvas>
+            </div>
+        </div>
+    `;
+    dashboardContainer.appendChild(analysisRow);
+
+    new Chart(document.getElementById(`chart-${store.id}`), {
+        type: 'line',
+        data: {
+            labels: ['Início', 'D1', 'D2', 'D3', 'D4', 'D5', 'Hoje'],
+            datasets: [{
+                label: 'Performance', 
+                data: [0, store.vendido*0.1, store.vendido*0.3, store.vendido*0.5, store.vendido*0.7, store.vendido*0.85, store.vendido],
+                fill: true,
+                backgroundColor: chartColors.bg,
+                borderColor: chartColors.line,
+                borderWidth: 3,
+                tension: 0.3, 
+                pointRadius: 0
+            }]
+        },
+        options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } } }
+    });
+});
+</script>
+</body>
+</html>

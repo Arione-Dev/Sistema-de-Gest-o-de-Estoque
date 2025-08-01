@@ -1,0 +1,1088 @@
+<!-- <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Estratégico - Campanha Vizzela</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f8fafc;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #0f172a;
+            --cor-texto-secundario: #64748b;
+            --cor-sucesso: #22c55e;
+            --cor-alerta: #f59e0b;
+            --cor-perigo: #ef4444;
+            --cor-borda: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            padding: 25px;
+        }
+
+        .container { max-width: 1200px; margin: auto; }
+        
+        .header h1 {
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: 800;
+            color: var(--cor-primaria);
+            margin-bottom: 2.5rem;
+        }
+        
+        .dossier-card {
+            background-color: var(--cor-card);
+            border: 1px solid var(--cor-borda);
+            border-radius: 16px;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.07), 0 4px 6px -2px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        
+        .dossier-header {
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--cor-borda);
+        }
+        .dossier-header h2 { margin: 0; font-size: 1.8em; }
+        
+        .status-badge {
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            color: #fff;
+            font-size: 0.9em;
+        }
+        .status-alerta { background-color: var(--cor-perigo); }
+        .status-ok { background-color: var(--cor-sucesso); }
+        .status-atencao { background-color: var(--cor-alerta); }
+        
+        .dossier-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+        }
+        
+        .diagnosis-section, .chart-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            text-align: center;
+        }
+        .kpi .label { color: var(--cor-texto-secundario); font-size: 0.9em; }
+        .kpi .value { font-size: 2em; font-weight: 700; }
+        
+        .performance-index-card {
+            background: #f8fafc;
+            border: 1px solid var(--cor-borda);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .performance-index-card .label { font-size: 1.1em; font-weight: 600; margin-bottom: 0.5rem; }
+        .performance-index-card .index-value { font-size: 4em; font-weight: 800; line-height: 1; }
+        
+        .diagnosis-text {
+            background-color: #f8fafc;
+            border-left: 5px solid;
+            padding: 1rem;
+            font-size: 0.95em;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        @media (max-width: 900px) {
+            .dossier-body { grid-template-columns: 1fr; }
+        }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Painel de Diagnóstico e Estratégia</h1>
+    </div>
+    <div id="dashboard-container">
+        !-- O Dossiê da loja selecionada será inserido aqui --
+    </div>
+</div>
+
+<script>
+// --- CONFIGURAÇÃO DA CAMPANHA E DATAS ---
+const inicioCampanha = new Date('2025-07-11T00:00:00');
+const fimCampanha = new Date('2025-09-11T23:59:59');
+const hoje = new Date();
+const totalDiasCampanha = Math.ceil((fimCampanha - inicioCampanha) / (1000 * 60 * 60 * 24));
+const diasCorridos = Math.max(1, Math.ceil((hoje - inicioCampanha) / (1000 * 60 * 60 * 24)));
+const diasRestantes = Math.max(0, totalDiasCampanha - diasCorridos);
+
+// --- BANCO DE DADOS COMPLETO DAS LOJAS ---
+const allStoresData = [
+    { id: 121, name: 'SAC NORTE SHOPPING', meta: 10000.00, vendido: 1620.83 },
+    { id: 140, name: 'SACOLAO MARIA LACERDA', meta: 18000.00, vendido: 2803.09 },
+    { id: 1, name: 'SACOLAO PONTA NEGRA', meta: 35000.00, vendido: 12500 },
+    { id: 100, name: 'SACOLAO LAGOA NOVA', meta: 25000.00, vendido: 3695.63 },
+];
+
+function formatCurrency(value) {
+    return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function gerarDiagnostico(storeName, index, mediaNecessaria, mediaAtual) {
+    if (index >= 1.1) {
+        return `<strong>Diagnóstico: Excelente.</strong> A loja ${storeName} está performando <strong>${Math.round((index-1)*100)}% acima do ritmo necessário</strong>. A estratégia é manter a consistência e buscar superar a meta com folga.`;
+    } else if (index >= 1.0) {
+        return `<strong>Diagnóstico: Bom.</strong> O ritmo atual da loja ${storeName} é <strong>suficiente para atingir a meta</strong>. Manter a performance atual é a chave para o sucesso.`;
+    } else if (index >= 0.8) {
+        return `<strong>Diagnóstico: Atenção.</strong> A performance está <strong>${Math.round((1-index)*100)}% abaixo do necessário</strong>. É preciso um plano de ação para aumentar a média diária em <strong>${formatCurrency(mediaNecessaria - mediaAtual)}</strong> para reverter o quadro.`;
+    } else {
+        return `<strong>Diagnóstico: Alerta Crítico.</strong> O ritmo da ${storeName} está <strong>${Math.round((1-index)*100)}% abaixo do necessário</strong>. A meta está em risco. É urgente uma intervenção gerencial para redefinir a estratégia de vendas diária.`;
+    }
+}
+
+// --- LÓGICA PARA EXIBIR APENAS A LOJA SELECIONADA ---
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const storeId = parseInt(params.get('loja'));
+    
+    // Encontra a loja selecionada no nosso "banco de dados"
+    const store = allStoresData.find(s => s.id === storeId);
+    
+    const dashboardContainer = document.getElementById('dashboard-container');
+
+    if (store) {
+        const saldoAVender = store.meta - store.vendido;
+        const mediaDiariaAtual = store.vendido / diasCorridos;
+        const mediaDiariaNecessaria = diasRestantes > 0 ? saldoAVender / diasRestantes : 0;
+        const performanceIndex = mediaDiariaNecessaria > 0 ? mediaDiariaAtual / mediaDiariaNecessaria : 1;
+        const projecaoFinal = store.vendido + (mediaDiariaAtual * diasRestantes);
+
+        let statusClass = 'status-alerta';
+        let statusText = 'Alerta Crítico';
+        let borderColor = 'var(--cor-perigo)';
+        if (performanceIndex >= 1.0) {
+            statusClass = 'status-ok';
+            statusText = 'Ritmo OK';
+            borderColor = 'var(--cor-sucesso)';
+        } else if (performanceIndex >= 0.8) {
+            statusClass = 'status-atencao';
+            statusText = 'Atenção';
+            borderColor = 'var(--cor-alerta)';
+        }
+        
+        const dossier = document.createElement('div');
+        dossier.className = 'dossier-card';
+        dossier.innerHTML = `
+            <div class="dossier-header">
+                <h2>${store.name}</h2>
+                <div class="status-badge ${statusClass}">${statusText}</div>
+            </div>
+            <div class="dossier-body">
+                <div class="diagnosis-section">
+                    <div class="kpi-grid">
+                        <div class="kpi">
+                            <div class="label">Meta Final</div>
+                            <div class="value">${formatCurrency(store.meta)}</div>
+                        </div>
+                        <div class="kpi">
+                            <div class="label">Projeção Final</div>
+                            <div class="value">${formatCurrency(projecaoFinal)}</div>
+                        </div>
+                    </div>
+                    <div class="performance-index-card">
+                        <div class="label">Índice de Performance</div>
+                        <div class="index-value" style="color: ${borderColor}">${performanceIndex.toFixed(2)}</div>
+                    </div>
+                    <div class="diagnosis-text" style="border-left-color: ${borderColor};">
+                        ${gerarDiagnostico(store.name, performanceIndex, mediaDiariaNecessaria, mediaDiariaAtual)}
+                    </div>
+                </div>
+                <div class="chart-section">
+                    <canvas id="chart-${store.id}"></canvas>
+                </div>
+            </div>
+        `;
+        dashboardContainer.appendChild(dossier);
+        
+        const labels = Array.from({length: totalDiasCampanha}, (_, i) => `Dia ${i + 1}`);
+        const metaLineData = Array.from({length: totalDiasCampanha}, (_, i) => (store.meta / totalDiasCampanha) * (i + 1));
+        const actualData = Array(diasCorridos).fill(null).map((_, i) => (mediaDiariaAtual * (i + 1)));
+        const projectionData = Array(totalDiasCampanha).fill(null);
+        projectionData[diasCorridos - 1] = actualData[diasCorridos - 1];
+        for (let i = diasCorridos; i < totalDiasCampanha; i++) {
+            projectionData[i] = actualData[diasCorridos - 1] + (mediaDiariaAtual * (i - (diasCorridos-1)));
+        }
+        
+        new Chart(document.getElementById(`chart-${store.id}`), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Caminho da Meta', data: metaLineData, borderColor: '#cbd5e1', borderWidth: 2, pointRadius: 0, borderDash: [5, 5] },
+                    { label: 'Vendas Reais', data: actualData, borderColor: '#3b82f6', borderWidth: 4, pointRadius: 0, tension: 0.1 },
+                    { label: 'Projeção', data: projectionData, borderColor: borderColor, borderWidth: 4, pointRadius: 0, borderDash: [10, 5] }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } },
+                scales: { y: { ticks: { callback: (value) => formatCurrency(value) } } }
+            }
+        });
+    } else {
+        dashboardContainer.innerHTML = '<h1>Loja não encontrada.</h1>';
+    }
+});
+</script>
+</body>
+</html> -->
+
+
+
+
+<!-- 
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Diagnóstico e Estratégia</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f8fafc;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #0f172a;
+            --cor-texto-secundario: #64748b;
+            --cor-sucesso: #22c55e;
+            --cor-sucesso-forte: #15803d;
+            --cor-alerta: #f59e0b;
+            --cor-perigo: #ef4444;
+            --cor-borda: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            padding: 25px;
+        }
+
+        .container { max-width: 1400px; margin: auto; }
+        
+        .header h1 {
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: 800;
+            color: var(--cor-primaria);
+            margin-bottom: 1rem;
+        }
+
+        .store-title {
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: 600;
+            color: var(--cor-texto-secundario);
+            margin-bottom: 2.5rem;
+        }
+        
+        .dossier-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+
+        .module {
+            background-color: var(--cor-card);
+            border: 1px solid var(--cor-borda);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .module-title {
+            font-weight: 700;
+            font-size: 1.2em;
+            margin: 0 0 1.5rem 0;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            flex-grow: 1;
+            min-height: 280px;
+        }
+
+        /* Layout do Grid */
+        .main-chart-module { grid-column: span 12; }
+        .kpi-module { grid-column: span 12; }
+        .daily-chart-module { grid-column: span 12; }
+        .diagnosis-module { grid-column: span 12; }
+
+        /* Módulo de Destaque para o Índice */
+        .kpi-highlight-card {
+            text-align: center;
+        }
+        .kpi-highlight-card .label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--cor-texto-secundario);
+            margin-bottom: 0.5rem;
+        }
+        .kpi-highlight-card .value {
+            font-size: 5em;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+        
+        /* Módulo de Diagnóstico */
+        .diagnosis-text {
+            background-color: #f8fafc;
+            border-left: 5px solid;
+            padding: 1rem;
+            font-size: 0.95em;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* Módulo de KPIs semanais */
+        .weekly-kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            text-align: center;
+        }
+        .weekly-kpi .label { font-size: 0.9em; color: var(--cor-texto-secundario); }
+        .weekly-kpi .value { font-size: 2em; font-weight: 700; }
+        .weekly-kpi .comparison { font-size: 0.9em; font-weight: 600; }
+        
+        @media (min-width: 992px) {
+            .main-chart-module { grid-column: span 7; }
+            .kpi-module { grid-column: span 5; }
+            .daily-chart-module { grid-column: span 7; }
+            .diagnosis-module { grid-column: span 5; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Painel de Diagnóstico e Estratégia</h1>
+        <h2 id="store-title" class="store-title">Carregando...</h2>
+    </div>
+    <div id="dashboard-grid" class="dossier-grid">
+        !-- Módulos serão inseridos aqui --
+    </div>
+</div>
+
+<script>
+const inicioCampanha = new Date('2025-07-11T00:00:00');
+const fimCampanha = new Date('2025-09-11T23:59:59');
+const hoje = new Date('2025-07-25T10:00:00');
+const totalDiasCampanha = Math.ceil((fimCampanha - inicioCampanha) / (1000 * 60 * 60 * 24));
+const diasCorridos = Math.max(1, Math.ceil((hoje - inicioCampanha) / (1000 * 60 * 60 * 24)));
+const diasRestantes = Math.max(0, totalDiasCampanha - diasCorridos);
+
+const allStoresData = [
+    { id: 121, name: 'SAC NORTE SHOPPING', meta: 10000.00, vendido: 1620.83 },
+    { id: 140, name: 'SACOLAO MARIA LACERDA', meta: 18000.00, vendido: 2803.09 },
+    { id: 1, name: 'SACOLAO PONTA NEGRA', meta: 35000.00, vendido: 12500 },
+    { id: 100, name: 'SACOLAO LAGOA NOVA', meta: 25000.00, vendido: 3695.63 },
+];
+
+function formatCurrency(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+
+function getPerformanceColor(index) {
+    if (index >= 1.1) return 'var(--cor-sucesso-forte)';
+    if (index >= 1.0) return 'var(--cor-sucesso)';
+    if (index >= 0.8) return 'var(--cor-alerta)';
+    return 'var(--cor-perigo)';
+}
+
+function gerarDiagnostico(index) {
+    if (index >= 1.1) return `<strong>Diagnóstico: Excelente.</strong> A loja está performando <strong>${Math.round((index-1)*100)}% acima do ritmo</strong>. <strong>Plano de Ação:</strong> Manter a estratégia atual, identificar os vendedores de alta performance e replicar suas táticas.`;
+    else if (index >= 1.0) return `<strong>Diagnóstico: Bom.</strong> O ritmo atual é <strong>suficiente para atingir a meta</strong>. <strong>Plano de Ação:</strong> Foco em consistência. Monitorar as vendas diárias para evitar quedas e garantir que a média seja mantida.`;
+    else if (index >= 0.8) return `<strong>Diagnóstico: Atenção.</strong> A performance está <strong>${Math.round((1-index)*100)}% abaixo do necessário</strong>. <strong>Plano de Ação:</strong> Reunião de alinhamento com a equipe para identificar gargalos. Criar uma micro-meta diária para fechar a lacuna.`;
+    else return `<strong>Diagnóstico: Alerta Crítico.</strong> O ritmo está muito abaixo do esperado. <strong>Plano de Ação:</strong> Intervenção gerencial imediata. Analisar os motivos da baixa performance (produto, equipe, tráfego) e redefinir a estratégia de vendas para os próximos dias.`;
+}
+
+function generateDailySales(media, dias) {
+    const sales = [];
+    for (let i = 0; i < dias; i++) {
+        const variacao = (Math.random() - 0.5) * media * 0.8;
+        sales.push(Math.max(0, media + variacao));
+    }
+    return sales;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const storeId = parseInt(params.get('loja'));
+    const store = allStoresData.find(s => s.id === storeId);
+    
+    if (store) {
+        document.getElementById('store-title').textContent = store.name;
+        
+        const mediaDiariaAtual = store.vendido / diasCorridos;
+        const mediaDiariaNecessaria = diasRestantes > 0 ? (store.meta - store.vendido) / diasRestantes : 0;
+        const performanceIndex = mediaDiariaNecessaria > 0 ? mediaDiariaAtual / mediaDiariaNecessaria : 1;
+        
+        const performanceColor = getPerformanceColor(performanceIndex);
+        
+        const dailySales = generateDailySales(mediaDiariaAtual, diasCorridos);
+        const mediaSemanaAtual = dailySales.slice(-7).reduce((a,b) => a+b, 0) / 7;
+        const mediaSemanaAnterior = dailySales.slice(-14, -7).reduce((a,b) => a+b, 0) / 7;
+        const comparacaoSemanas = mediaSemanaAnterior > 0 ? ((mediaSemanaAtual / mediaSemanaAnterior) - 1) * 100 : 100;
+
+        const dashboardGrid = document.getElementById('dashboard-grid');
+        dashboardGrid.innerHTML = `
+            <div class="module main-chart-module">
+                <h3 class="module-title">Caminho para a Meta vs. Projeção</h3>
+                <div class="chart-wrapper">
+                    <canvas id="main-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="module kpi-module">
+                <div class="kpi-highlight-card">
+                    <div class="label">Índice de Performance</div>
+                    <div class="value" style="color: ${performanceColor}">${performanceIndex.toFixed(2)}</div>
+                </div>
+                <hr style="border: none; border-top: 1px solid var(--cor-borda); margin: 1.5rem 0;">
+                <div class="weekly-kpi-grid">
+                    <div class="weekly-kpi">
+                        <div class="label">Média/Dia (Semana Atual)</div>
+                        <div class="value">${formatCurrency(mediaSemanaAtual)}</div>
+                        <div class="comparison" style="color: ${comparacaoSemanas >= 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)'}">
+                            ${comparacaoSemanas >= 0 ? '▲' : '▼'} ${comparacaoSemanas.toFixed(1)}% vs. semana anterior
+                        </div>
+                    </div>
+                    <div class="weekly-kpi">
+                        <div class="label">Média/Dia (Necessária)</div>
+                        <div class="value">${formatCurrency(mediaDiariaNecessaria)}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module daily-chart-module">
+                <h3 class="module-title">Desempenho Diário (Vendas/dia)</h3>
+                <div class="chart-wrapper">
+                    <canvas id="daily-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="module diagnosis-module">
+                <h3 class="module-title">Diagnóstico e Plano de Ação</h3>
+                <div class="diagnosis-text" style="border-left-color: ${performanceColor};">
+                    ${gerarDiagnostico(performanceIndex)}
+                </div>
+            </div>
+        `;
+        
+        const chartLabels = Array.from({length: totalDiasCampanha}, (_, i) => `D${i + 1}`);
+        new Chart(document.getElementById('main-chart'), {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [
+                    { label: 'Caminho Ideal', data: Array.from({length: totalDiasCampanha}, (_, i) => (store.meta / totalDiasCampanha) * (i + 1)), borderColor: '#cbd5e1', borderWidth: 2, pointRadius: 0, borderDash: [5, 5] },
+                    { label: 'Projeção Atual', data: Array(diasCorridos-1).fill(null).concat(Array.from({length: diasRestantes + 1}, (_, i) => mediaDiariaAtual * (diasCorridos + i))), borderColor: performanceColor, borderWidth: 4, pointRadius: 0, borderDash: [10, 5] },
+                    { label: 'Vendas Reais', data: Array.from({length: diasCorridos}, (_, i) => mediaDiariaAtual * (i + 1)), borderColor: '#3b82f6', borderWidth: 4, pointRadius: 0, tension: 0.1 },
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { ticks: { callback: (value) => formatCurrency(value) } } } }
+        });
+
+        new Chart(document.getElementById('daily-chart'), {
+            type: 'bar',
+            data: {
+                labels: Array.from({length: diasCorridos}, (_, i) => `D${i + 1}`),
+                datasets: [{ label: 'Vendas do Dia', data: dailySales, backgroundColor: 'rgba(59, 130, 246, 0.6)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+    } else {
+        document.getElementById('dashboard-grid').innerHTML = '<h1>Loja não encontrada.</h1>';
+    }
+});
+</script>
+</body>
+</html> -->
+
+
+
+<!-- 
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dossiê Estratégico - Campanha Vizzela</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f8fafc;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #0f172a;
+            --cor-texto-secundario: #64748b;
+            --cor-sucesso: #22c55e;
+            --cor-sucesso-forte: #15803d;
+            --cor-alerta: #f59e0b;
+            --cor-perigo: #ef4444;
+            --cor-borda: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            padding: 25px;
+        }
+
+        .container { max-width: 1400px; margin: auto; }
+        
+        .header h1 {
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: 800;
+            color: var(--cor-primaria);
+            margin-bottom: 1rem;
+        }
+
+        .store-title {
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: 600;
+            color: var(--cor-texto-secundario);
+            margin-bottom: 2.5rem;
+        }
+        
+        .dossier-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+
+        .module {
+            background-color: var(--cor-card);
+            border: 1px solid var(--cor-borda);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .module-title {
+            font-weight: 700;
+            font-size: 1.2em;
+            margin: 0 0 1.5rem 0;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            flex-grow: 1;
+            min-height: 280px;
+        }
+
+        /* Layout do Grid */
+        .main-chart-module { grid-column: span 12; }
+        .kpi-module { grid-column: span 12; }
+        .daily-chart-module { grid-column: span 12; }
+        .diagnosis-module { grid-column: span 12; }
+
+        /* Módulo de Destaque para o Índice */
+        .kpi-highlight-card {
+            text-align: center;
+        }
+        .kpi-highlight-card .label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--cor-texto-secundario);
+            margin-bottom: 0.5rem;
+        }
+        .kpi-highlight-card .value {
+            font-size: 5em;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+        
+        /* Módulo de Diagnóstico */
+        .diagnosis-text {
+            background-color: #f8fafc;
+            border-left: 5px solid;
+            padding: 1rem;
+            font-size: 0.95em;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* Módulo de KPIs semanais */
+        .weekly-kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            text-align: center;
+        }
+        .weekly-kpi .label { font-size: 0.9em; color: var(--cor-texto-secundario); }
+        .weekly-kpi .value { font-size: 2em; font-weight: 700; }
+        .weekly-kpi .comparison { font-size: 0.9em; font-weight: 600; }
+        
+        @media (min-width: 992px) {
+            .main-chart-module { grid-column: span 7; }
+            .kpi-module { grid-column: span 5; }
+            .daily-chart-module { grid-column: span 7; }
+            .diagnosis-module { grid-column: span 5; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Dossiê Estratégico da Loja</h1>
+        <h2 id="store-title" class="store-title">Carregando...</h2>
+    </div>
+    <div id="dashboard-grid" class="dossier-grid">
+        !-- Módulos serão inseridos aqui --
+    </div>
+</div>
+
+<script>
+const inicioCampanha = new Date('2025-07-11T00:00:00');
+const fimCampanha = new Date('2025-09-11T23:59:59');
+const hoje = new Date('2025-07-25T10:00:00');
+const totalDiasCampanha = Math.ceil((fimCampanha - inicioCampanha) / (1000 * 60 * 60 * 24));
+const diasCorridos = Math.max(1, Math.ceil((hoje - inicioCampanha) / (1000 * 60 * 60 * 24)));
+const diasRestantes = Math.max(0, totalDiasCampanha - diasCorridos);
+
+// --- DADOS DE EXEMPLO ATUALIZADOS PARA MOSTRAR TODAS AS CORES ---
+const allStoresData = [
+    { id: 121, name: 'SAC NORTE SHOPPING', meta: 10000.00, vendido: 1620.83 },   // Performance: Vermelho (Índice ~0.67)
+    { id: 140, name: 'SACOLAO MARIA LACERDA', meta: 18000.00, vendido: 3700.00 }, // Performance: Amarelo (Índice ~0.91)
+    { id: 1, name: 'SACOLAO PONTA NEGRA', meta: 35000.00, vendido: 8500.00 },   // Performance: Verde (Índice ~1.12)
+    { id: 100, name: 'SACOLAO LAGOA NOVA', meta: 25000.00, vendido: 8000.00 },    // Performance: Verde Forte (Índice ~1.65)
+];
+
+function formatCurrency(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+
+// --- LÓGICA DE CORES ATUALIZADA ---
+function getPerformanceColor(index) {
+    if (index >= 1.1) return 'var(--cor-sucesso-forte)';
+    if (index >= 1.0) return 'var(--cor-sucesso)';
+    if (index >= 0.8) return 'var(--cor-alerta)';
+    return 'var(--cor-perigo)';
+}
+
+function gerarDiagnostico(index) {
+    if (index >= 1.1) return `<strong>Diagnóstico: Excelente.</strong> A loja está performando <strong>${Math.round((index-1)*100)}% acima do ritmo</strong>. <strong>Plano de Ação:</strong> Manter a estratégia atual, identificar os vendedores de alta performance e replicar suas táticas.`;
+    else if (index >= 1.0) return `<strong>Diagnóstico: Bom.</strong> O ritmo atual é <strong>suficiente para atingir a meta</strong>. <strong>Plano de Ação:</strong> Foco em consistência. Monitorar as vendas diárias para evitar quedas e garantir que a média seja mantida.`;
+    else if (index >= 0.8) return `<strong>Diagnóstico: Atenção.</strong> A performance está <strong>${Math.round((1-index)*100)}% abaixo do necessário</strong>. <strong>Plano de Ação:</strong> Reunião de alinhamento com a equipe para identificar gargalos. Criar uma micro-meta diária para fechar a lacuna.`;
+    else return `<strong>Diagnóstico: Alerta Crítico.</strong> O ritmo está muito abaixo do esperado. <strong>Plano de Ação:</strong> Intervenção gerencial imediata. Analisar os motivos da baixa performance (produto, equipe, tráfego) e redefinir a estratégia de vendas para os próximos dias.`;
+}
+
+function generateDailySales(media, dias) {
+    const sales = [];
+    for (let i = 0; i < dias; i++) {
+        const variacao = (Math.random() - 0.5) * media * 0.8;
+        sales.push(Math.max(0, media + variacao));
+    }
+    return sales;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const storeId = parseInt(params.get('loja'));
+    const store = allStoresData.find(s => s.id === storeId);
+    
+    if (store) {
+        document.getElementById('store-title').textContent = store.name;
+        
+        const mediaDiariaAtual = store.vendido / diasCorridos;
+        const mediaDiariaNecessaria = diasRestantes > 0 ? (store.meta - store.vendido) / diasRestantes : 0;
+        const performanceIndex = mediaDiariaNecessaria > 0 ? mediaDiariaAtual / mediaDiariaNecessaria : 1;
+        
+        const performanceColor = getPerformanceColor(performanceIndex);
+        
+        const dailySales = generateDailySales(mediaDiariaAtual, diasCorridos);
+        const mediaSemanaAtual = dailySales.slice(-7).reduce((a,b) => a+b, 0) / 7;
+        const mediaSemanaAnterior = dailySales.slice(-14, -7).reduce((a,b) => a+b, 0) / 7;
+        const comparacaoSemanas = mediaSemanaAnterior > 0 ? ((mediaSemanaAtual / mediaSemanaAnterior) - 1) * 100 : 100;
+
+        const dashboardGrid = document.getElementById('dashboard-grid');
+        dashboardGrid.innerHTML = `
+            <div class="module main-chart-module">
+                <h3 class="module-title">Caminho para a Meta vs. Projeção</h3>
+                <div class="chart-wrapper">
+                    <canvas id="main-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="module kpi-module">
+                <div class="kpi-highlight-card">
+                    <div class="label">Índice de Performance</div>
+                    <div class="value" style="color: ${performanceColor}">${performanceIndex.toFixed(2)}</div>
+                </div>
+                <hr style="border: none; border-top: 1px solid var(--cor-borda); margin: 1.5rem 0;">
+                <div class="weekly-kpi-grid">
+                    <div class="weekly-kpi">
+                        <div class="label">Média/Dia (Semana Atual)</div>
+                        <div class="value">${formatCurrency(mediaSemanaAtual)}</div>
+                        <div class="comparison" style="color: ${comparacaoSemanas >= 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)'}">
+                            ${comparacaoSemanas >= 0 ? '▲' : '▼'} ${comparacaoSemanas.toFixed(1)}% vs. semana anterior
+                        </div>
+                    </div>
+                    <div class="weekly-kpi">
+                        <div class="label">Média/Dia (Necessária)</div>
+                        <div class="value">${formatCurrency(mediaDiariaNecessaria)}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module daily-chart-module">
+                <h3 class="module-title">Desempenho Diário (Vendas/dia)</h3>
+                <div class="chart-wrapper">
+                    <canvas id="daily-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="module diagnosis-module">
+                <h3 class="module-title">Diagnóstico e Plano de Ação</h3>
+                <div class="diagnosis-text" style="border-left-color: ${performanceColor};">
+                    ${gerarDiagnostico(performanceIndex)}
+                </div>
+            </div>
+        `;
+        
+        const chartLabels = Array.from({length: totalDiasCampanha}, (_, i) => `D${i + 1}`);
+        new Chart(document.getElementById('main-chart'), {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [
+                    { label: 'Caminho Ideal', data: Array.from({length: totalDiasCampanha}, (_, i) => (store.meta / totalDiasCampanha) * (i + 1)), borderColor: '#cbd5e1', borderWidth: 2, pointRadius: 0, borderDash: [5, 5] },
+                    { label: 'Projeção Atual', data: Array(diasCorridos-1).fill(null).concat(Array.from({length: diasRestantes + 1}, (_, i) => mediaDiariaAtual * (diasCorridos + i))), borderColor: performanceColor, borderWidth: 4, pointRadius: 0, borderDash: [10, 5] },
+                    { label: 'Vendas Reais', data: Array.from({length: diasCorridos}, (_, i) => mediaDiariaAtual * (i + 1)), borderColor: '#3b82f6', borderWidth: 4, pointRadius: 0, tension: 0.1 },
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { ticks: { callback: (value) => formatCurrency(value) } } } }
+        });
+
+        new Chart(document.getElementById('daily-chart'), {
+            type: 'bar',
+            data: {
+                labels: Array.from({length: diasCorridos}, (_, i) => `D${i + 1}`),
+                datasets: [{ label: 'Vendas do Dia', data: dailySales, backgroundColor: 'rgba(59, 130, 246, 0.6)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+    } else {
+        document.getElementById('dashboard-grid').innerHTML = '<h1>Loja não encontrada.</h1>';
+    }
+});
+</script>
+</body>
+</html> -->
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Diagnóstico e Estratégia</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cor-primaria: #E6007E;
+            --cor-fundo: #f8fafc;
+            --cor-card: #ffffff;
+            --cor-texto-principal: #0f172a;
+            --cor-texto-secundario: #64748b;
+            --cor-sucesso: #22c55e;
+            --cor-sucesso-forte: #15803d;
+            --cor-alerta: #f59e0b;
+            --cor-perigo: #ef4444;
+            --cor-borda: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--cor-fundo);
+            color: var(--cor-texto-principal);
+            padding: 25px;
+        }
+
+        .container { max-width: 1400px; margin: auto; }
+        
+        .header h1 {
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: 800;
+            color: var(--cor-primaria);
+            margin-bottom: 1rem;
+        }
+
+        .store-title {
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: 600;
+            color: var(--cor-texto-secundario);
+            margin-bottom: 2.5rem;
+        }
+        
+        .dossier-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+
+        .module {
+            background-color: var(--cor-card);
+            border: 1px solid var(--cor-borda);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .module-title {
+            font-weight: 700;
+            font-size: 1.2em;
+            margin: 0 0 1.5rem 0;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            flex-grow: 1;
+            min-height: 280px;
+        }
+
+        /* Layout do Grid */
+        .main-chart-module { grid-column: span 12; }
+        .kpi-module { grid-column: span 12; }
+        .daily-chart-module { grid-column: span 12; }
+        .diagnosis-module { grid-column: span 12; }
+
+        /* Módulo de Destaque para o Índice */
+        .kpi-highlight-card {
+            text-align: center;
+        }
+        .kpi-highlight-card .label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--cor-texto-secundario);
+            margin-bottom: 0.5rem;
+        }
+        .kpi-highlight-card .value {
+            font-size: 5em;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+        
+        /* Módulo de Diagnóstico */
+        .diagnosis-text {
+            background-color: #f8fafc;
+            border-left: 5px solid;
+            padding: 1rem;
+            font-size: 0.95em;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* Módulo de KPIs semanais */
+        .weekly-kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            text-align: center;
+        }
+        .weekly-kpi .label { font-size: 0.9em; color: var(--cor-texto-secundario); }
+        .weekly-kpi .value { font-size: 2em; font-weight: 700; }
+        .weekly-kpi .comparison { font-size: 0.9em; font-weight: 600; }
+        
+        @media (min-width: 992px) {
+            .main-chart-module { grid-column: span 7; }
+            .kpi-module { grid-column: span 5; }
+            .daily-chart-module { grid-column: span 7; }
+            .diagnosis-module { grid-column: span 5; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1> Diagnóstico e Estratégia da Loja</h1>
+        <h2 id="store-title" class="store-title">Carregando...</h2>
+    </div>
+    <div id="dashboard-grid" class="dossier-grid">
+        !-- Módulos serão inseridos aqui --
+    </div>
+</div>
+
+<script>
+const inicioCampanha = new Date('2025-07-11T00:00:00');
+const fimCampanha = new Date('2025-09-11T23:59:59');
+const hoje = new Date('2025-07-25T10:00:00');
+const totalDiasCampanha = Math.ceil((fimCampanha - inicioCampanha) / (1000 * 60 * 60 * 24));
+const diasCorridos = Math.max(1, Math.ceil((hoje - inicioCampanha) / (1000 * 60 * 60 * 24)));
+const diasRestantes = Math.max(0, totalDiasCampanha - diasCorridos);
+
+// --- DADOS FINAIS E ALINHADOS COM A PLANILHA ---
+const allStoresData = [
+    { id: 121, name: 'SAC NORTE SHOPPING',meta: 10000.00, vendido: 1620.83 },
+    { id: 140, name: 'SAC MARIA LACERDA', meta: 18000.00, vendido: 2803.09 },
+    { id: 100, name: 'SAC LAGOA NOVA',    meta: 25000.00, vendido: 3695.63 },
+    { id: 1,   name: 'SAC PONTA NEGRA',   meta: 35000.00, vendido: 4997.78 },
+    { id: 131, name: 'SAC ZN 2',          meta: 6000.00,  vendido: 820.63  },
+    { id: 122, name: 'SAC PARNAMIRIM',    meta: 10000.00, vendido: 1068.56 },
+    { id: 141, name: 'SAC IGAPO',         meta: 18000.00, vendido: 369.52  }
+];
+
+function formatCurrency(value) { return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+
+function getPerformanceColor(index) {
+    if (index >= 1.1) return 'var(--cor-sucesso-forte)';
+    if (index >= 1.0) return 'var(--cor-sucesso)';
+    if (index >= 0.8) return 'var(--cor-alerta)';
+    return 'var(--cor-perigo)';
+}
+
+function gerarDiagnostico(index) {
+    if (index >= 1.1) return `<strong>Diagnóstico: Excelente.</strong> A loja está performando <strong>${Math.round((index-1)*100)}% acima do ritmo</strong>. <strong>Plano de Ação:</strong> Manter a estratégia atual, identificar os vendedores de alta performance e replicar suas táticas.`;
+    else if (index >= 1.0) return `<strong>Diagnóstico: Bom.</strong> O ritmo atual é <strong>suficiente para atingir a meta</strong>. <strong>Plano de Ação:</strong> Foco em consistência. Monitorar as vendas diárias para evitar quedas e garantir que a média seja mantida.`;
+    else if (index >= 0.8) return `<strong>Diagnóstico: Atenção.</strong> A performance está <strong>${Math.round((1-index)*100)}% abaixo do necessário</strong>. <strong>Plano de Ação:</strong> Reunião de alinhamento com a equipe para identificar gargalos. Criar uma micro-meta diária para fechar a lacuna.`;
+    else return `<strong>Diagnóstico: Alerta Crítico.</strong> O ritmo está muito abaixo do esperado. <strong>Plano de Ação:</strong> Intervenção gerencial imediata. Analisar os motivos da baixa performance (produto, equipe, tráfego) e redefinir a estratégia de vendas para os próximos dias.`;
+}
+
+function generateDailySales(media, dias) {
+    const sales = [];
+    for (let i = 0; i < dias; i++) {
+        const variacao = (Math.random() - 0.5) * media * 0.8;
+        sales.push(Math.max(0, media + variacao));
+    }
+    return sales;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const storeId = parseInt(params.get('loja'));
+    const store = allStoresData.find(s => s.id === storeId);
+    
+    if (store) {
+        document.getElementById('store-title').textContent = store.name;
+        
+        const mediaDiariaAtual = store.vendido / diasCorridos;
+        const mediaDiariaNecessaria = diasRestantes > 0 ? (store.meta - store.vendido) / diasRestantes : 0;
+        const performanceIndex = mediaDiariaNecessaria > 0 ? mediaDiariaAtual / mediaDiariaNecessaria : 1;
+        
+        const performanceColor = getPerformanceColor(performanceIndex);
+        
+        const dailySales = generateDailySales(mediaDiariaAtual, diasCorridos);
+        const mediaSemanaAtual = dailySales.slice(-7).reduce((a,b) => a+b, 0) / 7;
+        const mediaSemanaAnterior = dailySales.slice(-14, -7).reduce((a,b) => a+b, 0) / 7;
+        const comparacaoSemanas = mediaSemanaAnterior > 0 ? ((mediaSemanaAtual / mediaSemanaAnterior) - 1) * 100 : 100;
+
+        const dashboardGrid = document.getElementById('dashboard-grid');
+        dashboardGrid.innerHTML = `
+            <div class="module main-chart-module">
+                <h3 class="module-title">Caminho para a Meta vs. Projeção</h3>
+                <div class="chart-wrapper">
+                    <canvas id="main-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="module kpi-module">
+                <div class="kpi-highlight-card">
+                    <div class="label">Índice de Performance</div>
+                    <div class="value" style="color: ${performanceColor}">${performanceIndex.toFixed(2)}</div>
+                </div>
+                <hr style="border: none; border-top: 1px solid var(--cor-borda); margin: 1.5rem 0;">
+                <div class="weekly-kpi-grid">
+                    <div class="weekly-kpi">
+                        <div class="label">Média/Dia (Semana Atual)</div>
+                        <div class="value">${formatCurrency(mediaSemanaAtual)}</div>
+                        <div class="comparison" style="color: ${comparacaoSemanas >= 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)'}">
+                            ${comparacaoSemanas >= 0 ? '▲' : '▼'} ${comparacaoSemanas.toFixed(1)}% vs. semana anterior
+                        </div>
+                    </div>
+                    <div class="weekly-kpi">
+                        <div class="label">Média/Dia (Necessária)</div>
+                        <div class="value">${formatCurrency(mediaDiariaNecessaria)}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module daily-chart-module">
+                <h3 class="module-title">Desempenho Diário (Vendas/dia)</h3>
+                <div class="chart-wrapper">
+                    <canvas id="daily-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="module diagnosis-module">
+                <h3 class="module-title">Diagnóstico e Plano de Ação</h3>
+                <div class="diagnosis-text" style="border-left-color: ${performanceColor};">
+                    ${gerarDiagnostico(performanceIndex)}
+                </div>
+            </div>
+        `;
+        
+        const chartLabels = Array.from({length: totalDiasCampanha}, (_, i) => `D${i + 1}`);
+        new Chart(document.getElementById('main-chart'), {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [
+                    { label: 'Caminho Ideal', data: Array.from({length: totalDiasCampanha}, (_, i) => (store.meta / totalDiasCampanha) * (i + 1)), borderColor: '#cbd5e1', borderWidth: 2, pointRadius: 0, borderDash: [5, 5] },
+                    { label: 'Projeção Atual', data: Array(diasCorridos-1).fill(null).concat(Array.from({length: diasRestantes + 1}, (_, i) => mediaDiariaAtual * (diasCorridos + i))), borderColor: performanceColor, borderWidth: 4, pointRadius: 0, borderDash: [10, 5] },
+                    { label: 'Vendas Reais', data: Array.from({length: diasCorridos}, (_, i) => mediaDiariaAtual * (i + 1)), borderColor: '#3b82f6', borderWidth: 4, pointRadius: 0, tension: 0.1 },
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { ticks: { callback: (value) => formatCurrency(value) } } } }
+        });
+
+        new Chart(document.getElementById('daily-chart'), {
+            type: 'bar',
+            data: {
+                labels: Array.from({length: diasCorridos}, (_, i) => `D${i + 1}`),
+                datasets: [{ label: 'Vendas do Dia', data: dailySales, backgroundColor: 'rgba(59, 130, 246, 0.6)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+
+    } else {
+        document.getElementById('dashboard-grid').innerHTML = '<h1>Loja não encontrada.</h1>';
+    }
+});
+</script>
+</body>
+</html> 

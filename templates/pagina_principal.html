@@ -1,0 +1,2807 @@
+<!-- 
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sistema de Gestão de Estoque</title>
+
+
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron :wght@500&display=swap" rel="stylesheet">
+
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css "/>
+
+  <style>
+    /* Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    body {
+      background-color: #0f0f1b;
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .background-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(#1a1a2e 1px, transparent 1px), linear-gradient(120deg, rgba(0,255,255,0.05) 0%, rgba(255,0,255,0.05) 100%);
+      background-size: 40px 40px;
+      z-index: 0;
+      animation: moveGrid 10s linear infinite;
+    }
+
+    @keyframes moveGrid {
+      from { background-position: 0 0; }
+      to { background-position: 80px 80px; }
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(20, 20, 40, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+      box-shadow: 0 2px 10px rgba(0, 255, 255, 0.1);
+    }
+
+    .header h1 {
+      font-size: 22px;
+      color: #00ffff;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropbtn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      color: white;
+      font-size: 14px;
+    }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background: rgba(25, 25, 50, 0.95);
+      min-width: 180px;
+      box-shadow: 0 4px 12px rgba(0, 255, 255, 0.2);
+      z-index: 1001;
+      border-radius: 6px;
+      overflow: hidden;
+      backdrop-filter: blur(5px);
+    }
+
+    .dropdown-content a {
+      color: #ccc;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+      transition: background 0.3s ease;
+    }
+
+    .dropdown-content a:hover {
+      background: rgba(0, 255, 255, 0.1);
+      color: #00ffff;
+    }
+
+    .logout-btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      background: linear-gradient(to right, #e74c3c, #c0392b);
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      background: linear-gradient(to right, #ff6b6b, #d63031);
+      box-shadow: 0 0 10px #ff6b6b;
+    }
+
+    .container {
+      padding: 100px 20px 40px;
+      max-width: 1200px;
+      margin: auto;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 24px;
+      color: #00ffff;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #aaa;
+    }
+    .parametros .dropbtn {
+  background: linear-gradient(to right, #3498db, #2980b9);
+}
+
+
+    /* Classes personalizadas para cada grupo */
+    .solicitacoes .dropbtn { background: linear-gradient(to right, #f39c12, #d35400); }
+    .estoque .dropbtn { background: linear-gradient(to right, #2ecc71, #27ae60); }
+    .relatorios .dropbtn { background: linear-gradient(to right, #1abc9c, #16a085); }
+    .rh .dropbtn { background: linear-gradient(to right, #9b59b6, #8e44ad); }
+
+    .dropbtn:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    }
+    .analises .dropbtn {
+  background: linear-gradient(to right, #3498db, #2980b9);
+}
+  </style>
+</head>
+<body>
+
+  !-- !-- Fundo Neural -- --
+  <div class="background-overlay"></div>
+
+  !-- !-- Cabeçalho -- --
+  <div class="header">
+    <h1>Gestão de Estoque</h1>
+
+    <div class="header-buttons">
+      <div class="dropdown parametros">
+  <button class="dropbtn">Parâmetros</button>
+  <div class="dropdown-content">
+    <a href="/permissoes" onclick="abrirPermissoes()">Permissões</a>
+  </div>
+</div>
+      <div class="dropdown solicitacoes">
+        <button class="dropbtn">Solicitações</button>
+        <div class="dropdown-content">
+          <a href="/solicitacoes_loja" onclick="abrirSolicitacoesLoja()">Solicitações da Loja</a>
+          <a href="/acomp_solic_deposito" onclick="abrirAcompSolicDeposito()">Acompanhamento de Solicitações</a>
+        </div>
+      </div>
+      <div class="dropdown estoque">
+        <button class="dropbtn">Estoque</button>
+        <div class="dropdown-content">
+          <a href="/index" onclick="abririndex()">Gestão de Estoque</a>
+          <a href="/ajustes_realizados" onclick="abrirAjustesRealizados()">Ajustes Realizados</a>
+          <a href="/liberar-ajustes" onclick="abrirLiberarAjustes()">Liberar Ajustes</a>
+          <a href="/monitoramento_fornecedores" onclick="abrirMonitoramentoFornecedores()">Monitoramento de Fornecedores</a>
+          <a href="/consultas_avancadas" onclick="abrirconsultasavancadas()">Consultar Estoque</a>
+          </div>
+        
+      </div>
+      <div class="dropdown analises">
+  <button class="dropbtn">Análises</button>
+  <div class="dropdown-content">
+    <a href="/analise_vendas" onclick="abrirAnaliseVendas()">Análise de Vendas</a>
+    <a href="/alerta_lojas" onclick="abrirAnaliseRupturas()">Análise de Rupturas</a>
+  </div>
+</div>
+      <div class="dropdown relatorios">
+        <button class="dropbtn">Relatórios</button>
+        <div class="dropdown-content">
+          <a href="/relatorio" onclick="abrirRelatorio()">Ajustes</a>
+          <a href="/conferencia" onclick="abrirConferencia()">Conferência</a>
+        </div>
+      </div>
+      <div class="dropdown rh">
+        <button class="dropbtn">RH</button>
+        <div class="dropdown-content">
+          <a href="/cv_analise" onclick="abrirCVAnalise()">CV-Análise</a>
+          <a href="/cadastro_vagas" onclick="abrirCadastrarVagas()">Cadastrar Vagas</a>
+          <a href="/selecionar_candidatos" onclick="abrirSelecionarCandidatos()">Selecionar Candidatos</a>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="logout()">Sair</button>
+    </div>
+  </div>
+
+  !-- -- -- Conteúdo Principal -- -- --
+  <div class="container">
+    <h2>Bem-vindo ao Sistema de Gestão de Estoque</h2>
+    <p>Selecione uma opção no menu acima para começar.</p>
+  </div>
+
+  !-- <-- <-- Script de navegação -- --
+  <script>
+    function abrirSolicitacoesLoja() { window.location.href = '/solicitacoes_loja'; }
+    function abrirAcompSolicDeposito() { window.location.href = '/acomp_solic_deposito'; }
+    function abririndex() { window.location.href = '/index'; }
+    function abrirRelatorio() { window.location.href = '/relatorio'; }
+    function abriralertalojas() { window.location.href = '/alerta_lojas'; }
+    function abrirConferencia() { window.location.href = '/conferencia'; }
+    function abrirCVAnalise() { window.location.href = '/cv_analise'; }
+    function abrirAjustesRealizados() { window.location.href = '/ajustes_realizados'; }
+    function abrirLiberarAjustes() { window.location.href = '/liberar-ajustes'; }
+    function abrirCadastrarVagas() { window.location.href = '/cadastro_vagas'; }
+    function abrirSelecionarCandidatos() { window.location.href = '/selecionar_candidatos'; }
+    function abrirMonitoramentoFornecedores() { window.location.href = '/monitoramento_fornecedores'; }
+    function abrirconsultasavancadas() { window.location.href = '/consultas_avancadas'; }
+    function abrirPermissoes() { window.location.href = '/permissoes'; }
+    function abrirAnaliseVendas() { window.location.href = '/analise_vendas'; }
+    function logout() { window.location.href = '/logout'; }
+  </script>
+</body>
+</html> -->
+
+
+
+
+<!-- 
+
+ <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sistema de Gestão de Estoque</title>
+
+ <link href="https://fonts.googleapis.com/css2?family=Orbitron :wght@500&display=swap" rel="stylesheet">
+
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css "/>
+
+  <style>
+    /* Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    body {
+      background-color: #0f0f1b;   
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .background-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(#1a1a2e 1px, transparent 1px), linear-gradient(120deg, rgba(0,255,255,0.05) 0%, rgba(255,0,255,0.05) 100%);
+      background-size: 40px 40px;
+      z-index: 0;
+      animation: moveGrid 10s linear infinite;
+    }
+
+    @keyframes moveGrid {
+      from { background-position: 0 0; }
+      to { background-position: 80px 80px; }
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(20, 20, 40, 0.9);
+      backdrop-filter: blur(10px);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+      box-shadow: 0 2px 10px rgba(0, 255, 255, 0.1);
+    }
+
+    .header h1 {
+      font-size: 22px;
+      color: #00ffff;
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropbtn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      color: white;
+      font-size: 14px;
+    }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background: rgba(25, 25, 50, 0.95);
+      min-width: 180px;
+      box-shadow: 0 4px 12px rgba(0, 255, 255, 0.2);
+      z-index: 1001;
+      border-radius: 6px;
+      overflow: hidden;
+      backdrop-filter: blur(5px);
+    }
+
+    .dropdown-content a {
+      color: #ccc;
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+      transition: background 0.3s ease;
+    }
+
+    .dropdown-content a:hover {
+      background: rgba(0, 255, 255, 0.1);
+      color: #00ffff;
+    }
+
+    .logout-btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      background: linear-gradient(to right, #e74c3c, #c0392b);
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      background: linear-gradient(to right, #ff6b6b, #d63031);
+      box-shadow: 0 0 10px #ff6b6b;
+    }
+
+    .container {
+      padding: 100px 20px 40px;
+      max-width: 1200px;
+      margin: auto;
+      text-align: center;
+    }
+
+    h2 {
+      font-size: 24px;
+      color: #00ffff;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #aaa;
+    }
+
+    /* Cores personalizadas por grupo */
+    .parametros .dropbtn {
+      background: linear-gradient(to right, #3498db, #2980b9);
+    }
+    .solicitacoes .dropbtn {
+      background: linear-gradient(to right, #f39c12, #d35400);
+    }
+    .estoque .dropbtn {
+      background: linear-gradient(to right, #2ecc71, #27ae60);
+    }
+    .relatorios .dropbtn {
+      background: linear-gradient(to right, #1abc9c, #16a085);
+    }
+    .rh .dropbtn {
+      background: linear-gradient(to right, #9b59b6, #8e44ad);
+    }
+
+    .dropbtn:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  !-- Fundo Neural --
+  <div class="background-overlay"></div>
+
+  !-- Cabeçalho --
+  <div class="header">
+    <h1>Gestão de Estoque</h1>
+
+    <div class="header-buttons">
+      <div class="dropdown parametros">
+        <button class="dropbtn">Parâmetros</button>
+        <div class="dropdown-content">
+          {% if 'admin:gerenciar_permissoes' in permissoes_usuario %}
+            <a href="/permissoes" onclick="abrirPermissoes()">Permissões</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="dropdown solicitacoes">
+        <button class="dropbtn">Solicitações</button>
+        <div class="dropdown-content">
+          {% if 'solicitacoes:visualizar' in permissoes_usuario %}
+            <a href="/solicitacoes_loja" onclick="abrirSolicitacoesLoja()">Solicitações da Loja</a>
+          {% endif %}
+          {% if 'solicitacoes:acompanhar' in permissoes_usuario %}
+            <a href="/acomp_solic_deposito" onclick="abrirAcompSolicDeposito()">Acompanhamento de Solicitações</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="dropdown estoque">
+        <button class="dropbtn">Estoque</button>
+        <div class="dropdown-content">
+          {% if 'estoque:gerenciar' in permissoes_usuario %}
+            <a href="/index" onclick="abririndex()">Gestão de Estoque</a>
+          {% endif %}
+          {% if 'estoque:visualizar_ajustes' in permissoes_usuario %}
+            <a href="/ajustes_realizados" onclick="abrirAjustesRealizados()">Ajustes Realizados</a>
+          {% endif %}
+          {% if 'estoque:liberar_ajustes' in permissoes_usuario %}
+            <a href="/liberar-ajustes" onclick="abrirLiberarAjustes()">Liberar Ajustes</a>
+          {% endif %}
+          {% if 'estoque:monitorar_fornecedores' in permissoes_usuario %}
+            <a href="/monitoramento_fornecedores" onclick="abrirMonitoramentoFornecedores()">Monitoramento de Fornecedores</a>
+          {% endif %}
+          {% if 'estoque:consultar' in permissoes_usuario %}
+            <a href="/consultas_avancadas" onclick="abrirconsultasavancadas()">Consultar Estoque</a>
+          {% endif %}
+          {% if 'estoque:analisar_rupturas' in permissoes_usuario %}
+            <a href="/alerta_lojas" onclick="abriralertalojas()">Análise de Rupturas</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="dropdown relatorios">
+        <button class="dropbtn">Relatórios</button>
+        <div class="dropdown-content">
+          {% if 'relatorio:visualizar_ajustes' in permissoes_usuario %}
+            <a href="/relatorio" onclick="abrirRelatorio()">Ajustes</a>
+          {% endif %}
+          {% if 'relatorio:conferir' in permissoes_usuario %}
+            <a href="/conferencia" onclick="abrirConferencia()">Conferência</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="dropdown rh">
+        <button class="dropbtn">RH</button>
+        <div class="dropdown-content">
+          {% if 'rh:analisar_cv' in permissoes_usuario %}
+            <a href="/cv_analise" onclick="abrirCVAnalise()">CV-Análise</a>
+          {% endif %}
+          {% if 'rh:cadastrar_vagas' in permissoes_usuario %}
+            <a href="/cadastro_vagas" onclick="abrirCadastrarVagas()">Cadastrar Vagas</a>
+          {% endif %}
+          {% if 'rh:selecionar_candidatos' in permissoes_usuario %}
+            <a href="/selecionar_candidatos" onclick="abrirSelecionarCandidatos()">Selecionar Candidatos</a>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if 'autenticacao:logout' in permissoes_usuario %}
+        <button class="logout-btn" onclick="logout()">Sair</button>
+      {% endif %}
+    </div> !-- Fechamento de header-buttons --
+  </div> !-- Fechamento de header --
+
+  <-- Conteúdo Principal --
+  <div class="container">
+    <h2>Bem-vindo ao Sistema de Gestão de Estoque</h2>
+    <p>Selecione uma opção no menu acima para começar.</p>
+  </div>
+
+  !-- Scripts --
+  <script>
+    function abrirSolicitacoesLoja() { window.location.href = '/solicitacoes_loja'; }
+    function abrirAcompSolicDeposito() { window.location.href = '/acomp_solic_deposito'; }
+    function abririndex() { window.location.href = '/index'; }
+    function abrirRelatorio() { window.location.href = '/relatorio'; }
+    function abriralertalojas() { window.location.href = '/alerta_lojas'; }
+    function abrirConferencia() { window.location.href = '/conferencia'; }
+    function abrirCVAnalise() { window.location.href = '/cv_analise'; }
+    function abrirAjustesRealizados() { window.location.href = '/ajustes_realizados'; }
+    function abrirLiberarAjustes() { window.location.href = '/liberar-ajustes'; }
+    function abrirCadastrarVagas() { window.location.href = '/cadastro_vagas'; }
+    function abrirSelecionarCandidatos() { window.location.href = '/selecionar_candidatos'; }
+    function abrirMonitoramentoFornecedores() { window.location.href = '/monitoramento_fornecedores'; }
+    function abrirconsultasavancadas() { window.location.href = '/consultas_avancadas'; }
+    function abrirPermissoes() { window.location.href = '/permissoes'; }
+    function logout() { window.location.href = '/logout'; }
+  </script>
+</body>
+</html> -->
+
+
+<!-- 
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Estoque</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            background-color: #34495e;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        .logout-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            color: white;
+            background-color: #e74c3c;
+        }
+
+        .logout-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            color: white;
+            background-color: #3498db;
+        }
+
+        .dropbtn:hover {
+            background-color: #2980b9;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #34495e;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #2980b9;
+        }
+
+        .solicitacoes .dropbtn { background-color: #f39c12; }
+        .solicitacoes .dropbtn:hover { background-color: #d35400; }
+        .estoque .dropbtn { background-color: #2ecc71; }
+        .estoque .dropbtn:hover { background-color: #27ae60; }
+        .relatorios .dropbtn { background-color: #1abc9c; }
+        .relatorios .dropbtn:hover { background-color: #16a085; }
+        .rh .dropbtn { background-color: #9b59b6; }
+        .rh .dropbtn:hover { background-color: #8e44ad; }
+
+        .container {
+            margin-top: 80px;
+            padding: 20px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Gestão de Estoque</h1>
+        <div class="header-buttons">
+          <div class="dropdown analises">
+  <button class="dropbtn">Análises</button>
+  <div class="dropdown-content">
+    <a href="/analise_vendas" onclick="abrirAnaliseVendas()">Análise de Vendas</a>
+    <a href="/alerta_lojas" onclick="abrirAnaliseRupturas()">Análise de Rupturas</a>
+    <a href="/monitoramento_pedidos" onclick="abrirmonitoramentopedidos()">Análise de Pedidos</a>
+    <a href="/analise_estrategica" onclick="abriranaliseestrategica()">Análise Estratégica de Rupturas</a>
+    <a href="/analise_avarias" onclick="abriranaliseeavarias()">Análise Avarias</a>
+
+  </div>
+</div>
+            <div class="dropdown solicitacoes">
+                <button class="dropbtn">Solicitações</button>
+                <div class="dropdown-content">
+                    <a href="/solicitacoes_loja" onclick="abrirSolicitacoesLoja()">Solicitações da Loja</a>
+                    <a href="/acomp_solic_deposito" onclick="abrirAcompSolicDeposito()">Acompanhamento de Solicitações</a>
+                </div>
+            </div>
+            <div class="dropdown estoque">
+                <button class="dropbtn">Estoque</button>
+                <div class="dropdown-content">
+                    <a href="/index" onclick="abririndex()">Gestão de Estoque</a>
+                    <a href="/ajustes_realizados" onclick="abrirAjustesRealizados()">Ajustes Realizados</a>
+                    <a href="/liberar-ajustes" onclick="abrirLiberarAjustes()">Liberar Ajustes</a>
+                    <a href="/monitoramento_fornecedores" onclick="abrirMonitoramentoFornecedores()">Monitoramento de Fornecedores</a>
+                    <a href="/consultas_avancadas" onclick="abrirconsultasavancadas()">Consultar Estoque</a>
+                    
+                </div>
+            </div>
+            <div class="dropdown relatorios">
+                <button class="dropbtn">Relatórios</button>
+                <div class="dropdown-content">
+                    <a href="/relatorio" onclick="abrirRelatorio()">Ajustes</a>
+                    <a href="/conferencia" onclick="abrirConferencia()">Conferência</a>
+                    <a href="/pda_imprimir_romaneio" onclick="abrirPDAConferencia()"> Conferência - PDA</a>
+                </div>
+            </div>
+            <div class="dropdown rh">
+                <button class="dropbtn">RH</button>
+                <div class="dropdown-content">
+                    <a href="/cv_analise" onclick="abrirCVAnalise()">CV-Análise</a>
+                    <a href="/cadastro_vagas" onclick="abrirCadastrarVagas()">Cadastrar Vagas</a>
+                    <a href="/selecionar_candidatos" onclick="abrirSelecionarCandidatos()">Selecionar Candidatos</a>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Sair</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Bem-vindo ao Sistema de Gestão de Estoque</h2>
+        <p>Selecione uma opção no menu acima para começar.</p>
+    </div>
+
+    <script>
+        function abriranalise_estrategica() {
+            console.log("Botão analise avarias");
+            window.location.href = '/analise_avaria';
+        }
+        function abriranalise_estrategica() {
+            console.log("Botão analise estrategica");
+            window.location.href = '/analise_estrategica';
+        }
+        function abrirSolicitacoesLoja() {
+            console.log("Botão PDA Conferência");
+            window.location.href = '/pda_imprimir_romaneio';
+        }
+        function abrirSolicitacoesLoja() {
+            console.log("Botão Solicitações da Loja clicado.");
+            window.location.href = '/solicitacoes_loja';
+        }
+
+        function abrirAcompSolicDeposito() {
+            console.log("Botão Acompanhamento de Solicitações clicado.");
+            window.location.href = '/acomp_solic_deposito.';
+        }
+
+        function abririndex() {
+            console.log("Botão Gestão de Estoque clicado.");
+            window.location.href = '/index';
+        }
+
+        function abrirRelatorio() {
+            console.log("Botão Relatório clicado.");
+            window.location.href = '/relatorio';
+        }
+
+        function abriralertalojas() {
+            console.log("Botão Análise de Rupturas.");
+            window.location.href = '/alerta_lojas';
+        }
+
+        function abrirConferencia() {
+            console.log("Botão Conferência clicado.");
+            window.location.href = '/conferencia';
+        }
+
+        function abrirCVAnalise() {
+            console.log("Botão CV-Análise clicado.");
+            window.location.href = '/cv_analise';
+        }
+
+        function abrirAjustesRealizados() {
+            console.log("Botão Ajustes Realizados clicado.");
+            window.location.href = '/ajustes_realizados';
+        }
+
+        function abrirLiberarAjustes() {
+            console.log("Botão Liberar Ajustes clicado.");
+            window.location.href = '/liberar-ajustes';
+        }
+        
+        function abrirAnaliseVendas() {
+            console.log("Botão Análise de Vendas clicado.");
+            window.location.href = '/analise_vendas';
+        }
+
+        function abrirCadastrarVagas() {
+            console.log("Botão Cadastrar Vagas clicado.");
+            window.location.href = '/cadastro_vagas';
+        }
+
+        function abrirSelecionarCandidatos() {
+            console.log("Botão Selecionar Candidatos clicado.");
+            window.location.href = '/selecionar_candidatos';
+        }
+
+        function abrirMonitoramentoFornecedores() {
+            console.log("Botão Monitoramento de Fornecedores clicado.");
+            window.location.href = '/monitoramento_fornecedores';
+        }
+
+        function abrirconsultasavancadas() {
+            console.log("Botão Consultar Estoque clicado.");
+            window.location.href = '/consultas_avancadas';
+        }
+
+        function logout() {
+            console.log("Executando logout...");
+            window.location.href = '/logout';
+        }
+        
+    </script>
+</body>
+</html>  -->
+
+
+
+
+
+  
+<!-- 
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão - Dashboard de Vendas</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        /* --- ESTILOS GERAIS E DO MENU SUPERIOR --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #f4f4f4; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+
+        .header {
+            background-color: #34495e; color: white; padding: 15px 20px; display: flex;
+            justify-content: space-between; align-items: center; position: fixed;
+            top: 0; width: 100%; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); z-index: 1000;
+        }
+        .header h1 { font-family: Arial, sans-serif; font-size: 24px; }
+        .logout-btn {
+            padding: 8px 15px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer;
+            transition: background-color 0.3s ease; color: white; background-color: #e74c3c;
+        }
+        .logout-btn:hover { background-color: #c0392b; }
+        .dropdown { position: relative; display: inline-block; }
+        .dropbtn {
+            padding: 8px 15px; border: none; border-radius: 4px; font-size: 14px; cursor: pointer;
+            transition: background-color 0.3s ease; color: white; background-color: #3498db;
+        }
+        .dropbtn:hover { background-color: #2980b9; }
+        .dropdown-content {
+            display: none; position: absolute; background-color: #34495e; min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); z-index: 1001; border-radius: 4px; overflow: hidden;
+        }
+        .dropdown:hover .dropdown-content { display: block; }
+        .dropdown-content a {
+            color: white; padding: 12px 16px; text-decoration: none; display: block;
+            font-size: 14px; transition: background-color 0.3s ease;
+        }
+        .dropdown-content a:hover { background-color: #2980b9; }
+        .analises .dropbtn { background-color: #3498db; }
+        .solicitacoes .dropbtn { background-color: #f39c12; }
+        .estoque .dropbtn { background-color: #2ecc71; }
+        .relatorios .dropbtn { background-color: #1abc9c; }
+        .rh .dropbtn { background-color: #9b59b6; }
+
+        /* --- ESTILOS DO DASHBOARD --- */
+        :root {
+            --bg-primary: #020617; --bg-secondary: #0f172a; --bg-card: rgba(15, 23, 42, 0.6);
+            --border-color: rgba(56, 189, 248, 0.2); --glow-color: rgba(56, 189, 248, 0.1);
+            --text-primary: #e2e8f0; --text-secondary: #94a3b8; --accent-cyan: #0ea5e9;
+            --accent-magenta: #d946ef; --accent-green: #22c55e; --accent-red: #ef4444;
+        }
+        .container {
+            margin-top: 80px; padding: 20px; max-width: 1800px; margin-left: auto; margin-right: auto;
+            background-color: var(--bg-primary); color: var(--text-primary); position: relative;
+            overflow: hidden; border-radius: 12px;
+        }
+        #background-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.5; }
+        .dashboard-content { position: relative; z-index: 1; }
+        .dashboard-header {
+            display: flex; justify-content: space-between; align-items: center; padding: 15px 25px;
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            backdrop-filter: blur(10px); margin-bottom: 20px;
+        }
+        .dashboard-header h2 { font-family: 'Roboto Mono', monospace; font-size: 24px; font-weight: 700; color: var(--accent-cyan); text-shadow: 0 0 8px var(--accent-cyan); }
+        .dashboard-grid { display: grid; gap: 20px; grid-template-columns: repeat(12, 1fr); }
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px;
+            backdrop-filter: blur(10px); padding: 25px; box-shadow: 0 0 30px var(--glow-color);
+            transition: all 0.3s ease; z-index: 1; display: flex; flex-direction: column;
+        }
+        .card:hover { border-color: rgba(56, 189, 248, 0.5); transform: translateY(-5px); }
+        .chart-container { position: relative; flex-grow: 1; min-height: 0; }
+        .kpi-card { grid-column: span 3; }
+        .main-chart-card { grid-column: span 8; }
+        .radar-chart-card { grid-column: span 4; }
+        .table-card { grid-column: span 12; }
+        .card-title { font-family: 'Roboto Mono', monospace; font-size: 18px; font-weight: 500; margin-bottom: 20px; color: var(--text-secondary); }
+        .kpi-value { font-size: 36px; font-weight: 700; color: var(--text-primary); }
+        .kpi-trend { display: flex; align-items: center; gap: 5px; font-size: 14px; margin-top: 5px; overflow-wrap: break-word; }
+        .kpi-trend.positive { color: var(--accent-green); }
+        .kpi-trend.negative { color: var(--accent-red); }
+        .table-toolbar { display: flex; justify-content: flex-end; margin-bottom: 15px; }
+        .search-input { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 15px; color: var(--text-primary); width: 300px; }
+        .data-table-container { max-height: 300px; overflow-y: auto; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        .data-table thead { position: sticky; top: 0; background: var(--bg-secondary); }
+        @media (max-width: 1200px) { .kpi-card, .main-chart-card, .radar-chart-card { grid-column: span 6; } }
+        @media (max-width: 768px) { .kpi-card, .main-chart-card, .radar-chart-card { grid-column: span 12; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Gestão de Estoque</h1>
+        <div class="header-buttons">
+            <div class="dropdown analises">
+                <button class="dropbtn">Análises</button>
+                <div class="dropdown-content">
+                    <a href="#" onclick="abrirAnaliseVendas()">Análise de Vendas</a>
+                    <a href="#" onclick="abrirAnaliseRupturas()">Análise de Rupturas</a>
+                    <a href="#" onclick="abrirmonitoramentopedidos()">Análise de Pedidos</a>
+                    <a href="#" onclick="abriranaliseestrategica()">Análise Estratégica</a>
+                    <a href="#" onclick="abriranaliseeavarias()">Análise Avarias</a>
+                </div>
+            </div>
+            <div class="dropdown solicitacoes">
+                <button class="dropbtn">Solicitações</button>
+                <div class="dropdown-content">
+                    <a href="#" onclick="abrirSolicitacoesLoja()">Solicitações da Loja</a>
+                    <a href="#" onclick="abrirAcompSolicDeposito()">Acompanhamento</a>
+                </div>
+            </div>
+            <div class="dropdown estoque">
+                <button class="dropbtn">Estoque</button>
+                <div class="dropdown-content">
+                    <a href="#" onclick="abririndex()">Página Principal</a>
+                    <a href="#" onclick="abrirAjustesRealizados()">Ajustes Realizados</a>
+                    <a href="#" onclick="abrirLiberarAjustes()">Liberar Ajustes</a>
+                    <a href="#" onclick="abrirMonitoramentoFornecedores()">Monitorar Fornecedores</a>
+                    <a href="#" onclick="abrirconsultasavancadas()">Consultar Estoque</a>
+                </div>
+            </div>
+            <div class="dropdown relatorios">
+                <button class="dropbtn">Relatórios</button>
+                <div class="dropdown-content">
+                    <a href="#" onclick="abrirRelatorio()">Ajustes</a>
+                    <a href="#" onclick="abrirConferencia()">Conferência</a>
+                    <a href="#" onclick="abrirPDAConferencia()">Conferência - PDA</a>
+                </div>
+            </div>
+            <div class="dropdown rh">
+                <button class="dropbtn">RH</button>
+                <div class="dropdown-content">
+                    <a href="#" onclick="abrirCVAnalise()">CV-Análise</a>
+                    <a href="#" onclick="abrirCadastrarVagas()">Cadastrar Vagas</a>
+                    <a href="#" onclick="abrirSelecionarCandidatos()">Selecionar Candidatos</a>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Sair</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <canvas id="background-canvas"></canvas>
+        <div class="dashboard-content">
+            <header class="dashboard-header">
+                <h2>Dashboard de Vendas em Tempo Real</h2>
+                <div class="user-profile"><i class="fas fa-user-astronaut"></i><span id="user-name"></span></div>
+            </header>
+
+            <main class="dashboard-grid">
+                <div class="card kpi-card">
+                    <h3 class="card-title">Faturamento Total (Dia)</h3>
+                    <p class="kpi-value" id="kpi-receita-valor">Carregando...</p>
+                    <div class="kpi-trend positive" id="kpi-receita-atualizacao"><i class="fas fa-sync-alt"></i> Atualizando...</div>
+                </div>
+
+                <div class="card kpi-card">
+                    <h3 class="card-title">Meta vs Ano Anterior</h3>
+                    <p class="kpi-value" id="comparativo-referencia">Carregando...</p>
+                    <div class="kpi-trend" id="comparativo-status">Calculando...</div>
+                </div>
+
+                <div class="card kpi-card">
+                    <h3 class="card-title">Lojas com Erro de API</h3>
+                    <p class="kpi-value" id="lojas-erro-valor">0</p>
+                    <div class="kpi-trend" id="lojas-erro-lista">Nenhuma</div>
+                </div>
+                
+                <div class="card kpi-card">
+                    <h3 class="card-title">Total de Itens Vendidos</h3>
+                    <p class="kpi-value" id="total-itens-valor">0</p>
+                    <div class="kpi-trend positive">Itens líquidos (sem devoluções)</div>
+                </div>
+
+                <div class="card main-chart-card">
+                    <h3 class="card-title">Ranking de Faturamento por Loja (vs Ano Anterior)</h3>
+                    <div class="chart-container">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card radar-chart-card">
+                    <h3 class="card-title">Top 5 Grupos por Faturamento</h3>
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card table-card">
+                    <div class="table-toolbar">
+                        <input type="text" class="search-input" id="tableSearch" placeholder="Buscar por produto ou grupo...">
+                    </div>
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Produto ID</th><th>Nome do Produto</th><th>Grupo</th><th>Vendas (Hoje)</th></tr>
+                            </thead>
+                            <tbody id="dataTableBody">
+                                <tr><td colspan="4" style="text-align: center;">Carregando dados dos produtos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+     -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // --- FUNÇÕES DE NAVEGAÇÃO DO SISTEMA ORIGINAL ---
+        function abrirAnaliseVendas() { window.location.href = '/analise_vendas'; }
+        function abrirAnaliseRupturas() { window.location.href = '/alerta_lojas'; }
+        function abrirmonitoramentopedidos() { window.location.href = '/monitoramento_pedidos'; }
+        function abriranaliseestrategica() { window.location.href = '/analise_estrategica'; }
+        function abriranaliseeavarias() { window.location.href = '/analise_avarias'; }
+        function abrirSolicitacoesLoja() { window.location.href = '/solicitacoes_loja'; }
+        function abrirAcompSolicDeposito() { window.location.href = '/acomp_solic_deposito'; }
+        function abririndex() { window.location.href = '/'; }
+        function abrirAjustesRealizados() { window.location.href = '/ajustes_realizados'; }
+        function abrirLiberarAjustes() { window.location.href = '/liberar-ajustes'; }
+        function abrirMonitoramentoFornecedores() { window.location.href = '/monitoramento_fornecedores'; }
+        function abrirconsultasavancadas() { window.location.href = '/consultas_avancadas'; }
+        function abrirRelatorio() { window.location.href = '/relatorio'; }
+        function abrirConferencia() { window.location.href = '/conferencia'; }
+        function abrirPDAConferencia() { window.location.href = '/pda_imprimir_romaneio'; }
+        function abrirCVAnalise() { window.location.href = '/cv_analise'; }
+        function abrirCadastrarVagas() { window.location.href = '/cadastro_vagas'; }
+        function abrirSelecionarCandidatos() { window.location.href = '/selecionar_candidatos'; }
+        function logout() { window.location.href = '/logout'; }
+
+        // --- LÓGICA DO DASHBOARD ---
+
+        let faturamentoBarChart, radarChart;
+
+        async function atualizarDashboard() {
+            console.log("Buscando dados unificados do backend...");
+            try {
+                const response = await fetch('/api/dashboard/dados-diarios', { credentials: 'include' });
+                if (!response.ok) throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
+                const data = await response.json();
+
+                // Bloco 1: KPIs
+                if (data.kpi_faturamento) {
+                    document.getElementById('kpi-receita-valor').textContent = data.kpi_faturamento.valor_formatado;
+                    document.getElementById('kpi-receita-atualizacao').innerHTML = `<i class="fas fa-sync-alt"></i> Atualizado às ${data.kpi_faturamento.atualizado_em}`;
+                }
+                if (data.kpi_comparativo_anual) {
+                    const kpiComp = data.kpi_comparativo_anual;
+                    const statusEl = document.getElementById('comparativo-status');
+                    document.getElementById('comparativo-referencia').textContent = "Hoje vs Ano Anterior";
+                    statusEl.textContent = kpiComp.texto;
+                    statusEl.className = 'kpi-trend ' + kpiComp.status;
+                }
+                if (data.info_processamento) {
+                    const erroValorEl = document.getElementById('lojas-erro-valor');
+                    const erroListaEl = document.getElementById('lojas-erro-lista');
+                    const lojasComErro = data.info_processamento.lojas_com_erro;
+                    erroValorEl.textContent = lojasComErro.length;
+                    if (lojasComErro.length > 0) {
+                        erroListaEl.textContent = "Lojas: " + lojasComErro.map(e => e.loja).join(', ');
+                        erroListaEl.className = 'kpi-trend negative';
+                    } else {
+                        erroListaEl.textContent = "Nenhuma";
+                        erroListaEl.className = 'kpi-trend positive';
+                    }
+                }
+                if (data.kpi_total_itens) {
+                    document.getElementById('total-itens-valor').textContent = data.kpi_total_itens.valor.toLocaleString('pt-BR');
+                }
+
+                // Bloco 2: Tabela de Produtos
+                if (data.tabela_top_produtos) {
+                    const produtos = data.tabela_top_produtos;
+                    const tabelaBody = document.getElementById('dataTableBody');
+                    tabelaBody.innerHTML = '';
+                    if (!produtos || produtos.length === 0) {
+                        tabelaBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum produto vendido hoje.</td></tr>';
+                    } else {
+                        produtos.forEach(p => {
+                            tabelaBody.innerHTML += `<tr><td>${p.produto_id || 'N/A'}</td><td>${p.nome || 'N/A'}</td><td>${p.categoria || 'N/A'}</td><td>${p.total_vendido || 0}</td></tr>`;
+                        });
+                    }
+                }
+
+                // Bloco 3: Gráficos
+                if (faturamentoBarChart && data.bar_chart_faturamento_loja) {
+                    const chartData = data.bar_chart_faturamento_loja;
+                    faturamentoBarChart.data.labels = chartData.labels;
+                    faturamentoBarChart.data.datasets[0].data = chartData.dataset_ano_passado;
+                    faturamentoBarChart.data.datasets[1].data = chartData.dataset_hoje;
+                    faturamentoBarChart.update();
+                }
+                if (radarChart && data.radar_chart_desempenho_grupo) {
+                    const radarData = data.radar_chart_desempenho_grupo;
+                    radarChart.data.labels = radarData.labels;
+                    radarChart.data.datasets[0].data = radarData.data;
+                    radarChart.update();
+                }
+
+            } catch (error) {
+                console.error("Falha ao buscar ou processar dados do dashboard:", error);
+                document.getElementById('kpi-receita-valor').textContent = "Erro";
+            }
+        }
+
+        function iniciarComponentesVisuais() {
+            // Animação de Fundo
+            const canvas = document.getElementById('background-canvas');
+            const ctx = canvas.getContext('2d');
+            const container = document.querySelector('.container');
+            let width, height, particles;
+            function setup() {
+                width = canvas.width = container.offsetWidth; height = canvas.height = container.offsetHeight;
+                particles = []; const particleCount = Math.floor(width * height / 20000);
+                for(let i=0; i<particleCount; i++) particles.push(new Particle());
+            }
+            class Particle { constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.vx = Math.random() * 0.4 - 0.2; this.vy = Math.random() * 0.4 - 0.2; this.radius = Math.random() * 1.5 + 0.5; this.opacity = Math.random() * 0.5 + 0.2; } update() { this.x += this.vx; this.y += this.vy; if (this.x < 0 || this.x > width) this.vx *= -1; if (this.y < 0 || this.y > height) this.vy *= -1; } draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = `rgba(226, 232, 240, ${this.opacity})`; ctx.fill(); } }
+            function animate() { ctx.clearRect(0,0,width,height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+            window.addEventListener('resize', setup); setup(); animate();
+
+            // Configurações Comuns dos Gráficos
+            const chartTextColor = '#94a3b8';
+            const chartGridColor = 'rgba(148, 163, 184, 0.1)';
+            
+            // Inicializa Gráfico de Barras Agrupado
+            const barChartCtx = document.getElementById('mainChart').getContext('2d');
+            faturamentoBarChart = new Chart(barChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Ano Passado', data: [], backgroundColor: 'rgba(255, 99, 132, 0.5)', borderColor: 'rgba(255, 99, 132, 1)', borderWidth: 1 },
+                        { label: 'Hoje', data: [], backgroundColor: 'rgba(54, 162, 235, 0.5)', borderColor: 'rgba(54, 162, 235, 1)', borderWidth: 1 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } }, y: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } } }, plugins: { legend: { display: true, labels: { color: chartTextColor } } } }
+            });
+
+            // Inicializa Gráfico de Radar
+            const radarChartCtx = document.getElementById('radarChart').getContext('2d');
+            radarChart = new Chart(radarChartCtx, {
+                type: 'radar', data: { labels: [], datasets: [{ label: 'Faturamento por Grupo', data: [], fill: true, backgroundColor: 'rgba(14, 165, 233, 0.2)', borderColor: 'rgb(14, 165, 233)', pointBackgroundColor: 'rgb(14, 165, 233)' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { angleLines: { color: chartGridColor }, grid: { color: chartGridColor }, pointLabels: { color: chartTextColor, font: {size: 11} }, ticks: { display: false } } }, plugins: { legend: { labels: { color: chartTextColor } } } }
+            });
+
+            // Filtro da Tabela
+            const searchInput = document.getElementById('tableSearch');
+            searchInput.addEventListener('keyup', (e) => {
+                const query = e.target.value.toLowerCase();
+                document.querySelectorAll('#dataTableBody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none'; });
+            });
+        }
+
+        // Ponto de Entrada da Lógica do Dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            iniciarComponentesVisuais();
+            atualizarDashboard();
+            setInterval(atualizarDashboard, 60000); 
+        });
+    </script> -->
+<!-- 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // --- FUNÇÕES DE NAVEGAÇÃO DO SISTEMA ORIGINAL ---
+    function abrirAnaliseVendas() { window.location.href = '/analise_vendas'; }
+    function abrirAnaliseRupturas() { window.location.href = '/alerta_lojas'; }
+    function abrirmonitoramentopedidos() { window.location.href = '/monitoramento_pedidos'; }
+    function abriranaliseestrategica() { window.location.href = '/analise_estrategica'; }
+    function abriranaliseeavarias() { window.location.href = '/analise_avarias'; }
+    function abrirSolicitacoesLoja() { window.location.href = '/solicitacoes_loja'; }
+    function abrirAcompSolicDeposito() { window.location.href = '/acomp_solic_deposito'; }
+    function abririndex() { window.location.href = '/'; }
+    function abrirAjustesRealizados() { window.location.href = '/ajustes_realizados'; }
+    function abrirLiberarAjustes() { window.location.href = '/liberar-ajustes'; }
+    function abrirMonitoramentoFornecedores() { window.location.href = '/monitoramento_fornecedores'; }
+    function abrirconsultasavancadas() { window.location.href = '/consultas_avancadas'; }
+    function abrirRelatorio() { window.location.href = '/relatorio'; }
+    function abrirConferencia() { window.location.href = '/conferencia'; }
+    function abrirPDAConferencia() { window.location.href = '/pda_imprimir_romaneio'; }
+    function abrirCVAnalise() { window.location.href = '/cv_analise'; }
+    function abrirCadastrarVagas() { window.location.href = '/cadastro_vagas'; }
+    function abrirSelecionarCandidatos() { window.location.href = '/selecionar_candidatos'; }
+    function logout() { window.location.href = '/logout'; }
+
+    // --- LÓGICA DO DASHBOARD ---
+
+    let mainChart, topGroupsChart;
+
+    async function atualizarDashboard() {
+        console.log("Buscando dados unificados do backend...");
+        try {
+            const response = await fetch('/api/dashboard/dados-diarios', { credentials: 'include' });
+            if (!response.ok) throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
+            const data = await response.json();
+
+            // KPIs e Tabela (sem alteração)
+            if (data.kpi_faturamento) {
+                document.getElementById('kpi-receita-valor').textContent = data.kpi_faturamento.valor_formatado;
+                document.getElementById('kpi-receita-atualizacao').innerHTML = `<i class="fas fa-sync-alt"></i> Atualizado às ${data.kpi_faturamento.atualizado_em}`;
+            }
+            if (data.kpi_comparativo_anual) {
+                const kpiComp = data.kpi_comparativo_anual;
+                const statusEl = document.getElementById('comparativo-status');
+                document.getElementById('comparativo-referencia').textContent = "Hoje vs Ano Anterior";
+                statusEl.textContent = kpiComp.texto;
+                statusEl.className = 'kpi-trend ' + kpiComp.status;
+            }
+            if (data.info_processamento) {
+                const erroValorEl = document.getElementById('lojas-erro-valor');
+                const erroListaEl = document.getElementById('lojas-erro-lista');
+                const lojasComErro = data.info_processamento.lojas_com_erro;
+                erroValorEl.textContent = lojasComErro.length;
+                if (lojasComErro.length > 0) {
+                    erroListaEl.textContent = "Lojas: " + lojasComErro.map(e => e.loja).join(', ');
+                    erroListaEl.className = 'kpi-trend negative';
+                } else {
+                    erroListaEl.textContent = "Nenhuma";
+                    erroListaEl.className = 'kpi-trend positive';
+                }
+            }
+            if (data.kpi_total_itens) {
+                document.getElementById('total-itens-valor').textContent = data.kpi_total_itens.valor.toLocaleString('pt-BR');
+            }
+            if (data.tabela_top_produtos) {
+                const produtos = data.tabela_top_produtos;
+                const tabelaBody = document.getElementById('dataTableBody');
+                tabelaBody.innerHTML = '';
+                if (!produtos || produtos.length === 0) {
+                    tabelaBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum produto vendido hoje.</td></tr>';
+                } else {
+                    produtos.forEach(p => {
+                        tabelaBody.innerHTML += `<tr><td>${p.produto_id || 'N/A'}</td><td>${p.nome || 'N/A'}</td><td>${p.categoria || 'N/A'}</td><td>${p.total_vendido || 0}</td></tr>`;
+                    });
+                }
+            }
+
+            // Atualização dos Gráficos
+            if (mainChart && data.bar_chart_faturamento_loja) {
+                const chartData = data.bar_chart_faturamento_loja;
+                mainChart.data.labels = chartData.labels;
+                mainChart.data.datasets[0].data = chartData.dataset_ano_passado;
+                mainChart.data.datasets[1].data = chartData.dataset_hoje;
+                mainChart.update();
+            }
+            if (topGroupsChart && data.radar_chart_desempenho_grupo) {
+                const polarData = data.radar_chart_desempenho_grupo;
+                topGroupsChart.data.labels = polarData.labels;
+                topGroupsChart.data.datasets[0].data = polarData.data;
+                topGroupsChart.update();
+            }
+
+        } catch (error) {
+            console.error("Falha ao buscar ou processar dados do dashboard:", error);
+            document.getElementById('kpi-receita-valor').textContent = "Erro";
+        }
+    }
+
+    function iniciarComponentesVisuais_V9() {
+        // Animação de Fundo (sem alteração)
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.querySelector('.container');
+        let width, height, particles;
+        function setup() { width = canvas.width = container.offsetWidth; height = canvas.height = container.offsetHeight; particles = []; const particleCount = Math.floor(width * height / 20000); for(let i=0; i<particleCount; i++) particles.push(new Particle()); }
+        class Particle { constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.vx = Math.random() * 0.4 - 0.2; this.vy = Math.random() * 0.4 - 0.2; this.radius = Math.random() * 1.5 + 0.5; this.opacity = Math.random() * 0.5 + 0.2; } update() { this.x += this.vx; this.y += this.vy; if (this.x < 0 || this.x > width) this.vx *= -1; if (this.y < 0 || this.y > height) this.vy *= -1; } draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = `rgba(226, 232, 240, ${this.opacity})`; ctx.fill(); } }
+        function animate() { ctx.clearRect(0,0,width,height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+        window.addEventListener('resize', setup); setup(); animate();
+
+        const chartTextColor = '#94a3b8';
+        const chartGridColor = 'rgba(148, 163, 184, 0.1)';
+
+        // PLUGIN CUSTOMIZADO PARA ETIQUETAS (sem alteração)
+        const topLabelsPlugin = {
+            id: 'topLabels',
+            afterDatasetsDraw(chart, args, options) {
+                const { ctx, data } = chart;
+                ctx.save();
+                const todayDatasetMeta = chart.getDatasetMeta(1);
+                todayDatasetMeta.data.forEach((bar, index) => {
+                    const salesToday = data.datasets[1].data[index];
+                    const salesTarget = data.datasets[0].data[index];
+                    if (salesTarget <= 0) return;
+                    const performanceRatio = salesToday / salesTarget;
+                    let labelText = '';
+                    let labelColor = '';
+                    if (performanceRatio < 1) {
+                        const missingPercentage = (1 - performanceRatio) * 100;
+                        labelText = `▼ ${missingPercentage.toFixed(0)}%`;
+                        labelColor = '#ef4444';
+                    } else {
+                        const growthPercentage = (performanceRatio - 1) * 100;
+                        labelText = `▲ ${growthPercentage.toFixed(0)}%`;
+                        labelColor = '#22c55e';
+                    }
+                    ctx.font = 'bold 12px "Roboto Mono", monospace';
+                    ctx.fillStyle = labelColor;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText(labelText, bar.x, bar.y - 5);
+                });
+                ctx.restore();
+            }
+        };
+
+        // GRÁFICO 1: Barras Verticais com Gradiente de 4 Cores
+        const mainChartCtx = document.getElementById('mainChart').getContext('2d');
+        mainChart = new Chart(mainChartCtx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Ano Passado',
+                        data: [],
+                        backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                        borderColor: 'rgba(239, 68, 68, 0.8)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Hoje',
+                        data: [],
+                        // LÓGICA DE COR COM GRADIENTE DE 4 CORES
+                        backgroundColor: (context) => {
+                            const dataIndex = context.dataIndex;
+                            const datasets = context.chart.data.datasets;
+                            const salesToday = datasets[1].data[dataIndex];
+                            const salesTarget = datasets[0].data[dataIndex];
+
+                            // Cores do gradiente: Laranja Forte -> Amarelo -> Verde Padrão -> Verde Brilhante
+                            const strongOrangeColor = [255, 128, 0];  // 0% da meta
+                            const yellowColor = [255, 222, 0];        // 50% da meta
+                            const standardGreenColor = [34, 197, 94]; // 100% da meta
+                            const brightGreenColor = [100, 255, 100]; // >=150% da meta
+
+                            if (salesTarget <= 0) {
+                                return `rgba(${standardGreenColor.join(',')}, 0.8)`;
+                            }
+                            
+                            const performanceRatio = salesToday / salesTarget;
+                            let r, g, b;
+                            
+                            if (performanceRatio < 0.5) {
+                                // Fase 1: Interpola de Laranja Forte para Amarelo (0% a 50%)
+                                const t = performanceRatio / 0.5;
+                                r = strongOrangeColor[0] + t * (yellowColor[0] - strongOrangeColor[0]);
+                                g = strongOrangeColor[1] + t * (yellowColor[1] - strongOrangeColor[1]);
+                                b = strongOrangeColor[2] + t * (yellowColor[2] - strongOrangeColor[2]);
+                            } else if (performanceRatio < 1) {
+                                // Fase 2: Interpola de Amarelo para Verde Padrão (50% a 100%)
+                                const t = (performanceRatio - 0.5) / 0.5;
+                                r = yellowColor[0] + t * (standardGreenColor[0] - yellowColor[0]);
+                                g = yellowColor[1] + t * (standardGreenColor[1] - yellowColor[1]);
+                                b = yellowColor[2] + t * (standardGreenColor[2] - yellowColor[2]);
+                            } else {
+                                // Fase 3: Interpola de Verde Padrão para Verde Brilhante (100% a 150%+)
+                                const t = Math.min((performanceRatio - 1) / 0.5, 1);
+                                r = standardGreenColor[0] + t * (brightGreenColor[0] - standardGreenColor[0]);
+                                g = standardGreenColor[1] + t * (brightGreenColor[1] - standardGreenColor[1]);
+                                b = standardGreenColor[2] + t * (brightGreenColor[2] - standardGreenColor[2]);
+                            }
+
+                            return `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, 0.8)`;
+                        },
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                layout: { padding: { top: 30 } },
+                scales: {
+                    x: { ticks: { color: chartTextColor }, grid: { display: false } },
+                    y: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } }
+                },
+                plugins: {
+                    legend: { position: 'top', labels: { color: chartTextColor } },
+                    tooltip: {
+                         callbacks: {
+                            label: (context) => {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.raw);
+                                if (context.dataset.label === 'Hoje') {
+                                    const salesToday = context.raw;
+                                    const salesTarget = context.chart.data.datasets[0].data[context.dataIndex];
+                                    if (salesTarget > 0) {
+                                        const percentage = ((salesToday / salesTarget) * 100).toFixed(1);
+                                        label += ` (${percentage}% da meta)`;
+                                    }
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            },
+            plugins: [topLabelsPlugin]
+        });
+
+        // GRÁFICO 2: Gráfico de Área Polar (Mantido)
+        const polarChartCtx = document.getElementById('radarChart').getContext('2d');
+        topGroupsChart = new Chart(polarChartCtx, {
+            type: 'polarArea',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Faturamento por Grupo',
+                    data: [],
+                    backgroundColor: [
+                        'rgba(14, 165, 233, 0.7)', 'rgba(217, 70, 239, 0.7)',
+                        'rgba(245, 158, 11, 0.7)', 'rgba(16, 185, 129, 0.7)',
+                        'rgba(99, 102, 241, 0.7)'
+                    ],
+                    borderWidth: 1,
+                    borderColor: '#0f172a'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        grid: { color: chartGridColor },
+                        ticks: { display: false },
+                        pointLabels: {
+                            display: true, centerPointLabels: true,
+                            font: { size: 12, family: "'Roboto Mono', monospace" },
+                            color: chartTextColor
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // Filtro da Tabela (sem alteração)
+        const searchInput = document.getElementById('tableSearch');
+        searchInput.addEventListener('keyup', (e) => {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('#dataTableBody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none'; });
+        });
+    }
+
+    // Ponto de Entrada da Lógica do Dashboard
+    document.addEventListener('DOMContentLoaded', () => {
+        iniciarComponentesVisuais_V9(); // Chame a versão final V9
+        atualizarDashboard();
+        setInterval(atualizarDashboard, 60000);
+    });
+</script> -->
+
+
+
+
+
+<!-- 
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // --- FUNÇÕES DE NAVEGAÇÃO DO SISTEMA ORIGINAL ---
+    function abrirAnaliseVendas() { window.location.href = '/analise_vendas'; }
+    function abrirAnaliseRupturas() { window.location.href = '/alerta_lojas'; }
+    function abrirmonitoramentopedidos() { window.location.href = '/monitoramento_pedidos'; }
+    function abriranaliseestrategica() { window.location.href = '/analise_estrategica'; }
+    function abriranaliseeavarias() { window.location.href = '/analise_avarias'; }
+    function abrirSolicitacoesLoja() { window.location.href = '/solicitacoes_loja'; }
+    function abrirAcompSolicDeposito() { window.location.href = '/acomp_solic_deposito'; }
+    function abririndex() { window.location.href = '/'; }
+    function abrirAjustesRealizados() { window.location.href = '/ajustes_realizados'; }
+    function abrirLiberarAjustes() { window.location.href = '/liberar-ajustes'; }
+    function abrirMonitoramentoFornecedores() { window.location.href = '/monitoramento_fornecedores'; }
+    function abrirconsultasavancadas() { window.location.href = '/consultas_avancadas'; }
+    function abrirRelatorio() { window.location.href = '/relatorio'; }
+    function abrirConferencia() { window.location.href = '/conferencia'; }
+    function abrirPDAConferencia() { window.location.href = '/pda_imprimir_romaneio'; }
+    function abrirCVAnalise() { window.location.href = '/cv_analise'; }
+    function abrirCadastrarVagas() { window.location.href = '/cadastro_vagas'; }
+    function abrirSelecionarCandidatos() { window.location.href = '/selecionar_candidatos'; }
+    function logout() { window.location.href = '/logout'; }
+
+    // --- LÓGICA DO DASHBOARD ---
+
+    let mainChart, topGroupsChart;
+
+    async function atualizarDashboard() {
+        console.log("Buscando dados unificados do backend...");
+        try {
+            const response = await fetch('/api/dashboard/dados-diarios', { credentials: 'include' });
+            if (!response.ok) throw new Error(`Erro na API: ${response.status} ${response.statusText}`);
+            const data = await response.json();
+
+            // KPIs e Tabela (sem alteração)
+            if (data.kpi_faturamento) {
+                document.getElementById('kpi-receita-valor').textContent = data.kpi_faturamento.valor_formatado;
+                document.getElementById('kpi-receita-atualizacao').innerHTML = `<i class="fas fa-sync-alt"></i> Atualizado às ${data.kpi_faturamento.atualizado_em}`;
+            }
+            if (data.kpi_comparativo_anual) {
+                const kpiComp = data.kpi_comparativo_anual;
+                const statusEl = document.getElementById('comparativo-status');
+                document.getElementById('comparativo-referencia').textContent = "Hoje vs Ano Anterior";
+                statusEl.textContent = kpiComp.texto;
+                statusEl.className = 'kpi-trend ' + kpiComp.status;
+            }
+            if (data.info_processamento) {
+                const erroValorEl = document.getElementById('lojas-erro-valor');
+                const erroListaEl = document.getElementById('lojas-erro-lista');
+                const lojasComErro = data.info_processamento.lojas_com_erro;
+                erroValorEl.textContent = lojasComErro.length;
+                if (lojasComErro.length > 0) {
+                    erroListaEl.textContent = "Lojas: " + lojasComErro.map(e => e.loja).join(', ');
+                    erroListaEl.className = 'kpi-trend negative';
+                } else {
+                    erroListaEl.textContent = "Nenhuma";
+                    erroListaEl.className = 'kpi-trend positive';
+                }
+            }
+            if (data.kpi_total_itens) {
+                document.getElementById('total-itens-valor').textContent = data.kpi_total_itens.valor.toLocaleString('pt-BR');
+            }
+            if (data.tabela_top_produtos) {
+                const produtos = data.tabela_top_produtos;
+                const tabelaBody = document.getElementById('dataTableBody');
+                tabelaBody.innerHTML = '';
+                if (!produtos || produtos.length === 0) {
+                    tabelaBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum produto vendido hoje.</td></tr>';
+                } else {
+                    produtos.forEach(p => {
+                        tabelaBody.innerHTML += `<tr><td>${p.produto_id || 'N/A'}</td><td>${p.nome || 'N/A'}</td><td>${p.categoria || 'N/A'}</td><td>${p.total_vendido || 0}</td></tr>`;
+                    });
+                }
+            }
+
+            // Atualização dos Gráficos
+            if (mainChart && data.bar_chart_faturamento_loja) {
+                const chartData = data.bar_chart_faturamento_loja;
+                mainChart.data.labels = chartData.labels;
+                mainChart.data.datasets[0].data = chartData.dataset_ano_passado;
+                mainChart.data.datasets[1].data = chartData.dataset_hoje;
+                mainChart.update();
+            }
+            if (topGroupsChart && data.radar_chart_desempenho_grupo) {
+                const polarData = data.radar_chart_desempenho_grupo;
+                topGroupsChart.data.labels = polarData.labels;
+                topGroupsChart.data.datasets[0].data = polarData.data;
+                topGroupsChart.update();
+            }
+
+        } catch (error) {
+            console.error("Falha ao buscar ou processar dados do dashboard:", error);
+            document.getElementById('kpi-receita-valor').textContent = "Erro";
+        }
+    }
+
+    function iniciarComponentesVisuais_V10() {
+        // Animação de Fundo (sem alteração)
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.querySelector('.container');
+        let width, height, particles;
+        function setup() { width = canvas.width = container.offsetWidth; height = canvas.height = container.offsetHeight; particles = []; const particleCount = Math.floor(width * height / 20000); for(let i=0; i<particleCount; i++) particles.push(new Particle()); }
+        class Particle { constructor() { this.x = Math.random() * width; this.y = Math.random() * height; this.vx = Math.random() * 0.4 - 0.2; this.vy = Math.random() * 0.4 - 0.2; this.radius = Math.random() * 1.5 + 0.5; this.opacity = Math.random() * 0.5 + 0.2; } update() { this.x += this.vx; this.y += this.vy; if (this.x < 0 || this.x > width) this.vx *= -1; if (this.y < 0 || this.y > height) this.vy *= -1; } draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = `rgba(226, 232, 240, ${this.opacity})`; ctx.fill(); } }
+        function animate() { ctx.clearRect(0,0,width,height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+        window.addEventListener('resize', setup); setup(); animate();
+
+        const chartTextColor = '#94a3b8';
+        const chartGridColor = 'rgba(148, 163, 184, 0.1)';
+
+        // PLUGIN CUSTOMIZADO PARA ETIQUETAS (sem alteração)
+        const topLabelsPlugin = {
+            id: 'topLabels',
+            afterDatasetsDraw(chart, args, options) {
+                const { ctx, data } = chart;
+                ctx.save();
+                const todayDatasetMeta = chart.getDatasetMeta(1);
+                todayDatasetMeta.data.forEach((bar, index) => {
+                    const salesToday = data.datasets[1].data[index];
+                    const salesTarget = data.datasets[0].data[index];
+                    if (salesTarget <= 0) return;
+                    const performanceRatio = salesToday / salesTarget;
+                    let labelText = '';
+                    let labelColor = '';
+                    if (performanceRatio < 1) {
+                        const missingPercentage = (1 - performanceRatio) * 100;
+                        labelText = `▼ ${missingPercentage.toFixed(0)}%`;
+                        labelColor = '#ef4444';
+                    } else {
+                        const growthPercentage = (performanceRatio - 1) * 100;
+                        labelText = `▲ ${growthPercentage.toFixed(0)}%`;
+                        labelColor = '#22c55e';
+                    }
+                    ctx.font = 'bold 12px "Roboto Mono", monospace';
+                    ctx.fillStyle = labelColor;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText(labelText, bar.x, bar.y - 5);
+                });
+                ctx.restore();
+            }
+        };
+
+        // GRÁFICO 1: Barras Verticais com Gradiente e Legenda Ajustada
+        const mainChartCtx = document.getElementById('mainChart').getContext('2d');
+        mainChart = new Chart(mainChartCtx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Ano Passado',
+                        data: [],
+                        backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                        borderColor: 'rgba(239, 68, 68, 0.8)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Hoje',
+                        data: [],
+                        backgroundColor: (context) => {
+                            const dataIndex = context.dataIndex;
+                            const datasets = context.chart.data.datasets;
+                            const salesToday = datasets[1].data[dataIndex];
+                            const salesTarget = datasets[0].data[dataIndex];
+
+                            const strongOrangeColor = [255, 128, 0];
+                            const yellowColor = [255, 222, 0];
+                            const standardGreenColor = [34, 197, 94];
+                            const brightGreenColor = [100, 255, 100];
+
+                            if (salesTarget <= 0) {
+                                return `rgba(${standardGreenColor.join(',')}, 0.8)`;
+                            }
+                            
+                            const performanceRatio = salesToday / salesTarget;
+                            let r, g, b;
+                            
+                            if (performanceRatio < 0.5) {
+                                const t = performanceRatio / 0.5;
+                                r = strongOrangeColor[0] + t * (yellowColor[0] - strongOrangeColor[0]);
+                                g = strongOrangeColor[1] + t * (yellowColor[1] - strongOrangeColor[1]);
+                                b = strongOrangeColor[2] + t * (yellowColor[2] - strongOrangeColor[2]);
+                            } else if (performanceRatio < 1) {
+                                const t = (performanceRatio - 0.5) / 0.5;
+                                r = yellowColor[0] + t * (standardGreenColor[0] - yellowColor[0]);
+                                g = yellowColor[1] + t * (standardGreenColor[1] - yellowColor[1]);
+                                b = yellowColor[2] + t * (standardGreenColor[2] - yellowColor[2]);
+                            } else {
+                                const t = Math.min((performanceRatio - 1) / 0.5, 1);
+                                r = standardGreenColor[0] + t * (brightGreenColor[0] - standardGreenColor[0]);
+                                g = standardGreenColor[1] + t * (brightGreenColor[1] - standardGreenColor[1]);
+                                b = standardGreenColor[2] + t * (brightGreenColor[2] - standardGreenColor[2]);
+                            }
+
+                            return `rgba(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)}, 0.8)`;
+                        },
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                layout: { padding: { top: 30 } },
+                scales: {
+                    x: { ticks: { color: chartTextColor }, grid: { display: false } },
+                    y: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: chartTextColor,
+                            // Função para gerar a legenda customizada
+                            generateLabels: function(chart) {
+                                // Pega as legendas padrão
+                                const defaultLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                                
+                                // Encontra a legenda 'Hoje' e altera sua cor
+                                const hojeLabel = defaultLabels.find(label => label.text === 'Hoje');
+                                if (hojeLabel) {
+                                    hojeLabel.fillStyle = 'rgba(34, 197, 94, 0.8)'; // Cor verde padrão
+                                    hojeLabel.strokeStyle = 'rgba(34, 197, 94, 1)';
+                                }
+                                
+                                return defaultLabels;
+                            }
+                        }
+                    },
+                    tooltip: {
+                         callbacks: {
+                            label: (context) => {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                label += new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(context.raw);
+                                if (context.dataset.label === 'Hoje') {
+                                    const salesToday = context.raw;
+                                    const salesTarget = context.chart.data.datasets[0].data[context.dataIndex];
+                                    if (salesTarget > 0) {
+                                        const percentage = ((salesToday / salesTarget) * 100).toFixed(1);
+                                        label += ` (${percentage}% da meta)`;
+                                    }
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            },
+            plugins: [topLabelsPlugin]
+        });
+
+        // GRÁFICO 2: Gráfico de Área Polar (Mantido)
+        const polarChartCtx = document.getElementById('radarChart').getContext('2d');
+        topGroupsChart = new Chart(polarChartCtx, {
+            type: 'polarArea',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Faturamento por Grupo',
+                    data: [],
+                    backgroundColor: [
+                        'rgba(14, 165, 233, 0.7)', 'rgba(217, 70, 239, 0.7)',
+                        'rgba(245, 158, 11, 0.7)', 'rgba(16, 185, 129, 0.7)',
+                        'rgba(99, 102, 241, 0.7)'
+                    ],
+                    borderWidth: 1,
+                    borderColor: '#0f172a'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        grid: { color: chartGridColor },
+                        ticks: { display: false },
+                        pointLabels: {
+                            display: true, centerPointLabels: true,
+                            font: { size: 12, family: "'Roboto Mono', monospace" },
+                            color: chartTextColor
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // Filtro da Tabela (sem alteração)
+        const searchInput = document.getElementById('tableSearch');
+        searchInput.addEventListener('keyup', (e) => {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('#dataTableBody tr').forEach(row => { row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none'; });
+        });
+    }
+
+    // Ponto de Entrada da Lógica do Dashboard
+    document.addEventListener('DOMContentLoaded', () => {
+        iniciarComponentesVisuais_V10(); // Chame a versão final V10
+        atualizarDashboard();
+        setInterval(atualizarDashboard, 60000);
+    });
+</script>
+    
+</body> 
+</html> --->
+
+<!-- 
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Estoque</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            background-color: #34495e;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        .logout-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            color: white;
+            background-color: #e74c3c;
+        }
+
+        .logout-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            color: white;
+            background-color: #3498db;
+        }
+
+        .dropbtn:hover {
+            background-color: #2980b9;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #34495e;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #2980b9;
+        }
+
+        .solicitacoes .dropbtn { background-color: #f39c12; }
+        .solicitacoes .dropbtn:hover { background-color: #d35400; }
+        .estoque .dropbtn { background-color: #2ecc71; }
+        .estoque .dropbtn:hover { background-color: #27ae60; }
+        .relatorios .dropbtn { background-color: #1abc9c; }
+        .relatorios .dropbtn:hover { background-color: #16a085; }
+        .rh .dropbtn { background-color: #9b59b6; }
+        .rh .dropbtn:hover { background-color: #8e44ad; }
+
+        .container {
+            margin-top: 80px;
+            padding: 20px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Gestão de Estoque</h1>
+        <div class="header-buttons">
+          <div class="dropdown analises">
+  <button class="dropbtn">Análises</button>
+  <div class="dropdown-content">
+    <a href="/analise_vendas" onclick="abrirAnaliseVendas()"> Vendas</a>
+    <a href="/alerta_lojas" onclick="abrirAnaliseRupturas()"> Rupturas</a>
+    <a href="/monitoramento_pedidos" onclick="abrirmonitoramentopedidos()"> Pedidos</a>
+    <a href="/faturamento" onclick="abriranaliseestrategica()">Faturamento</a>
+    <a href="/analise_avarias" onclick="abriranaliseeavarias()"> Avarias</a>
+    <a href="/analise_venda_casada" onclick="abriraanalisevendacasada()"> Venda Casada</a>
+
+  </div>
+</div>
+            <div class="dropdown solicitacoes">
+                <button class="dropbtn">Solicitações</button>
+                <div class="dropdown-content">
+                    <a href="/solicitacoes_loja" onclick="abrirSolicitacoesLoja()">Solicitações da Loja</a>
+                    <a href="/acomp_solic_deposito" onclick="abrirAcompSolicDeposito()">Acompanhamento de Solicitações</a>
+                </div>
+            </div>
+            <div class="dropdown estoque">
+                <button class="dropbtn">Estoque</button>
+                <div class="dropdown-content">
+                    <a href="/index" onclick="abririndex()">Gestão de Estoque</a>
+                    <a href="/ajustes_realizados" onclick="abrirAjustesRealizados()">Ajustes Realizados</a>
+                    <a href="/liberar-ajustes" onclick="abrirLiberarAjustes()">Liberar Ajustes</a>
+                    <a href="/monitoramento_fornecedores" onclick="abrirMonitoramentoFornecedores()">Monitoramento de Fornecedores</a>
+                    <a href="/consultas_avancadas" onclick="abrirconsultasavancadas()">Consultar Estoque</a>
+                    
+                </div>
+            </div>
+            <div class="dropdown relatorios">
+                <button class="dropbtn">Relatórios</button>
+                <div class="dropdown-content">
+                    <a href="/relatorio" onclick="abrirRelatorio()">Ajustes</a>
+                    <a href="/conferencia" onclick="abrirConferencia()">Conferência</a>
+                    <a href="/pda_imprimir_romaneio" onclick="abrirPDAConferencia()"> Conferência - PDA</a>
+                </div>
+            </div>
+            <div class="dropdown rh">
+                <button class="dropbtn">RH</button>
+                <div class="dropdown-content">
+                    <a href="/cv_analise" onclick="abrirCVAnalise()">CV-Análise</a>
+                    <a href="/cadastro_vagas" onclick="abrirCadastrarVagas()">Cadastrar Vagas</a>
+                    <a href="/selecionar_candidatos" onclick="abrirSelecionarCandidatos()">Selecionar Candidatos</a>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="logout()">Sair</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Bem-vindo ao Sistema de Gestão de Estoque</h2>
+        <p>Selecione uma opção no menu acima para começar.</p>
+    </div>
+
+    <script>
+        function abriranalise_estrategica() {
+            console.log("Botão analise avarias");
+            window.location.href = '/analise_avaria';
+        }
+        function abriranalise_venda_casada() {
+            console.log("Botão analise venda casada ");
+            window.location.href = '/analise_venda_casada';
+        }
+        function abriranalise_estrategica() {
+            console.log("Botão faturamento");
+            window.location.href = '/faturamento';
+        }
+        function abrirSolicitacoesLoja() {
+            console.log("Botão PDA Conferência");
+            window.location.href = '/pda_imprimir_romaneio';
+        }
+        function abrirSolicitacoesLoja() {
+            console.log("Botão Solicitações da Loja clicado.");
+            window.location.href = '/solicitacoes_loja';
+        }
+
+        function abrirAcompSolicDeposito() {
+            console.log("Botão Acompanhamento de Solicitações clicado.");
+            window.location.href = '/acomp_solic_deposito.';
+        }
+
+        function abririndex() {
+            console.log("Botão Gestão de Estoque clicado.");
+            window.location.href = '/index';
+        }
+
+        function abrirRelatorio() {
+            console.log("Botão Relatório clicado.");
+            window.location.href = '/relatorio';
+        }
+
+        function abriralertalojas() {
+            console.log("Botão Análise de Rupturas.");
+            window.location.href = '/alerta_lojas';
+        }
+
+        function abrirConferencia() {
+            console.log("Botão Conferência clicado.");
+            window.location.href = '/conferencia';
+        }
+
+        function abrirCVAnalise() {
+            console.log("Botão CV-Análise clicado.");
+            window.location.href = '/cv_analise';
+        }
+
+        function abrirAjustesRealizados() {
+            console.log("Botão Ajustes Realizados clicado.");
+            window.location.href = '/ajustes_realizados';
+        }
+
+        function abrirLiberarAjustes() {
+            console.log("Botão Liberar Ajustes clicado.");
+            window.location.href = '/liberar-ajustes';
+        }
+        
+        function abrirAnaliseVendas() {
+            console.log("Botão Análise de Vendas clicado.");
+            window.location.href = '/analise_vendas';
+        }
+
+        function abrirCadastrarVagas() {
+            console.log("Botão Cadastrar Vagas clicado.");
+            window.location.href = '/cadastro_vagas';
+        }
+
+        function abrirSelecionarCandidatos() {
+            console.log("Botão Selecionar Candidatos clicado.");
+            window.location.href = '/selecionar_candidatos';
+        }
+
+        function abrirMonitoramentoFornecedores() {
+            console.log("Botão Monitoramento de Fornecedores clicado.");
+            window.location.href = '/monitoramento_fornecedores';
+        }
+
+        function abrirconsultasavancadas() {
+            console.log("Botão Consultar Estoque clicado.");
+            window.location.href = '/consultas_avancadas';
+        }
+
+        function logout() {
+            console.log("Executando logout...");
+            window.location.href = '/logout';
+        }
+        
+    </script>
+</body>
+</html> 
+
+
+
+ -->
+
+
+<!-- 
+
+ <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Estoque</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f4f4;
+        }
+
+        .header {
+            background-color: #34495e;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        /* NOVO: Adicionado para alinhar todos os botões no cabeçalho */
+        .header-buttons {
+            display: flex;
+            align-items: center; /* Alinha verticalmente todos os botões */
+            gap: 10px; /* Adiciona um espaço entre os botões */
+        }
+
+        .logout-btn, .dropbtn { /* Aplica o estilo a AMBOS os tipos de botão */
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            color: white;
+            
+            /* --- CORREÇÃO DEFINITIVA --- */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* min-width: 110px; Garante que todos tenham uma largura mínima igual */
+            height: 35px; /* Força todos a terem a mesma altura */
+        }
+
+        .logout-btn {
+            background-color: #e74c3c;
+        }
+
+        .logout-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            background-color: #3498db;
+        }
+
+        .dropbtn:hover {
+            background-color: #2980b9;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #34495e;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #2980b9;
+        }
+
+        .solicitacoes .dropbtn { background-color: #f39c12; }
+        .solicitacoes .dropbtn:hover { background-color: #d35400; }
+        .estoque .dropbtn { background-color: #2ecc71; }
+        .estoque .dropbtn:hover { background-color: #27ae60; }
+        .relatorios .dropbtn { background-color: #1abc9c; }
+        .relatorios .dropbtn:hover { background-color: #16a085; }
+        .rh .dropbtn { background-color: #9b59b6; }
+        .rh .dropbtn:hover { background-color: #8e44ad; }
+        
+        .mapa .dropbtn { background-color: #5dade2; }
+        .mapa .dropbtn:hover { background-color: #5499c7; }
+
+        .container {
+            margin-top: 80px;
+            padding: 20px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="header">
+        <h1>Gestão de Estoque</h1>
+        <div class="header-buttons">
+            <div class="dropdown analises">
+                <button class="dropbtn">Análises</button>
+                <div class="dropdown-content">
+                    <a href="/analise_vendas" onclick="abrirAnaliseVendas()"> Vendas</a>
+                    <a href="/alerta_lojas" onclick="abrirAnaliseRupturas()"> Rupturas</a>
+                    <a href="/monitoramento_pedidos" onclick="abrirmonitoramentopedidos()"> Pedidos</a>
+                    <a href="/faturamento" onclick="abriranaliseestrategica()">Faturamento</a>
+                    <a href="/analise_avarias" onclick="abriranaliseeavarias()"> Avarias</a>
+                    <a href="/analise_venda_casada" onclick="abriraanalisevendacasada()"> Venda Casada</a>
+                </div>
+            </div>
+            <div class="dropdown solicitacoes">
+                <button class="dropbtn">Solicitações</button>
+                <div class="dropdown-content">
+                    <a href="/solicitacoes_loja" onclick="abrirSolicitacoesLoja()">Solicitações da Loja</a>
+                    <a href="/acomp_solic_deposito" onclick="abrirAcompSolicDeposito()">Acompanhamento de Solicitações</a>
+                </div>
+            </div>
+            <div class="dropdown estoque">
+                <button class="dropbtn">Estoque</button>
+                <div class="dropdown-content">
+                    <a href="/index" onclick="abririndex()">Gestão de Estoque</a>
+                    <a href="/ajustes_realizados" onclick="abrirAjustesRealizados()">Ajustes Realizados</a>
+                    <a href="/liberar-ajustes" onclick="abrirLiberarAjustes()">Liberar Ajustes</a>
+                    <a href="/monitoramento_fornecedores" onclick="abrirMonitoramentoFornecedores()">Monitoramento de Fornecedores</a>
+                    <a href="/consultas_avancadas" onclick="abrirconsultasavancadas()">Consultar Estoque</a>
+                </div>
+            </div>
+            <div class="dropdown relatorios">
+                <button class="dropbtn">Relatórios</button>
+                <div class="dropdown-content">
+                    <a href="/relatorio" onclick="abrirRelatorio()">Ajustes</a>
+                    <a href="/conferencia" onclick="abrirConferencia()">Conferência</a>
+                    <a href="/pda_imprimir_romaneio" onclick="abrirPDAConferencia()"> Conferência - PDA</a>
+                </div>
+            </div>
+            <div class="dropdown rh">
+                <button class="dropbtn">RH</button>
+                <div class="dropdown-content">
+                    <a href="/cv_analise" onclick="abrirCVAnalise()">CV-Análise</a>
+                    <a href="/cadastro_vagas" onclick="abrirCadastrarVagas()">Cadastrar Vagas</a>
+                    <a href="/selecionar_candidatos" onclick="abrirSelecionarCandidatos()">Selecionar Candidatos</a>
+                </div>
+            </div>
+
+            <div class="dropdown mapa">
+                <button class="dropbtn">🗺️ Mapa</button>
+                <div class="dropdown-content">
+                    <a href="/mapa" onclick="abrirMapa()">Visualizar Mapa de Rotas</a>
+                </div>
+            </div>
+            
+            <button class="logout-btn" onclick="logout()">Sair</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Bem-vindo ao Sistema de Gestão de Estoque</h2>
+        <p>Selecione uma opção no menu acima para começar.</p>
+    </div>
+
+    <script>
+        // ... (todas as suas funções existentes)
+        
+        function abriranalise_estrategica() {
+            console.log("Botão analise avarias");
+            window.location.href = '/analise_avaria';
+        }
+        function abriranalise_venda_casada() {
+            console.log("Botão analise venda casada ");
+            window.location.href = '/analise_venda_casada';
+        }
+        function abriranalise_estrategica() {
+            console.log("Botão faturamento");
+            window.location.href = '/faturamento';
+        }
+        function abrirSolicitacoesLoja() {
+            console.log("Botão PDA Conferência");
+            window.location.href = '/pda_imprimir_romaneio';
+        }
+        function abrirSolicitacoesLoja() {
+            console.log("Botão Solicitações da Loja clicado.");
+            window.location.href = '/solicitacoes_loja';
+        }
+
+        function abrirAcompSolicDeposito() {
+            console.log("Botão Acompanhamento de Solicitações clicado.");
+            window.location.href = '/acomp_solic_deposito.';
+        }
+
+        function abririndex() {
+            console.log("Botão Gestão de Estoque clicado.");
+            window.location.href = '/index';
+        }
+
+        function abrirRelatorio() {
+            console.log("Botão Relatório clicado.");
+            window.location.href = '/relatorio';
+        }
+
+        function abriralertalojas() {
+            console.log("Botão Análise de Rupturas.");
+            window.location.href = '/alerta_lojas';
+        }
+
+        function abrirConferencia() {
+            console.log("Botão Conferência clicado.");
+            window.location.href = '/conferencia';
+        }
+
+        function abrirCVAnalise() {
+            console.log("Botão CV-Análise clicado.");
+            window.location.href = '/cv_analise';
+        }
+
+        function abrirAjustesRealizados() {
+            console.log("Botão Ajustes Realizados clicado.");
+            window.location.href = '/ajustes_realizados';
+        }
+
+        function abrirLiberarAjustes() {
+            console.log("Botão Liberar Ajustes clicado.");
+            window.location.href = '/liberar-ajustes';
+        }
+        
+        function abrirAnaliseVendas() {
+            console.log("Botão Análise de Vendas clicado.");
+            window.location.href = '/analise_vendas';
+        }
+
+        function abrirCadastrarVagas() {
+            console.log("Botão Cadastrar Vagas clicado.");
+            window.location.href = '/cadastro_vagas';
+        }
+
+        function abrirSelecionarCandidatos() {
+            console.log("Botão Selecionar Candidatos clicado.");
+            window.location.href = '/selecionar_candidatos';
+        }
+
+        function abrirMonitoramentoFornecedores() {
+            console.log("Botão Monitoramento de Fornecedores clicado.");
+            window.location.href = '/monitoramento_fornecedores';
+        }
+
+        function abrirconsultasavancadas() {
+            console.log("Botão Consultar Estoque clicado.");
+            window.location.href = '/consultas_avancadas';
+        }
+
+        function logout() {
+            console.log("Executando logout...");
+            window.location.href = '/logout';
+        }
+
+        /* */
+        function abrirMapa() {
+            console.log("Botão Visualizar Mapa clicado.");
+            // A rota '/' é a que definimos para o mapa no passo anterior.
+            window.location.href = '/mapa'; 
+        }
+        
+    </script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Estoque</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f7f7f9;
+            color: #1f2a44;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background-color: #ffffff;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1f2a44;
+        }
+
+        .header-buttons {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Buttons */
+        .logout-btn, .dropbtn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #ffffff;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 130px;
+            height: 42px;
+            background-color: #2563eb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .logout-btn {
+            background-color: #dc2626;
+        }
+
+        .logout-btn:hover {
+            background-color: #b91c1c;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+        }
+
+        /* Dropdown */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropbtn:hover {
+            background-color: #1e40af;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #ffffff;
+            min-width: 200px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            border-radius: 6px;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(5px);
+        }
+
+        .dropdown-content a {
+            color: #1f2a44;
+            padding: 12px 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f1f5f9;
+            color: #2563eb;
+            padding-left: 25px;
+        }
+
+        /* Specific Dropdown Colors */
+        .analises .dropbtn { background-color: #2563eb; }
+        .analises .dropbtn:hover { background-color: #1e40af; }
+        .solicitacoes .dropbtn { background-color: #d97706; }
+        .solicitacoes .dropbtn:hover { background-color: #b45309; }
+        .estoque .dropbtn { background-color: #16a34a; }
+        .estoque .dropbtn:hover { background-color: #15803d; }
+        .relatorios .dropbtn { background-color: #0d9488; }
+        .relatorios .dropbtn:hover { background-color: #0f766e; }
+        .rh .dropbtn { background-color: #7e22ce; }
+        .rh .dropbtn:hover { background-color: #6b21a8; }
+        .mapa .dropbtn { background-color: #0284c7; }
+        .mapa .dropbtn:hover { background-color: #0369a1; }
+
+        /* Container */
+        .container {
+            margin-top: 100px;
+            padding: 40px 30px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .container h2 {
+            font-size: 32px;
+            font-weight: 600;
+            color: #1f2a44;
+            margin-bottom: 20px;
+        }
+
+        .container p {
+            font-size: 18px;
+            color: #4b5563;
+            margin-bottom: 20px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px 20px;
+                position: relative; /* Changed to relative for better flow on small screens */
+                height: auto; /* Adjust height based on content */
+            }
+            .header-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px; /* Adjusted gap for smaller screens */
+            }
+            .dropdown {
+                flex: 1 1 auto; /* Allow dropdowns to grow and shrink */
+                min-width: 150px; /* Ensure a minimum width */
+            }
+            .container {
+                margin-top: 20px; /* Adjust margin for mobile */
+                padding: 30px 20px; /* Adjusted padding */
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 24px;
+            }
+            .logout-btn, .dropbtn {
+                min-width: unset;
+                width: 100%;
+                font-size: 14px;
+            }
+            .dropdown-content {
+                min-width: 100%;
+                left: 0;
+                transform: translateX(0);
+            }
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Gestão de Estoque</h1>
+        <div class="header-buttons">
+            <div class="dropdown analises">
+                <button class="dropbtn">Análises</button>
+                <div class="dropdown-content">
+                    <a href="/analise_vendas" onclick="abrirAnaliseVendas()"> Vendas</a>
+                    <a href="/alerta_lojas" onclick="abrirAnaliseRupturas()"> Rupturas</a>
+                    <a href="/monitoramento_pedidos" onclick="abrirmonitoramentopedidos()"> Pedidos</a>
+                    <a href="/faturamento" onclick="abriranaliseestrategica()">Faturamento</a>
+                    <a href="/analise_avarias" onclick="abriranaliseeavarias()"> Avarias</a>
+                    <a href="/analise_venda_casada" onclick="abriraanalisevendacasada()"> Venda Casada</a>
+                    <a href="/painel_campanha" onclick="abrirPainelCampanha()">Campanhas</a>
+                </div>
+            </div>
+            <div class="dropdown solicitacoes">
+                <button class="dropbtn">Solicitações</button>
+                <div class="dropdown-content">
+                    <a href="/solicitacoes_loja" onclick="abrirSolicitacoesLoja()">Solicitações da Loja</a>
+                    <a href="/acomp_solic_deposito" onclick="abrirAcompSolicDeposito()">Acompanhamento de Solicitações</a>
+                </div>
+            </div>
+            <div class="dropdown estoque">
+                <button class="dropbtn">Estoque</button>
+                <div class="dropdown-content">
+                    <a href="/index" onclick="abririndex()">Gestão de Estoque</a>
+                    <a href="/ajustes_realizados" onclick="abrirAjustesRealizados()">Ajustes Realizados</a>
+                    <a href="/liberar-ajustes" onclick="abrirLiberarAjustes()">Liberar Ajustes</a>
+                    <a href="/monitoramento_fornecedores" onclick="abrirMonitoramentoFornecedores()">Monitoramento de Fornecedores</a>
+                    <a href="/consultas_avancadas" onclick="abrirconsultasavancadas()">Consultar Estoque</a>
+                </div>
+            </div>
+            <div class="dropdown relatorios">
+                <button class="dropbtn">Relatórios</button>
+                <div class="dropdown-content">
+                    <a href="/relatorio" onclick="abrirRelatorio()">Ajustes</a>
+                    <a href="/conferencia" onclick="abrirConferencia()">Conferência</a>
+                    <a href="/pda_imprimir_romaneio" onclick="abrirPDAConferencia()"> Conferência - PDA</a>
+                </div>
+            </div>
+            <div class="dropdown rh">
+                <button class="dropbtn">RH</button>
+                <div class="dropdown-content">
+                    <a href="/cv_analise" onclick="abrirCVAnalise()">CV-Análise</a>
+                    <a href="/cadastro_vagas" onclick="abrirCadastrarVagas()">Cadastrar Vagas</a>
+                    <a href="/selecionar_candidatos" onclick="abrirSelecionarCandidatos()">Selecionar Candidatos</a>
+                    <a href="/cadastro_promotores" onclick="abrirCadastroPromotores()">Cadastro Promotores</a>
+                    <a href="/visualizacao_rotas.html" onclick="abrirVisualizacaoRotas()"> Rotas Promotores</a>
+                </div>
+            </div>
+
+            <div class="dropdown mapa">
+                <button class="dropbtn">🗺️ Mapa</button>
+                <div class="dropdown-content">
+                    <a href="/mapa" onclick="abrirMapa()">Visualizar Mapa de Rotas</a>
+                </div>
+            </div>
+            
+            <button class="logout-btn" onclick="logout()">Sair</button>
+        </div>
+    </div>
+
+
+
+
+
+
+
+    <div class="container">
+        <h2>Bem-vindo ao Sistema de Gestão de Estoque</h2>
+        <p>Selecione uma opção no menu acima para começar.</p>
+    </div>
+
+    <script>
+        // Existing JavaScript Functions
+        function abrirAnaliseVendas() {
+            console.log("Botão Análise de Vendas clicado.");
+            window.location.href = '/analise_vendas';
+        }
+
+        function abrirAnaliseRupturas() {
+            console.log("Botão Análise de Rupturas clicado.");
+            window.location.href = '/alerta_lojas';
+        }
+        
+        // Removed the duplicate function definition here
+
+        function abrirmonitoramentopedidos() {
+            console.log("Botão Monitoramento de Pedidos clicado.");
+            window.location.href = '/monitoramento_pedidos';
+        }
+
+        function abriranaliseestrategica() {
+            console.log("Botão Faturamento clicado.");
+            window.location.href = '/faturamento';
+        }
+
+        function abriranaliseeavarias() {
+            console.log("Botão Análise de Avarias clicado.");
+            window.location.href = '/analise_avarias';
+        }
+
+        function abriraanalisevendacasada() {
+            console.log("Botão Análise de Venda Casada clicado.");
+            window.location.href = '/analise_venda_casada';
+        }
+
+        function abrirSolicitacoesLoja() {
+            console.log("Botão Solicitações da Loja clicado.");
+            window.location.href = '/solicitacoes_loja';
+        }
+
+        function abrirAcompSolicDeposito() {
+            console.log("Botão Acompanhamento de Solicitações clicado.");
+            window.location.href = '/acomp_solic_deposito';
+        }
+
+        function abririndex() {
+            console.log("Botão Gestão de Estoque clicado.");
+            window.location.href = '/index';
+        }
+
+        function abrirAjustesRealizados() {
+            console.log("Botão Ajustes Realizados clicado.");
+            window.location.href = '/ajustes_realizados';
+        }
+
+        function abrirLiberarAjustes() {
+            console.log("Botão Liberar Ajustes clicado.");
+            window.location.href = '/liberar-ajustes';
+        }
+
+        function abrirMonitoramentoFornecedores() {
+            console.log("Botão Monitoramento de Fornecedores clicado.");
+            window.location.href = '/monitoramento_fornecedores';
+        }
+
+        function abrirconsultasavancadas() {
+            console.log("Botão Consultar Estoque clicado.");
+            window.location.href = '/consultas_avancadas';
+        }
+
+        function abrirRelatorio() {
+            console.log("Botão Relatório de Ajustes clicado.");
+            window.location.href = '/relatorio';
+        }
+
+        function abrirConferencia() {
+            console.log("Botão Conferência clicado.");
+            window.location.href = '/conferencia';
+        }
+
+        function abrirPDAConferencia() {
+            console.log("Botão Conferência - PDA clicado.");
+            window.location.href = '/pda_imprimir_romaneio';
+        }
+
+        function abrirCVAnalise() {
+            console.log("Botão CV-Análise clicado.");
+            window.location.href = '/cv_analise';
+        }
+
+        function abrirCadastrarVagas() {
+            console.log("Botão Cadastrar Vagas clicado.");
+            window.location.href = '/cadastro_vagas';
+        }
+
+        function abrirSelecionarCandidatos() {
+            console.log("Botão Selecionar Candidatos clicado.");
+            window.location.href = '/selecionar_candidatos';
+        }
+
+        function abrirMapa() {
+            console.log("Botão Visualizar Mapa de Rotas clicado.");
+            window.location.href = '/mapa';
+        }
+
+        function logout() {
+            console.log("Executando logout...");
+            window.location.href = '/logout';
+        }
+
+        function abrirCadastroPromotores() {
+            console.log("Botão Cadastro de Promotores clicado.");
+            window.location.href = '/cadastro_promotores';
+        }
+
+        function abrirVisualizacaoRotas() {
+            console.log("Botão Visualização de Rotas clicado.");
+            window.location.href = '/visualizacao_rotas';
+        }
+    </script>
+</body>
+</html>

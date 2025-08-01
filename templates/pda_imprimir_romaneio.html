@@ -1,0 +1,1018 @@
+<!-- <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Romaneio Encerrado</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 0;
+      background-color: white;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+    }
+
+    .info div {
+      font-size: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #aaa;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    .footer {
+      margin-top: 30px;
+      text-align: right;
+      font-style: italic;
+      color: #555;
+    }
+
+    @media print {
+      button {
+        display: none;
+      }
+      body {
+        background-color: white;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h2>Romaneio Encerrado</h2>
+    <div class="info">
+      <div><strong>ID:</strong> {{ romaneio.id }}</div>
+      <div><strong>Placa:</strong> {{ romaneio.placa_caminhao or '-' }}</div>
+      <div><strong>Motorista:</strong> {{ romaneio.nome_motorista or '-' }}</div>
+      <div><strong>Início:</strong> {{ data_inicio }}</div>
+      <div><strong>Filial:</strong> {{ romaneio.nome_filial or '-' }}</div>
+      <div><strong>Data de Encerramento:</strong> {{ data_fim }}</div>
+    </div>
+  </div>
+
+  <table>
+  <thead>
+    <tr>
+      <th>Nº Pedido</th>
+      <th>Destinatário</th>
+      <th>Volumes</th>
+      <th>Vol. Conferido</th>
+      <th>Obs.</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for pedido in pedidos %}
+    <tr>
+      <td>{{ pedido.numero_pedido }}</td>
+      <td>{{ pedido.destinatario or 'Não informado' }}</td>
+      <td>{{ pedido.total_volumes }}</td>
+      <td>{{ pedido.volumes_escaneados }}</td>
+      <td></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+  <div class="footer">
+    <button onclick="window.print()">Imprimir</button>
+  </div>
+
+</body>
+</html> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Romaneio Encerrado</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 0;
+      background-color: white;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+    }
+
+    .info div {
+      font-size: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #aaa;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    .footer {
+      margin-top: 40px;
+      font-size: 16px;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      font-weight: bold;
+    }
+
+    .signature-line {
+      border-top: 1px solid #000;
+      padding-top: 5px;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .print-button {
+      text-align: right;
+      margin-top: 30px;
+    }
+
+    @media print {
+      .print-button button {
+        display: none;
+      }
+      body {
+        background-color: white;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h2>Romaneio Encerrado</h2>
+    <div class="info">
+      <div><strong>ID:</strong> {{ romaneio.id }}</div>
+      <div><strong>Placa:</strong> {{ romaneio.placa_caminhao or '-' }}</div>
+      <div><strong>Motorista:</strong> {{ romaneio.nome_motorista or '-' }}</div>
+      <div><strong>Início:</strong> {{ data_inicio }}</div>
+      <div><strong>Filial:</strong> {{ romaneio.nome_filial or '-' }}</div>
+      <div><strong>Data de Encerramento:</strong> {{ data_fim }}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Nº Pedido</th>
+        <th>Destinatário</th>
+        <th>Volumes</th>
+        <th>Vol. Conferido</th>
+        <th>Obs.</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pedido in pedidos %}
+      <tr>
+        <td>{{ pedido.numero_pedido }}</td>
+        <td>{{ pedido.destinatario or 'Não informado' }}</td>
+        <td>{{ pedido.total_volumes }}</td>
+        <td>{{ pedido.volumes_escaneados }}</td>
+        <td></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  !-- Rodapé com totais e assinatura --
+  <div class="footer">
+    <div class="summary">
+      <div>Total de Pedidos: <strong>{{ pedidos|length }}</strong></div>
+      <div>Total de Volumes: <strong>
+        {% set total_volumes = pedidos | sum(attribute='total_volumes') %}
+        {{ total_volumes }}
+      </strong></div>
+    </div>
+
+    <div class="signature-line">
+      Assinatura do Motorista / Conferente<br>
+      (_________________________________)
+    </div>
+  </div>
+
+  <div class="print-button">
+    <button onclick="window.print()">Imprimir</button>
+  </div>
+
+</body>
+</html> -->
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Romaneio Encerrado</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 0;
+      background-color: white;
+      color: #333;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #007BFF;
+      padding-bottom: 10px;
+    }
+
+    .header h2 {
+      margin: 0;
+      font-size: 24px;
+      color: #007BFF;
+    }
+
+    .info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+    }
+
+    .info div {
+      font-size: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th,
+    td {
+      border: 1px solid #aaa;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    .footer {
+      margin-top: 40px;
+      font-size: 16px;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      font-weight: bold;
+    }
+
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+    }
+
+    .signature-line {
+      width: 48%;
+      text-align: center;
+    }
+
+    .signature-line hr {
+      margin: 10px auto;
+      width: 100%;
+      border: none;
+      border-top: 1px solid #000;
+    }
+
+    .print-button {
+      text-align: right;
+      margin-top: 30px;
+    }
+
+    @media print {
+      .print-button button {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h2>Romaneio de Transporte - Finalizado</h2>
+    <p><strong>ID do Romaneio:</strong> {{ romaneio.id }}</p>
+  </div>
+
+  <div class="info">
+    <div><strong>Placa do Caminhão:</strong> {{ romaneio.placa_caminhao or '-' }}</div>
+    <div><strong>Motorista:</strong> {{ romaneio.nome_motorista or '-' }}</div>
+    <div><strong>Data de Início:</strong> {{ data_inicio }}</div>
+    <div><strong>Data de Encerramento:</strong> {{ data_fim }}</div>
+    <div><strong>Filial:</strong> {{ romaneio.nome_filial or '-' }}</div>
+    <div><strong>Conferente:</strong> {{ romaneio.conferente or '-' }}</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Nº Pedido</th>
+        <th>Destinatário</th>
+        <th>Volumes</th>
+        <th>Vol. Conferido</th>
+        <th>Obs.</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pedido in pedidos %}
+      <tr>
+        <td>{{ pedido.numero_pedido }}</td>
+        <td>{{ pedido.destinatario or 'Não informado' }}</td>
+        <td>{{ pedido.total_volumes }}</td>
+        <td>{{ pedido.volumes_escaneados }}</td>
+        <td></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  !-- Rodapé com totais e assinaturas --
+  <div class="footer">
+    <div class="summary">
+      <div>Total de Pedidos: <strong>{{ pedidos|length }}</strong></div>
+      <div>Total de Volumes: <strong>
+        {% set total_volumes = pedidos | sum(attribute='total_volumes') %}
+        {{ total_volumes }}
+      </strong></div>
+    </div>
+
+    <div class="signatures">
+      <div class="signature-line">
+        Assinatura do Motorista<br>
+        <hr>
+      </div>
+      <div class="signature-line">
+        Assinatura do Suporte Logístico<br>
+        <hr>
+      </div>
+    </div>
+  </div>
+
+  <div class="print-button">
+    <button onclick="window.print()">Imprimir</button>
+  </div>
+
+</body>
+</html> -->
+
+
+
+
+<!-- 
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Romaneio de Transporte</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #fff;
+      color: #333;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #0056b3;
+    }
+
+    .header {
+      border-bottom: 2px solid #007BFF;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+
+    .info div {
+      font-size: 15px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th,
+    td {
+      border: 1px solid #aaa;
+      padding: 12px; /* 🔧 Ajuste este valor para controlar o espaçamento dentro das células */
+      text-align: left;
+    }
+
+    th {
+      background-color: #f0f0f0;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+
+    .footer {
+      margin-top: 40px;
+      font-size: 16px;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      font-weight: bold;
+    }
+
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+    }
+
+    .signature-line {
+      width: 48%;
+      text-align: center;
+    }
+
+    .signature-line hr {
+      margin: 10px auto;
+      width: 100%;
+      border: none;
+      border-top: 1px solid #000;
+    }
+
+    .print-button {
+      text-align: right;
+      margin-top: 30px;
+    }
+
+    @media print {
+      .print-button button {
+        display: none;
+      }
+    }
+    
+  </style>
+</head>
+<body>
+
+  <div class="header">
+
+    <p><strong>ID do Romaneio:</strong> {{ romaneio.id }}</p>
+  </div>
+
+  <div class="info">
+    <p><strong>ID do Romaneio:</strong> {{ romaneio.id }}</p>
+    <div><strong>Placa do Caminhão:</strong> {{ romaneio.placa_caminhao or '-' }}</div>
+    <div><strong>Motorista:</strong> {{ romaneio.nome_motorista or '-' }}</div>
+    <div><strong>Data de Início:</strong> {{ data_inicio }}</div>
+    <div><strong>Data de Encerramento:</strong> {{ data_fim }}</div>
+    <div><strong>Filial:</strong> {{ romaneio.nome_filial or '-' }}</div>
+    <div><strong>Conferente:</strong> {{ romaneio.conferente or '-' }}</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Nº Pedido</th>
+        <th>Destinatário</th>
+        <th>Volumes</th>
+        <th>Vol. Conferido</th>
+        !-- <th>Obs.</th> --
+      </tr>
+    </thead>
+    <tbody>
+      {% for pedido in pedidos %}
+      <tr>
+        <td>{{ pedido.numero_pedido }}</td>
+        <td>{{ pedido.destinatario or 'Não informado' }}</td>
+        <td>{{ pedido.total_volumes }}</td>
+        !-- <td>{{ pedido.volumes_escaneados }}</td> --
+        <td></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  !-- !-- Rodapé -- --
+  <div class="footer">
+    <div class="summary">
+      <div>Total de Pedidos: <strong>{{ pedidos|length }}</strong></div>
+      <div>Total de Volumes: <strong>
+        {% set total_volumes = pedidos | sum(attribute='total_volumes') %}
+        {{ total_volumes }}
+      </strong></div>
+    </div>
+
+    <div class="signatures">
+      <div class="signature-line">
+        Assinatura do Motorista<br>
+        <hr>
+      </div>
+      <div class="signature-line">
+        Assinatura do Suporte Logístico<br>
+        <hr>
+      </div>
+    </div>
+  </div>
+
+  <div class="print-button">
+    <button onclick="window.print()">Imprimir</button>
+  </div>
+
+</body>
+</html>
+
+
+
+ -->
+
+<!-- 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Romaneio de Transporte</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #fff;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #004080;
+      margin-bottom: 5px;
+      font-size: 24px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #555;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .header {
+      border-bottom: 2px solid #007BFF;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+
+    .info div {
+      font-size: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th,
+    td {
+      border: 1px solid #aaa;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f0f0f0;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+
+    .footer {
+      margin-top: 40px;
+      font-size: 14px;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      font-weight: bold;
+    }
+
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+    }
+
+    .signature-line {
+      width: 48%;
+      text-align: center;
+    }
+
+    .signature-line hr {
+      margin: 10px auto;
+      width: 100%;
+      border: none;
+      border-top: 1px solid #000;
+    }
+
+    .print-button {
+      text-align: right;
+      margin-top: 30px;
+    }
+
+    @media print {
+      .print-button button {
+        display: none;
+      }
+    }
+    @media print {
+  @page {
+    size: A4; /* Define o tamanho do papel (opcional) */
+    margin: 10mm; /* Define as margens de impressão */
+    zoom: 85%; /* Define a escala de impressão em 85% */
+  }
+}
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Romaneio de Transporte</h1>
+    <p class="subtitle"><strong>ID do Romaneio:</strong> {{ romaneio.id }}</p>
+  </div>
+
+  <div class="info">
+    <div><strong>Placa do Caminhão:</strong> {{ romaneio.placa_caminhao or '-' }}</div>
+    <div><strong>Motorista:</strong> {{ romaneio.nome_motorista or '-' }}</div>
+    <div><strong>Data de Início:</strong> {{ data_inicio }}</div>
+    <div><strong>Data de Encerramento:</strong> {{ data_fim }}</div>
+    <div><strong>Filial:</strong> {{ romaneio.nome_filial or '-' }}</div>
+    <div><strong>Conferente:</strong> {{ romaneio.conferente or '-' }}</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Nº Pedido</th>
+        <th>Destinatário</th>
+        <th>Volumes</th>
+        <th>Vol. Conferido</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pedido in pedidos %}
+      <tr>
+        <td>{{ pedido.numero_pedido }}</td>
+        <td>{{ pedido.destinatario or 'Não informado' }}</td>
+        <td>{{ pedido.total_volumes }}</td>
+        <td></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  !-- Rodapé --
+  <div class="footer">
+    <div class="summary">
+      <div>Total de Pedidos: <strong>{{ pedidos|length }}</strong></div>
+      <div>Total de Volumes: <strong>
+        {% set total_volumes = pedidos | sum(attribute='total_volumes') %}
+        {{ total_volumes }}
+      </strong></div>
+    </div>
+
+    <div class="signatures">
+      <div class="signature-line">
+        Assinatura do Motorista<br>
+        <hr>
+      </div>
+      <div class="signature-line">
+        Assinatura do Suporte Logístico<br>
+        <hr>
+      </div>
+    </div>
+  </div>
+
+  <div class="print-button">
+    <button onclick="window.print()">Imprimir</button>
+  </div>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+ -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Romaneio de Transporte</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #fff;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #004080;
+      margin-bottom: 5px;
+      font-size: 24px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #555;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .header {
+      border-bottom: 2px solid #007BFF;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+
+    .info div {
+      font-size: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th,
+    td {
+      border: 1px solid #aaa;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f0f0f0;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+
+    .footer {
+      margin-top: 40px;
+      font-size: 14px;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      font-weight: bold;
+    }
+
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+    }
+
+    .signature-line {
+      width: 48%;
+      text-align: center;
+    }
+
+    .signature-line hr {
+      margin: 10px auto;
+      width: 100%;
+      border: none;
+      border-top: 1px solid #000;
+    }
+
+    .print-button {
+      text-align: right;
+      margin-top: 30px;
+    }
+
+    @media print {
+      @page {
+        size: A4;
+        margin: 10mm;
+        zoom: 85%;
+      }
+
+      .print-button button {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Romaneio de Transporte</h1>
+    <p class="subtitle"><strong>ID do Romaneio:</strong> {{ romaneio.id }}</p>
+  </div>
+
+  <div class="info">
+    <div><strong>Placa do Caminhão:</strong> {{ romaneio.placa_caminhao or '-' }}</div>
+    <div><strong>Motorista:</strong> {{ romaneio.nome_motorista or '-' }}</div>
+    <div><strong>Data de Início:</strong> {{ data_inicio }}</div>
+    <div><strong>Data de Encerramento:</strong> {{ data_fim }}</div>
+    <div><strong>Filial:</strong> {{ romaneio.nome_filial or '-' }}</div>
+    <div><strong>Conferente:</strong> {{ romaneio.conferente or '-' }}</div>
+  </div>
+
+  <!-- Tabela de Pedidos - Ordenada pelo Nº Pedido -->
+  <table>
+    <thead>
+      <tr>
+        <th>Nº Pedido</th>
+        <th>Destinatário</th>
+        <th>Volumes</th>
+        <th>Vol. Conferido</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for pedido in pedidos | sort(attribute='numero_pedido|int') %}
+      <tr>
+        <td>{{ pedido.numero_pedido }}</td>
+        <td>{{ pedido.destinatario or 'Não informado' }}</td>
+        <td>{{ pedido.total_volumes }}</td>
+        <td></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Rodapé -->
+  <div class="footer">
+    <div class="summary">
+      <div>Total de Pedidos: <strong>{{ pedidos|length }}</strong></div>
+      <div>Total de Volumes: <strong>
+        {% set total_volumes = pedidos | sum(attribute='total_volumes') %}
+        {{ total_volumes }}
+      </strong></div>
+    </div>
+
+    <div class="signatures">
+      <div class="signature-line">
+        Assinatura do Motorista<br>
+        <hr>
+      </div>
+      <div class="signature-line">
+        Assinatura do Suporte Logístico<br>
+        <hr>
+      </div>
+    </div>
+  </div>
+
+  <div class="print-button">
+    <button onclick="window.print()">Imprimir</button>
+  </div>
+
+</body>
+</html>
