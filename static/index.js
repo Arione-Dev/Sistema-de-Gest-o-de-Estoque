@@ -1,17 +1,12 @@
 
 
-
-
-
-
-
-
 console.log('Carregando index.js...');
 
 let currentProduto = null;
 let produtosMassivo = []; // Array para armazenar produtos no modo ajuste em massivo
 let ultimoCodigoBipado = null; // Armazena o último código bipado para comparação
 let ajustesPendentes = []; // Array para armazenar ajustes pendentes
+let currentNumeroAjuste = null; // Armazena o numero_ajuste atual
 
 function atualizarAjusteMassivo() {
     const ajusteMassivoCheckbox = document.getElementById('ajusteMassivoCheckbox');
@@ -84,58 +79,135 @@ function formatarQuantidade() {
     console.log(`Quantidade formatada para: ${document.getElementById('ajusteInput').value}`);
 }
 
-async function buscarProduto() {
-    console.log('Executando buscarProduto()');
-    const codigo = document.getElementById('codigoInput').value.trim();
-    console.log(`Buscando produto com código: ${codigo}`);
+
+async function buscarProduto(autoAdicionar = false) {
+    const codigoInput = document.getElementById('codigoInput');
+    const produtoInfo = document.getElementById('produtoInfo');
+    const ajusteMassivoCheckbox = document.getElementById('ajusteMassivoCheckbox');
+    const ajusteAutomaticoCheckbox = document.getElementById('ajusteAutomaticoCheckbox');
+
+    if (!codigoInput) {
+        console.error('Elemento codigoInput não encontrado.');
+        return;
+    }
+
+    const ajusteMassa = ajusteMassivoCheckbox ? ajusteMassivoCheckbox.checked : false;
+    const ajusteAutomatico = ajusteAutomaticoCheckbox ? ajusteAutomaticoCheckbox.checked : false;
+    console.log('Ajuste em Massa ativo:', ajusteMassa, 'Ajuste Automático ativo:', ajusteAutomatico);
+
+    const codigo = codigoInput.value.trim();
 
     if (!codigo) {
-        console.log('Código não fornecido.');
-        alert('Por favor, insira o código ou barras do produto.');
+        if (produtoInfo) {
+            exibirMensagem('Por favor, insira um código ou barras.', 'error');
+        }
+        manterFoco();
         return;
     }
 
     try {
-        console.log(`Enviando requisição GET para /produto/${codigo}`);
-        const response = await fetch(`/produto/${codigo}`);
-        console.log('Resposta recebida do backend:', response);
+        console.log('Iniciando busca para o código/barras:', codigo);
+        const response = await fetch(`/produto/${encodeURIComponent(codigo)}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        console.log('Status da resposta:', response.status);
+        console.log('Resposta OK:', response.ok);
 
         if (!response.ok) {
-            const errorData = await response.json();
-            console.error(`Erro na requisição: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
-            throw new Error(errorData.error || `Erro na requisição: ${response.status} ${response.statusText}`);
+            const errorText = await response.text();
+            console.error('Erro na resposta (status:', response.status, '):', errorText);
+            if (produtoInfo) {
+                exibirMensagem(`Erro ao buscar o produto: ${response.status} - ${errorText}`, 'error');
+            }
+            produtoSelecionado = null;
+            currentProduto = null;
+            manterFoco();
+            return;
         }
 
-        const produto = await response.json();
-        console.log('Produto retornado do backend:', produto);
-        currentProduto = produto;
+        const data = await response.json();
+        console.log('Dados recebidos do backend:', data);
 
-        document.getElementById('produtoInfo').innerHTML = `
-            <p>Código: ${produto.codigo}</p>
-            <p>Descrição: ${produto.descricao || 'Descrição não disponível'}</p>
-            <p>Saldo Atual: ${produto.saldo_atual !== undefined ? produto.saldo_atual : 'N/A'}</p>
-            <p>Barras: ${produto.barras || 'N/A'}</p>
-        `;
-        document.getElementById('ajusteForm').style.display = 'block';
+        if (data && typeof data === 'object' && 'codigo' in data && Object.keys(data).length > 0) {
+            console.log('Produto encontrado:', data);
+            produtoSelecionado = data;
+            currentProduto = {
+                codigo: data.codigo,
+                descricao: data.descricao || 'N/A',
+                saldo_atual: data.saldo_atual != null ? String(data.saldo_atual) : 'N/A',
+                barras: data.barras || 'N/A',
+                Local1: data.Local1 || 'N/A', // Garantindo que Local1 seja incluído
+                Local2: data.Local2 || 'N/A', // Garantindo que Local2 seja incluído
+                Grupo: data.Grupo || 'N/A'    // Garantindo que Grupo seja incluído
+            };
 
-        const ajusteMassivoCheckbox = document.getElementById('ajusteMassivoCheckbox');
-        if (!ajusteMassivoCheckbox.checked) {
-            document.getElementById('ajusteInput').value = '0';
-        } else if (ultimoCodigoBipado !== codigo) {
-            document.getElementById('ajusteInput').value = '1'; // Quantidade padrão para novo código
+            const codigoProduto = currentProduto.codigo != null ? String(currentProduto.codigo) : 'N/A';
+            const descricaoProduto = currentProduto.descricao || 'N/A';
+            const saldoAtual = currentProduto.saldo_atual != null ? String(currentProduto.saldo_atual) : 'N/A';
+            const barrasProduto = currentProduto.barras || 'N/A';
+            const local1 = currentProduto.Local1 || 'N/A';
+            const local2 = currentProduto.Local2 || 'N/A';
+            const grupo = currentProduto.Grupo || 'N/A';
+
+            const htmlContent = `
+                <p><strong>Código:</strong> ${codigoProduto}</p>
+                <p><strong>Descrição:</strong> ${descricaoProduto}</p>
+                <p><strong>Saldo Atual:</strong> ${saldoAtual}</p>
+                <p><strong>Barras:</strong> ${barrasProduto}</p>
+                <p><strong>Local 1:</strong> ${local1}</p>
+                <p><strong>Local 2:</strong> ${local2}</p>
+                <p><strong>Grupo:</strong> ${grupo}</p>
+            `;
+            console.log('Conteúdo HTML a ser exibido em produtoInfo:', htmlContent);
+
+            if (produtoInfo) {
+                produtoInfo.innerHTML = htmlContent;
+            } else {
+                console.error('Elemento produtoInfo não encontrado ao tentar exibir informações do produto.');
+            }
+
+            if (autoAdicionar || ajusteAutomatico) {
+                console.log('Ajuste Automático ativo, adicionando ajuste automaticamente.');
+                await adicionarAjuste();
+            }
+        } else {
+            let errorMessage = 'Produto não encontrado.';
+            if (data && 'error' in data) {
+                errorMessage = data.error || 'Erro desconhecido ao buscar o produto.';
+                console.log('Erro retornado pelo backend:', errorMessage);
+            } else if (data && 'success' in data && !data.success) {
+                errorMessage = 'Produto não encontrado no servidor.';
+                console.log('Backend retornou success: false:', data);
+            } else if (data && Object.keys(data).length === 0) {
+                errorMessage = 'Resposta vazia do servidor.';
+                console.log('Backend retornou um objeto vazio:', data);
+            } else {
+                errorMessage = 'Formato de resposta inválido do servidor.';
+                console.log('Formato de resposta inesperado:', data);
+            }
+
+            if (produtoInfo) {
+                exibirMensagem(errorMessage, 'error');
+            }
+            produtoSelecionado = null;
+            currentProduto = null;
         }
-
-        document.getElementById('codigoInput').value = '';
-        ultimoCodigoBipado = codigo;
-        carregarHistorico();
-    } catch (err) {
-        console.error('Erro ao buscar produto:', err);
-        alert(`Erro ao buscar produto: ${err.message}`);
-        document.getElementById('produtoInfo').innerHTML = '';
-        document.getElementById('ajusteForm').style.display = 'none';
+    } catch (error) {
+        console.error('Erro ao fazer a requisição:', error.message);
+        if (produtoInfo) {
+            exibirMensagem(`Erro ao buscar o produto: ${error.message}`, 'error');
+        }
+        produtoSelecionado = null;
         currentProduto = null;
-        document.getElementById('codigoInput').value = '';
     }
+
+    codigoInput.value = '';
+    manterFoco();
 }
 
 async function processarCodigoBarras(codigo) {
@@ -227,45 +299,120 @@ function alterarQuantidade(operacao) {
     console.log(`Quantidade atualizada para: ${quantidade}`);
 }
 
-function adicionarAjuste() {
+async function adicionarAjuste() {
+    console.log('Iniciando função adicionarAjuste...');
+
+    // Verifica se há um produto selecionado
     if (!currentProduto) {
-        console.log('Nenhum produto selecionado para adicionar ao ajuste.');
-        alert('Nenhum produto selecionado para adicionar ao ajuste.');
+        console.log('Erro: Nenhum produto selecionado para adicionar ao ajuste.');
+        alert('Nenhum produto selecionado para adicionar ao ajuste. Por favor, escaneie ou busque um produto primeiro.');
         return;
     }
+    console.log('Produto selecionado:', currentProduto);
 
+    // Verifica a quantidade
     let quantidade = parseInt(document.getElementById('ajusteInput').value);
     console.log('Quantidade digitada:', quantidade);
     if (isNaN(quantidade) || quantidade === 0) {
-        console.log('Quantidade inválida:', quantidade);
-        alert('Por favor, digite uma quantidade válida.');
+        console.log('Erro: Quantidade inválida:', quantidade);
+        alert('Por favor, digite uma quantidade válida (diferente de 0).');
         return;
     }
 
-    const ajusteExistente = ajustesPendentes.find(ajuste => ajuste.codigo === currentProduto.codigo);
-    if (ajusteExistente) {
-        ajusteExistente.quantidade += quantidade;
-        console.log(`Produto ${currentProduto.codigo} já existe na lista. Nova quantidade: ${ajusteExistente.quantidade}`);
-    } else {
-        ajustesPendentes.push({
+    try {
+        // Se não houver numero_ajuste, obtém um novo do backend
+        if (!currentNumeroAjuste) {
+            console.log('Obtendo novo número de ajuste do backend...');
+            const response = await fetch('/proximo-numero-ajuste', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            console.log('Resposta do backend para /proximo-numero-ajuste:', response);
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Erro ao buscar número de ajuste:', errorData);
+                alert(`Erro ao obter número de ajuste: ${errorData.error || 'Erro desconhecido'}`);
+                throw new Error(errorData.error || 'Erro ao obter número de ajuste');
+            }
+
+            const data = await response.json();
+            if (!data.success || !data.numero_ajuste) {
+                console.error('Erro: Resposta do backend não contém numero_ajuste:', data);
+                alert('Erro: Não foi possível obter o número de ajuste do servidor.');
+                throw new Error('Resposta do backend inválida');
+            }
+
+            currentNumeroAjuste = data.numero_ajuste;
+            console.log(`Novo número de ajuste gerado: ${currentNumeroAjuste}`);
+            // Exibe o número de ajuste para o usuário
+            alert(`Número de ajuste gerado: ${currentNumeroAjuste}`);
+        } else {
+            console.log(`Número de ajuste já existe: ${currentNumeroAjuste}`);
+            alert(`Usando número de ajuste existente: ${currentNumeroAjuste}`);
+        }
+
+        // Adiciona o ajuste ao backend (tabela ajustes_pendentes)
+        const ajuste = {
+            numero_ajuste: currentNumeroAjuste,
             codigo: currentProduto.codigo,
             descricao: currentProduto.descricao || 'Descrição não disponível',
             quantidade: quantidade
+        };
+        console.log('Enviando ajuste para o backend:', ajuste);
+
+        const response = await fetch('/adicionar-ajuste-pendente', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(ajuste)
         });
-        console.log(`Produto ${currentProduto.codigo} adicionado à lista com quantidade: ${quantidade}`);
-    }
+        console.log('Resposta do backend para /adicionar-ajuste-pendente:', response);
 
-    // Reseta o estado do modo massivo para o produto atual
-    const ajusteMassivoCheckbox = document.getElementById('ajusteMassivoCheckbox');
-    if (ajusteMassivoCheckbox.checked) {
-        produtosMassivo = produtosMassivo.filter(p => p.codigo !== currentProduto.codigo); // Remove o produto ajustado
-        document.getElementById('ajusteInput').value = '0'; // Reseta a quantidade exibida
-        ultimoCodigoBipado = null; // Permite que o próximo bip reinicie a contagem
-    } else {
-        document.getElementById('ajusteInput').value = '0'; // Reseta para modo normal
-    }
+        const result = await response.json();
+        if (!response.ok) {
+            console.error('Erro ao adicionar ajuste pendente:', result);
+            alert(`Erro ao adicionar ajuste pendente: ${result.error || 'Erro desconhecido'}`);
+            throw new Error(result.error || 'Erro ao adicionar ajuste pendente');
+        }
 
-    atualizarListaPendentes();
+        if (result.success) {
+            console.log('Ajuste adicionado com sucesso no backend!');
+            alert('Ajuste adicionado com sucesso! Verifique a tabela de ajustes pendentes.');
+            // Atualiza a lista de ajustes pendentes localmente
+            const ajusteExistente = ajustesPendentes.find(a => a.codigo === currentProduto.codigo && a.numero_ajuste === currentNumeroAjuste);
+            if (ajusteExistente) {
+                ajusteExistente.quantidade += quantidade;
+                console.log(`Produto ${currentProduto.codigo} já existe na lista. Nova quantidade: ${ajusteExistente.quantidade}`);
+            } else {
+                ajustesPendentes.push({
+                    numero_ajuste: currentNumeroAjuste,
+                    codigo: currentProduto.codigo,
+                    descricao: currentProduto.descricao || 'Descrição não disponível',
+                    quantidade: quantidade
+                });
+                console.log(`Produto ${currentProduto.codigo} adicionado à lista com quantidade: ${quantidade}`);
+            }
+
+            // Reseta o estado do modo massivo para o produto atual
+            const ajusteMassivoCheckbox = document.getElementById('ajusteMassivoCheckbox');
+            if (ajusteMassivoCheckbox.checked) {
+                produtosMassivo = produtosMassivo.filter(p => p.codigo !== currentProduto.codigo); // Remove o produto ajustado
+                document.getElementById('ajusteInput').value = '0'; // Reseta a quantidade exibida
+                ultimoCodigoBipado = null; // Permite que o próximo bip reinicie a contagem
+            } else {
+                document.getElementById('ajusteInput').value = '0'; // Reseta para modo normal
+            }
+
+            atualizarListaPendentes();
+        } else {
+            console.error('Erro: Backend não confirmou sucesso:', result);
+            alert('Erro ao adicionar ajuste pendente: resposta do backend não confirmou sucesso');
+            throw new Error('Erro ao adicionar ajuste pendente: resposta do backend não confirmou sucesso');
+        }
+    } catch (err) {
+        console.error('Erro ao adicionar ajuste:', err);
+        alert(`Erro ao adicionar ajuste: ${err.message}`);
+    }
 }
 
 function atualizarListaPendentes() {
@@ -273,7 +420,7 @@ function atualizarListaPendentes() {
     tbody.innerHTML = '';
     ajustesPendentes.forEach(ajuste => {
         const tr = document.createElement('tr');
-        const ajusteSymbol = ajuste.quantidade > 0 ? '+' : '';
+        const ajusteSymbol = ajuste.quantidade > 0 ? '+' : '-';
         tr.innerHTML = `
             <td>${ajuste.codigo}</td>
             <td>${ajuste.descricao}</td>
@@ -290,30 +437,13 @@ async function confirmarAjuste() {
         return;
     }
 
-    for (const ajuste of ajustesPendentes) {
-        if (!ajuste.codigo || ajuste.codigo.trim() === '') {
-            console.log('Erro: Um ajuste na lista não possui um código válido:', ajuste);
-            alert('Erro: Um ou mais ajustes na lista não possuem um código válido.');
-            return;
-        }
-        if (!ajuste.descricao || ajuste.descricao.trim() === '') {
-            console.log('Aviso: Descrição não fornecida para o ajuste, usando valor padrão:', ajuste);
-            ajuste.descricao = 'Descrição não disponível';
-        }
-        if (!ajuste.quantidade || isNaN(ajuste.quantidade)) {
-            console.log('Erro: Quantidade inválida no ajuste:', ajuste);
-            alert('Erro: Um ou mais ajustes na lista possuem uma quantidade inválida.');
-            return;
-        }
-    }
-
     try {
-        console.log('Enviando requisição POST para /ajustar-estoque');
+        console.log('Enviando requisição POST para /confirmar-ajuste');
         console.log('Ajustes pendentes enviados:', JSON.stringify(ajustesPendentes, null, 2));
-        const response = await fetch('/ajustar-estoque', {
+        const response = await fetch('/confirmar-ajuste', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ajustes: ajustesPendentes })
+            body: JSON.stringify({ ajustes: ajustesPendentes, numero_ajuste: currentNumeroAjuste })
         });
         console.log('Resposta recebida do backend:', response);
 
@@ -327,13 +457,14 @@ async function confirmarAjuste() {
         console.log('Resultado retornado do backend:', resultado);
 
         if (resultado.success) {
-            let mensagem = `Ajuste #${resultado.numero_ajuste} realizado com sucesso!\n`;
+            let mensagem = `Ajuste #${currentNumeroAjuste} realizado com sucesso!\n`;
             resultado.resultados.forEach(res => {
                 mensagem += `Código: ${res.codigo}, Novo Saldo: ${res.saldo_atual}\n`;
             });
             alert(mensagem);
 
             ajustesPendentes = [];
+            currentNumeroAjuste = null; // Reseta o numero_ajuste para criar um novo na próxima vez
             atualizarListaPendentes();
             document.getElementById('produtoInfo').innerHTML = '';
             document.getElementById('ajusteForm').style.display = 'none';
@@ -349,6 +480,93 @@ async function confirmarAjuste() {
         alert(`Erro ao ajustar estoque: ${err.message}`);
     }
 }
+
+async function adicionarAjuste() {
+    if (!currentProduto) {
+        console.log('Nenhum produto selecionado para adicionar ao ajuste.');
+        alert('Nenhum produto selecionado para adicionar ao ajuste.');
+        return;
+    }
+
+    let quantidade = parseInt(document.getElementById('ajusteInput').value);
+    console.log('Quantidade digitada:', quantidade);
+    if (isNaN(quantidade) || quantidade === 0) {
+        console.log('Quantidade inválida:', quantidade);
+        alert('Por favor, digite uma quantidade válida.');
+        return;
+    }
+
+    try {
+        // Se não houver numero_ajuste, obtém um novo do backend
+        if (!currentNumeroAjuste) {
+            const response = await fetch('/proximo-numero-ajuste', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Erro ao obter número de ajuste');
+            }
+            currentNumeroAjuste = data.numero_ajuste;
+            console.log(`Novo numero_ajuste obtido: ${currentNumeroAjuste}`);
+        }
+
+        // Adiciona o ajuste ao backend (tabela ajustes_pendentes)
+        const ajuste = {
+            numero_ajuste: currentNumeroAjuste,
+            codigo: currentProduto.codigo,
+            descricao: currentProduto.descricao || 'Descrição não disponível',
+            quantidade: quantidade
+        };
+
+        const response = await fetch('/adicionar-ajuste-pendente', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(ajuste)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Erro ao adicionar ajuste pendente');
+        }
+
+        const result = await response.json();
+        if (result.success) {
+            // Atualiza a lista de ajustes pendentes localmente
+            const ajusteExistente = ajustesPendentes.find(a => a.codigo === currentProduto.codigo && a.numero_ajuste === currentNumeroAjuste);
+            if (ajusteExistente) {
+                ajusteExistente.quantidade += quantidade;
+                console.log(`Produto ${currentProduto.codigo} já existe na lista. Nova quantidade: ${ajusteExistente.quantidade}`);
+            } else {
+                ajustesPendentes.push({
+                    numero_ajuste: currentNumeroAjuste,
+                    codigo: currentProduto.codigo,
+                    descricao: currentProduto.descricao || 'Descrição não disponível',
+                    quantidade: quantidade
+                });
+                console.log(`Produto ${currentProduto.codigo} adicionado à lista com quantidade: ${quantidade}`);
+            }
+
+            // Reseta o estado do modo massivo para o produto atual
+            const ajusteMassivoCheckbox = document.getElementById('ajusteMassivoCheckbox');
+            if (ajusteMassivoCheckbox.checked) {
+                produtosMassivo = produtosMassivo.filter(p => p.codigo !== currentProduto.codigo); // Remove o produto ajustado
+                document.getElementById('ajusteInput').value = '0'; // Reseta a quantidade exibida
+                ultimoCodigoBipado = null; // Permite que o próximo bip reinicie a contagem
+            } else {
+                document.getElementById('ajusteInput').value = '0'; // Reseta para modo normal
+            }
+
+            atualizarListaPendentes();
+        } else {
+            throw new Error('Erro ao adicionar ajuste pendente');
+        }
+    } catch (err) {
+        console.error('Erro ao adicionar ajuste:', err);
+        alert(`Erro ao adicionar ajuste: ${err.message}`);
+    }
+}
+
 
 async function carregarHistorico() {
     console.log('Executando carregarHistorico()');
@@ -465,3 +683,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 console.log('index.js carregado com sucesso.');
+
+
+
+
+

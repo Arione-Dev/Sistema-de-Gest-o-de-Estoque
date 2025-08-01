@@ -48,10 +48,12 @@ async function buscarRelatorio() {
         // Adicionar variável para calcular o total do custo
         let totalCusto = 0;
 
+  
+
         ajustes.forEach(item => {
             const tr = document.createElement('tr');
             const ajusteIcon = item.quantidade > 0 ? 'positive' : 'negative';
-            const ajusteSymbol = item.quantidade > 0 ? '+' : '-';
+            const ajusteSymbol = item.quantidade > 0 ? '+' : '-'; // Definir o símbolo corretamente
             // Adicionar lógica para custo
             const custo = item.custo || 0; // Assume que o custo vem do backend, padrão 0 se nulo
             const custoTotalItem = custo * Math.abs(item.quantidade); // Custo total do item
@@ -61,7 +63,7 @@ async function buscarRelatorio() {
                 <td>${item.numero_ajuste}</td>
                 <td>${item.produto_codigo}</td>
                 <td>${item.descricao || 'N/A'}</td>
-                <td>${ajusteSymbol}${item.quantidade}</td>
+                <td>${ajusteSymbol}${Math.abs(item.quantidade)}</td>
                 <!-- Adicionar a coluna de custo -->
                 <td>${custoTotalItem.toFixed(2)}</td>
                 <td>${item.data_hora}</td>
